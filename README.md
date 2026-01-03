@@ -117,16 +117,6 @@ npm run dev
 
 Ethos strictly follows **Clean Architecture** principles as detailed in [CLAUDE.md](CLAUDE.md):
 
-```mermaid
-graph TD
-    User[User / Client] --> handler[Interface Adapters (HTTP/gRPC)]
-    handler --> app[Application Layer (Use Cases/CQRS)]
-    app --> domain[Domain Layer (Entities & Rules)]
-
-    app --> infra[Infrastructure (DB, Mail, Redis)]
-    infra -.-> domain
-```
-
 ### Folder Structure
 
 ```bash
