@@ -1,0 +1,521 @@
+{
+    "common": {
+        "loading": "Memuat...",
+        "error": "Kesalahan",
+        "success": "Berhasil",
+        "cancel": "Batal",
+        "save": "Simpan",
+        "delete": "Hapus",
+        "edit": "Ubah",
+        "create": "Buat",
+        "search": "Cari",
+        "filter": "Filter",
+        "all": "Semua",
+        "active": "Aktif",
+        "inactive": "Tidak Aktif",
+        "yes": "Ya",
+        "no": "Tidak",
+        "confirm": "Konfirmasi",
+        "back": "Kembali",
+        "next": "Selanjutnya",
+        "previous": "Sebelumnya",
+        "submit": "Kirim",
+        "close": "Tutup",
+        "view": "Lihat",
+        "viewAll": "Lihat Semua",
+        "noData": "Tidak ada data",
+        "required": "Wajib",
+        "optional": "Opsional"
+    },
+    "nav": {
+        "dashboard": "Beranda",
+        "habits": "Kebiasaan",
+        "analytics": "Analitik",
+        "notifications": "Notifikasi",
+        "settings": "Pengaturan",
+        "logout": "Keluar",
+        "login": "Masuk",
+        "register": "Daftar"
+    },
+    "landing": {
+        "hero": {
+            "title": "Bangun Kebiasaan Baik,",
+            "titleHighlight": "Ubah Hidupmu",
+            "subtitle": "Lacak kebiasaan harianmu, bangun rutinitas yang bertahan lama, dan raih tujuanmu dengan platform pelacak kebiasaan yang indah dan intuitif.",
+            "cta": "Mulai Gratis",
+            "ctaSecondary": "Pelajari Lebih Lanjut"
+        },
+        "features": {
+            "title": "Semua yang kamu butuhkan untuk",
+            "titleHighlight": "membangun kebiasaan baik",
+            "subtitle": "Alat komprehensif kami membantumu melacak, menganalisis, dan meningkatkan rutinitas harianmu.",
+            "habitTracking": {
+                "title": "Pelacakan Kebiasaan Cerdas",
+                "description": "Lacak kebiasaan harian, mingguan, dan bulananmu dengan mudah. Atur pengingat dan jangan lewatkan satu hari pun."
+            },
+            "analytics": {
+                "title": "Analitik Detail",
+                "description": "Visualisasikan kemajuanmu dengan grafik yang indah. Pahami polamu dan tingkatkan."
+            },
+            "streaks": {
+                "title": "Streak & Pencapaian",
+                "description": "Tetap termotivasi dengan pelacakan streak. Rayakan pencapaian dan prestasi kamu."
+            },
+            "reminders": {
+                "title": "Pengingat Cerdas",
+                "description": "Dapatkan notifikasi tepat waktu untuk menyelesaikan kebiasaanmu. Jangan pernah lupa hal yang penting."
+            },
+            "sync": {
+                "title": "Sinkronisasi Multi-Perangkat",
+                "description": "Akses kebiasaanmu dari mana saja. Data tersinkronisasi dengan mulus di semua perangkat."
+            },
+            "secure": {
+                "title": "Privasi Utama",
+                "description": "Data kamu terenkripsi dan aman. Kami tidak pernah membagikan informasi pribadimu."
+            }
+        },
+        "stats": {
+            "users": "Pengguna Aktif",
+            "habitsTracked": "Kebiasaan Dilacak",
+            "completionRate": "Tingkat Penyelesaian Rata-rata",
+            "countries": "Negara"
+        },
+        "cta": {
+            "title": "Siap mengubah hidupmu?",
+            "subtitle": "Bergabunglah dengan ribuan orang yang membangun kebiasaan baik setiap hari.",
+            "button": "Mulai Perjalananmu"
+        },
+        "footer": {
+            "tagline": "Bangun kebiasaan baik, satu hari dalam satu waktu.",
+            "product": "Produk",
+            "features": "Fitur",
+            "pricing": "Harga",
+            "testimonials": "Testimoni",
+            "company": "Perusahaan",
+            "about": "Tentang",
+            "blog": "Blog",
+            "careers": "Karir",
+            "support": "Dukungan",
+            "helpCenter": "Pusat Bantuan",
+            "contact": "Kontak",
+            "privacy": "Kebijakan Privasi",
+            "terms": "Syarat Layanan",
+            "copyright": "Hak cipta dilindungi."
+        }
+    },
+    "auth": {
+        "login": {
+            "title": "Selamat datang kembali",
+            "subtitle": "Masuk ke akunmu untuk melanjutkan",
+            "email": "Alamat Email",
+            "password": "Kata Sandi",
+            "forgotPassword": "Lupa kata sandi?",
+            "submitButton": "Masuk",
+            "noAccount": "Belum punya akun?",
+            "signUp": "Daftar"
+        },
+        "register": {
+            "title": "Buat akun",
+            "subtitle": "Mulai perjalananmu menuju kebiasaan yang lebih baik",
+            "name": "Nama Lengkap",
+            "email": "Alamat Email",
+            "password": "Kata Sandi",
+            "confirmPassword": "Konfirmasi Kata Sandi",
+            "submitButton": "Buat Akun",
+            "hasAccount": "Sudah punya akun?",
+            "signIn": "Masuk",
+            "passwordHint": "Minimal 8 karakter"
+        },
+        "verifyEmail": {
+            "title": "Verifikasi Emailmu",
+            "subtitle": "Kami telah mengirimkan kode verifikasi ke emailmu",
+            "code": "Kode Verifikasi",
+            "submitButton": "Verifikasi Email",
+            "resend": "Tidak menerima kode?",
+            "resendButton": "Kirim Ulang Kode"
+        },
+        "forgotPassword": {
+            "title": "Lupa Kata Sandi",
+            "subtitle": "Masukkan emailmu dan kami akan mengirimkan kode reset",
+            "email": "Alamat Email",
+            "submitButton": "Kirim Kode Reset",
+            "backToLogin": "Kembali ke halaman masuk"
+        },
+        "resetPassword": {
+            "title": "Reset Kata Sandi",
+            "subtitle": "Masukkan kata sandi barumu",
+            "code": "Kode Reset",
+            "newPassword": "Kata Sandi Baru",
+            "confirmPassword": "Konfirmasi Kata Sandi Baru",
+            "submitButton": "Reset Kata Sandi"
+        },
+        "google": {
+            "signIn": "Masuk dengan Google",
+            "continueWith": "Atau lanjutkan dengan"
+        },
+        "validation": {
+            "emailRequired": "Email wajib diisi",
+            "emailInvalid": "Format email tidak valid",
+            "passwordRequired": "Kata sandi wajib diisi",
+            "passwordMin": "Kata sandi minimal 8 karakter",
+            "passwordMismatch": "Kata sandi tidak cocok",
+            "nameRequired": "Nama wajib diisi",
+            "nameMin": "Nama minimal 2 karakter"
+        },
+        "features": {
+            "unlimited": "Lacak kebiasaan tanpa batas",
+            "analytics": "Analitik & wawasan detail",
+            "secure": "Aman & privat",
+            "free": "Gratis untuk memulai",
+            "noCreditCard": "Tidak perlu kartu kredit",
+            "cancelAnytime": "Batalkan kapan saja"
+        },
+        "rememberMe": "Ingat saya",
+        "terms": "Saya setuju dengan",
+        "termsOfService": "Syarat Layanan",
+        "and": "dan",
+        "privacyPolicy": "Kebijakan Privasi",
+        "welcomeBack": "Selamat datang kembali!",
+        "loginSuccess": "Kamu berhasil masuk.",
+        "loginFailed": "Gagal Masuk",
+        "accountCreated": "Akun Dibuat!",
+        "verifyEmailMessage": "Silakan cek email untuk verifikasi akunmu.",
+        "registrationFailed": "Pendaftaran Gagal",
+        "emailNotVerified": "Email Belum Diverifikasi",
+        "verifyEmailPrompt": "Silakan verifikasi alamat emailmu untuk melanjutkan. Kami akan mengarahkanmu ke halaman verifikasi."
+    },
+    "dashboard": {
+        "title": "Beranda",
+        "subtitle": "Lacak kemajuanmu dan tetap termotivasi",
+        "welcome": "Selamat datang kembali",
+        "todayProgress": "Kemajuan Hari Ini",
+        "weeklyProgress": "Kemajuan Mingguan",
+        "currentStreak": "Streak Saat Ini",
+        "longestStreak": "Streak Terpanjang",
+        "totalLogs": "Total Log",
+        "activeHabits": "Kebiasaan Aktif",
+        "completedToday": "Selesai Hari Ini",
+        "quickLog": "Log Cepat",
+        "recentActivity": "Aktivitas Terbaru",
+        "noHabits": "Belum ada kebiasaan. Buat kebiasaan pertamamu untuk memulai!",
+        "createFirst": "Buat Kebiasaan Pertamamu",
+        "days": "hari",
+        "day": "hari",
+        "todaysHabits": "Kebiasaan Hari Ini",
+        "activeToTrack": "kebiasaan aktif untuk dilacak",
+        "noHabitsYet": "Belum ada kebiasaan",
+        "createToStart": "Buat kebiasaan pertamamu untuk mulai melacak kemajuanmu.",
+        "moreHabits": "kebiasaan lagi",
+        "streakCard": {
+            "title": "Streak Saat Ini",
+            "subtitle": "Jaga api menyala!",
+            "nextMilestone": "Pencapaian berikutnya"
+        },
+        "tips": {
+            "title": "Tips Cepat",
+            "tip1": "Mulai dengan satu kebiasaan untuk membangun momentum",
+            "tip2": "Log kemajuanmu di waktu yang sama setiap hari",
+            "tip3": "Jangan putus rantai - konsistensi adalah kunci!"
+        }
+    },
+    "habits": {
+        "title": "Kebiasaanku",
+        "subtitle": "Kelola dan lacak kebiasaan harianmu",
+        "createHabit": "Buat Kebiasaan",
+        "noHabits": "Tidak ada kebiasaan ditemukan",
+        "noHabitsDesc": "Buat kebiasaan pertamamu untuk mulai melacak",
+        "searchPlaceholder": "Cari kebiasaan...",
+        "filters": {
+            "all": "Semua",
+            "active": "Aktif",
+            "inactive": "Tidak Aktif"
+        },
+        "form": {
+            "name": "Nama Kebiasaan",
+            "namePlaceholder": "contoh: Olahraga, Membaca, Meditasi",
+            "description": "Deskripsi",
+            "descriptionPlaceholder": "Tentang apa kebiasaan ini?",
+            "frequency": "Frekuensi",
+            "targetCount": "Target Jumlah",
+            "targetCountHelp": "Berapa kali per periode?",
+            "reminderTime": "Pengingat Harian",
+            "reminderTimeHelp": "Kami akan mengirimkanmu notifikasi pada waktu ini"
+        },
+        "frequency": {
+            "daily": "Harian",
+            "weekly": "Mingguan",
+            "monthly": "Bulanan"
+        },
+        "actions": {
+            "edit": "Ubah Kebiasaan",
+            "delete": "Hapus Kebiasaan",
+            "activate": "Aktifkan",
+            "deactivate": "Nonaktifkan",
+            "logProgress": "Log Kemajuan"
+        },
+        "modal": {
+            "createTitle": "Buat Kebiasaan Baru",
+            "editTitle": "Ubah Kebiasaan",
+            "deleteTitle": "Hapus Kebiasaan",
+            "deleteConfirm": "Apakah kamu yakin ingin menghapus kebiasaan ini? Tindakan ini tidak dapat dibatalkan.",
+            "logTitle": "Log Kemajuan"
+        },
+        "log": {
+            "count": "Jumlah",
+            "countHelp": "Berapa kali kamu menyelesaikan ini?",
+            "date": "Tanggal",
+            "notes": "Catatan",
+            "notesPlaceholder": "Ada catatan tentang sesi ini?"
+        },
+        "stats": {
+            "totalLogs": "Total Log",
+            "currentStreak": "Streak Saat Ini",
+            "longestStreak": "Streak Terpanjang",
+            "completionRate": "Tingkat Penyelesaian"
+        },
+        "detail": {
+            "title": "Detail Kebiasaan",
+            "logs": "Log Aktivitas",
+            "noLogs": "Belum ada log. Mulai lacak kemajuanmu!",
+            "editLog": "Ubah Log",
+            "deleteLog": "Hapus Log"
+        }
+    },
+    "analytics": {
+        "title": "Analitik",
+        "subtitle": "Lacak kemajuan dan wawasanmu",
+        "weeklyProgress": "Kemajuan Mingguan",
+        "weeklyProgressDesc": "Tingkat penyelesaian selama 7 hari terakhir",
+        "habitDistribution": "Berdasarkan Frekuensi",
+        "achievements": "Pencapaian",
+        "achievementsDesc": "Pencapaian dan hadiahmu",
+        "completionTrend": "Tren Penyelesaian",
+        "bestDay": "Hari Terbaik",
+        "averageCompletion": "Penyelesaian rata-rata",
+        "noData": "Data tidak cukup untuk menampilkan analitik. Terus lacak kebiasaanmu!",
+        "stats": {
+            "totalHabits": "Total Kebiasaan",
+            "createdHabits": "kebiasaan dibuat",
+            "weeklyCompletion": "Penyelesaian Mingguan",
+            "thisWeek": "minggu ini",
+            "bestStreak": "Streak Terbaik",
+            "daysRecord": "rekor hari",
+            "totalLogs": "Total Log",
+            "allTime": "sepanjang waktu"
+        },
+        "frequency": {
+            "daily": "Harian",
+            "weekly": "Mingguan",
+            "monthly": "Bulanan"
+        },
+        "achievementsList": {
+            "firstHabit": {
+                "title": "Kebiasaan Pertama",
+                "desc": "Membuat kebiasaan pertama"
+            },
+            "sevenDayStreak": {
+                "title": "Streak 7 Hari",
+                "desc": "Mempertahankan streak 7 hari"
+            },
+            "thirtyDayMaster": {
+                "title": "Master 30 Hari",
+                "desc": "Mencapai streak 30 hari"
+            },
+            "hundredLogs": {
+                "title": "100 Log",
+                "desc": "Mencatat 100 kali"
+            },
+            "unlocked": "Terbuka"
+        }
+    },
+    "help": {
+        "title": "Pusat Bantuan",
+        "subtitle": "Dapatkan jawaban dan dukungan",
+        "searchPlaceholder": "Cari bantuan...",
+        "quickLinks": {
+            "title": "Tautan Cepat",
+            "dashboard": "Ke Beranda",
+            "createHabit": "Buat Kebiasaan",
+            "viewAnalytics": "Lihat Analitik",
+            "manageSettings": "Kelola Pengaturan"
+        },
+        "contact": {
+            "title": "Butuh Bantuan Lebih?",
+            "subtitle": "Kami siap membantumu",
+            "email": "Dukungan Email",
+            "emailDesc": "Dapatkan respons dalam 24 jam",
+            "docs": "Dokumentasi",
+            "docsDesc": "Telusuri panduan detail kami"
+        },
+        "faq": {
+            "title": "Pertanyaan yang Sering Diajukan",
+            "gettingStarted": {
+                "title": "Memulai",
+                "q1": "Bagaimana cara membuat kebiasaan pertamaku?",
+                "a1": "Klik tombol 'Buat Kebiasaan' di halaman Kebiasaan. Isi nama, deskripsi, frekuensi, dan target jumlah. Kamu juga bisa mengatur waktu pengingat harian untuk menerima notifikasi.",
+                "q2": "Bisakah saya mengatur kebiasaan untuk hari tertentu dalam seminggu?",
+                "a2": "Ya! Saat membuat kebiasaan, kamu bisa memilih frekuensi 'Mingguan' dan memilih hari tertentu dalam seminggu yang ingin kamu lacak. Ini cocok untuk kebiasaan seperti 'Gym di Senin, Rabu, Jumat'."
+            },
+            "tracking": {
+                "title": "Pelacakan & Kemajuan",
+                "q1": "Bagaimana cara mencatat penyelesaian kebiasaan?",
+                "a1": "Klik kartu kebiasaan mana pun untuk melihat detail, lalu klik 'Log Kemajuan'. Kamu bisa mencatat beberapa penyelesaian jika targetmu lebih dari 1. Kamu juga bisa log cepat dari beranda.",
+                "q2": "Apa arti warna-warna yang berbeda?",
+                "a2": "Hijau menunjukkan kebiasaan yang selesai, kuning menunjukkan selesai sebagian (untuk kebiasaan dengan target), dan abu-abu mewakili kebiasaan yang belum dilacak hari ini. Merah menunjukkan kebiasaan yang terlewat dari hari sebelumnya."
+            },
+            "analytics": {
+                "title": "Analitik & Wawasan",
+                "q1": "Bagaimana tingkat penyelesaianku dihitung?",
+                "a1": "Tingkat penyelesaianmu adalah persentase target kebiasaan yang telah kamu penuhi dalam periode tertentu. Untuk kebiasaan harian, dihitung setiap hari. Untuk kebiasaan mingguan, mempertimbangkan seluruh minggu.",
+                "q2": "Bisakah saya mengekspor data kebiasaanku?",
+                "a2": "Saat ini, ekspor data belum tersedia tapi ada di roadmap kami. Tetap update! Sementara itu, kamu bisa melihat statistik lengkap di halaman Analitik."
+            },
+            "account": {
+                "title": "Akun & Keamanan",
+                "q1": "Bagaimana cara mengubah kata sandiku?",
+                "a1": "Buka Pengaturan > Keamanan dan klik 'Ubah Kata Sandi'. Kamu perlu memasukkan kata sandi saat ini lalu kata sandi baru dua kali untuk konfirmasi.",
+                "q2": "Bagaimana cara mengelola sesi aktifku?",
+                "a2": "Di Pengaturan > Sesi Aktif, kamu bisa melihat semua perangkat yang sedang login. Kamu bisa mencabut akses dari perangkat mana pun atau keluar dari semua perangkat sekaligus untuk keamanan."
+            },
+            "notifications": {
+                "title": "Notifikasi",
+                "q1": "Bagaimana cara mengatur pengingat?",
+                "a1": "Saat membuat atau mengedit kebiasaan, atur waktu 'Pengingat Harian'. Kamu akan menerima notifikasi pada waktu tersebut untuk mengingatkanmu menyelesaikan kebiasaanmu.",
+                "q2": "Bisakah saya menyesuaikan waktu notifikasi?",
+                "a2": "Ya, kamu bisa mengatur waktu pengingat khusus untuk setiap kebiasaan. Buka halaman detail kebiasaan dan konfigurasikan jadwal notifikasi yang paling cocok untukmu."
+            }
+        }
+    },
+    "notifications": {
+        "title": "Notifikasi",
+        "subtitle": "Tetap update dengan kemajuanmu",
+        "markAllRead": "Tandai semua sudah dibaca",
+        "noNotifications": "Tidak ada notifikasi",
+        "noNotificationsDesc": "Kamu sudah membaca semuanya!",
+        "types": {
+            "habitReminder": "Pengingat Kebiasaan",
+            "streakMilestone": "Pencapaian Streak",
+            "achievement": "Pencapaian",
+            "welcome": "Selamat Datang"
+        }
+    },
+    "settings": {
+        "title": "Pengaturan",
+        "subtitle": "Kelola preferensi akunmu",
+        "profile": {
+            "title": "Informasi Profil",
+            "subtitle": "Perbarui detail pribadimu",
+            "name": "Nama Lengkap",
+            "email": "Alamat Email",
+            "timezone": "Zona Waktu",
+            "timezoneHelp": "Digunakan untuk pengingat kebiasaan dan notifikasi",
+            "saveChanges": "Simpan Perubahan"
+        },
+        "appearance": {
+            "title": "Tampilan",
+            "subtitle": "Sesuaikan tampilan aplikasi",
+            "theme": "Tema",
+            "systemPreference": "Gunakan Preferensi Sistem",
+            "systemPreferenceHelp": "Saat diaktifkan, aplikasi akan otomatis beralih antara mode terang dan gelap berdasarkan pengaturan sistemmu.",
+            "light": "Mode Terang",
+            "dark": "Mode Gelap",
+            "currentTheme": "Tema Saat Ini",
+            "manuallySelected": "Dipilih secara manual",
+            "followingSystem": "Mengikuti preferensi sistem"
+        },
+        "language": {
+            "title": "Bahasa",
+            "subtitle": "Pilih bahasa yang kamu inginkan",
+            "current": "Bahasa Saat Ini"
+        },
+        "sessions": {
+            "title": "Sesi Aktif",
+            "subtitle": "Kelola sesi aktifmu",
+            "current": "Saat Ini",
+            "active": "Aktif",
+            "revoke": "Cabut",
+            "logoutAll": "Keluar dari Semua Perangkat",
+            "noSessions": "Tidak ada sesi aktif ditemukan."
+        },
+        "security": {
+            "title": "Keamanan",
+            "subtitle": "Kelola kata sandi dan pengaturan keamananmu",
+            "changePassword": "Ubah Kata Sandi",
+            "currentPassword": "Kata Sandi Saat Ini",
+            "newPassword": "Kata Sandi Baru",
+            "confirmPassword": "Konfirmasi Kata Sandi Baru",
+            "passwordHint": "Masukkan kata sandi baru (min. 8 karakter)"
+        },
+        "danger": {
+            "title": "Zona Berbahaya",
+            "subtitle": "Hapus akun dan semua data secara permanen",
+            "deleteAccount": "Hapus Akun",
+            "deleteConfirm": "Apakah kamu yakin ingin menghapus akunmu? Semua datamu akan dihapus secara permanen."
+        },
+        "installApp": {
+            "title": "Instal Aplikasi",
+            "subtitle": "Instal Ethos sebagai aplikasi di perangkatmu",
+            "pwaTitle": "Progressive Web App",
+            "pwaDesc": "Instal Ethos sebagai aplikasi untuk akses cepat, dukungan offline, dan pengalaman aplikasi native.",
+            "howToInstall": "Cara menginstal:",
+            "chrome": "Klik ikon instal di bilah alamat, atau Menu → \"Instal Ethos\"",
+            "safariMac": "File → \"Tambahkan ke Dock\" atau Bagikan → \"Tambahkan ke Dock\"",
+            "safariIOS": "Ketuk Bagikan → \"Tambahkan ke Layar Utama\"",
+            "firefox": "Menu → \"Instal\" (jika tersedia)",
+            "readyToInstall": "Siap Diinstal",
+            "devNote": "Catatan: Dalam mode pengembangan, prompt instal mungkin tidak muncul secara otomatis. Build versi produksi untuk menguji pengalaman PWA penuh."
+        }
+    },
+    "toast": {
+        "habitCreated": "Kebiasaan barumu telah berhasil dibuat.",
+        "habitUpdated": "Kebiasaanmu telah berhasil diperbarui.",
+        "habitDeleted": "Kebiasaan berhasil dihapus.",
+        "habitActivated": "Kebiasaan berhasil diaktifkan.",
+        "habitDeactivated": "Kebiasaan berhasil dinonaktifkan.",
+        "progressLogged": "Kemajuanmu telah dicatat.",
+        "logUpdated": "Log kemajuanmu telah diperbarui.",
+        "logDeleted": "Log berhasil dihapus.",
+        "profileUpdated": "Profilmu telah disimpan.",
+        "passwordChanged": "Kata sandimu telah diperbarui.",
+        "sessionRevoked": "Sesi berhasil dicabut.",
+        "loggedOutAll": "Keluar dari semua perangkat.",
+        "emailVerified": "Email berhasil diverifikasi.",
+        "verificationSent": "Email verifikasi telah dikirim.",
+        "resetCodeSent": "Kode reset kata sandi telah dikirim.",
+        "passwordReset": "Kata sandi berhasil direset."
+    },
+    "commands": {
+        "placeholder": "Ketik perintah atau cari...",
+        "noResults": "Tidak ada hasil ditemukan",
+        "tryAgain": "Coba kata kunci lain",
+        "tips": {
+            "navigate": "Navigasi",
+            "select": "Pilih",
+            "close": "Tutup"
+        },
+        "groups": {
+            "quick": "Aksi Cepat",
+            "navigation": "Navigasi",
+            "habits": "Kebiasaan",
+            "actions": "Aksi"
+        },
+        "actions": {
+            "createHabit": "Buat Kebiasaan Baru",
+            "createHabitDesc": "Tambah kebiasaan baru untuk dilacak",
+            "toggleTheme": "Ganti ke Mode {{mode}}",
+            "toggleThemeDesc": "Ubah tema aplikasi",
+            "switchLanguage": "Ganti Bahasa",
+            "switchLanguageDesc": "Ubah bahasa aplikasi ke {{lang}}",
+            "goDashboard": "Ke Beranda",
+            "goHabits": "Ke Kebiasaan",
+            "goAnalytics": "Ke Analitik",
+            "goSettings": "Ke Pengaturan",
+            "goNotifications": "Ke Notifikasi",
+            "goHelp": "Ke Bantuan",
+            "editProfile": "Ubah Profil",
+            "editProfileDesc": "Perbarui informasi profilmu",
+            "logout": "Keluar",
+            "logoutDesc": "Keluar dari akunmu"
+        }
+    }
+}

@@ -1,0 +1,169 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ethos-app-netpol
+  namespace: ethos-go
+  labels:
+    app.kubernetes.io/name: ethos
+    app.kubernetes.io/component: app
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: ethos
+      app.kubernetes.io/component: app
+  policyTypes:
+    - Ingress
+    - Egress
+
+  ingress:
+    # Allow traffic from ingress controller
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx # Standard namespace label
+      ports:
+        - protocol: TCP
+          port: 8080
+
+    # Allow monitoring/scraping
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - protocol: TCP
+          port: 8080
+
+  egress:
+    # Allow DNS
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+
+    # Allow PostgreSQL
+    - to:
+        - podSelector:
+            matchLabels:
+              app: postgresql
+      ports:
+        - protocol: TCP
+          port: 5432
+
+    # Allow Redis
+    - to:
+        - podSelector:
+            matchLabels:
+              app: redis
+      ports:
+        - protocol: TCP
+          port: 6379
+
+    # Allow OTLP/Telemetry
+    - to:
+        - podSelector:
+            matchLabels:
+              app: otel-collector
+      ports:
+        - protocol: TCP
+          port: 4317
+        - protocol: TCP
+          port: 4318
+
+    # Allow HTTPS (External APIs)
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+      ports:
+        - protocol: TCP
+          port: 443
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: postgresql-netpol
+  namespace: ethos-go
+  labels:
+    app: postgresql
+spec:
+  podSelector:
+    matchLabels:
+      app: postgresql
+  policyTypes:
+    - Ingress
+    - Egress
+
+  ingress:
+    # Allow from app
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: ethos
+              app.kubernetes.io/component: app
+      ports:
+        - protocol: TCP
+          port: 5432
+
+    # Allow from migrations job
+    - from:
+        - podSelector:
+            matchLabels:
+              job-name: migration-job
+      ports:
+        - protocol: TCP
+          port: 5432
+
+  egress:
+    # Allow DNS
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: redis-netpol
+  namespace: ethos-go
+  labels:
+    app: redis
+spec:
+  podSelector:
+    matchLabels:
+      app: redis
+  policyTypes:
+    - Ingress
+    - Egress
+
+  ingress:
+    # Allow from app
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: ethos
+              app.kubernetes.io/component: app
+      ports:
+        - protocol: TCP
+          port: 6379
+
+  egress:
+    # Allow DNS
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53

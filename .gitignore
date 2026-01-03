@@ -1,0 +1,58 @@
+# Binaries
+bin/
+dist/
+build/
+ethos
+server
+main
+*.exe
+*.test
+*.prof
+
+# Go build artifacts
+vendor/
+go.work
+go.work.sum
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# IDEs and Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Docker
+docker-compose.override.yml
+
+# Temporary files
+tmp/
+coverage/
+coverage.out
+
+# Embedded frontend (generated during build)
+internal/web/dist/
+!internal/web/dist/.gitkeep
+
+# Coverage HTML report
+coverage.html
+
+# Go debug binary (Delve debugger)
+__debug_bin*
+
+# Test cache
+.testcache/
+
+# Air live reload
+tmp/main

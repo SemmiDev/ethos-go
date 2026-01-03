@@ -1,0 +1,6 @@
+package: auth
+generate:
+  chi-server: true
+  models: true
+  embedded-spec: true
+output: internal/generated/api/auth/auth.gen.go

@@ -1,0 +1,531 @@
+# ============================================================================
+# ETHOS HABIT TRACKER - HTTP API TESTS
+# ============================================================================
+#
+# Usage:
+# 1. Run "Register New User" (optional if user exists)
+# 2. Run "Login" - This will automatically capture the access_token.
+# 3. Run "Create Daily Habit" to capture a habit_id.
+# 4. Run "Log Habit Completion" to capture a log_id.
+#
+# Tip: Variables are captured using # @name tags and referenced via {{request.response.body...}}
+# ============================================================================
+
+# ============================================================================
+# VARIABLES
+# ============================================================================
+
+@baseUrl = http://localhost:8080
+# @access_token, @habit_id, @log_id are now captured automatically from responses!
+# No need to manually copy-paste anymore.
+
+# ============================================================================
+# SYSTEM ENDPOINTS
+# ============================================================================
+
+### Health Check - Check if server is running
+GET {{baseUrl}}/health
+
+### Ping - Simple ping endpoint
+GET {{baseUrl}}/ping
+
+### Metrics (if Prometheus enabled)
+GET {{baseUrl}}/metrics
+
+# ============================================================================
+# AUTHENTICATION ENDPOINTS
+# ============================================================================
+
+### 1. Register New User
+# Creates a new user account
+# Response contains user info (save the ID if needed)
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "password": "password123"
+}
+
+### 2. Register Another User (for testing)
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "Jane Smith",
+  "email": "jane@example.com",
+  "password": "securepass456"
+}
+
+### 3. Login
+# Response contains access_token and refresh_token
+# @name login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "john@example.com",
+  "password": "password123"
+}
+
+### 4. Logout Current Session
+# Invalidates the current access token
+POST {{baseUrl}}/api/auth/logout
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+{
+  "access_token": "{{login.response.body.data.access_token}}"
+}
+
+### 5. Logout From All Devices
+# Invalidates all sessions for the user
+POST {{baseUrl}}/api/auth/logout-all
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+{
+  "access_token": "{{login.response.body.data.access_token}}"
+}
+
+### 6. List All Sessions
+# Returns a paginated list of sessions
+# Response includes { data: [...], meta: { pagination: {...} } }
+GET {{baseUrl}}/api/auth/sessions
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+### 7. List Sessions (Filtered)
+GET {{baseUrl}}/api/auth/sessions?page=1&per_page=5&include_blocked=true&include_expired=true
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+# ============================================================================
+# HABITS - CRUD OPERATIONS
+# ============================================================================
+
+### 6. Create Daily Habit
+# Creates a new daily habit
+# @name createHabit
+POST {{baseUrl}}/api/habits
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+{
+  "name": "Morning Exercise",
+  "description": "30 minutes of cardio or strength training",
+  "frequency": "daily",
+  "target_count": 1
+}
+
+### 7. Create Another Daily Habit
+POST {{baseUrl}}/api/habits
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+{
+  "name": "Read Books",
+  "description": "Read at least 20 pages",
+  "frequency": "daily",
+  "target_count": 1
+}
+
+### 8. Create Weekly Habit
+POST {{baseUrl}}/api/habits
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+{
+  "name": "Team Meeting",
+  "description": "Weekly sync with the team",
+  "frequency": "weekly",
+  "target_count": 1
+}
+
+### 9. Create Monthly Habit
+POST {{baseUrl}}/api/habits
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+{
+  "name": "Budget Review",
+  "description": "Review monthly expenses and savings",
+  "frequency": "monthly",
+  "target_count": 1
+}
+
+### 10. Create Habit with Higher Target
+POST {{baseUrl}}/api/habits
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+{
+  "name": "Drink Water",
+  "description": "Stay hydrated throughout the day",
+  "frequency": "daily",
+  "target_count": 8
+}
+### Helper: Create Notification (Test)
+POST {{baseUrl}}/api/notifications
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "title": "Welcome to Ethos!",
+  "message": "Start tracking your habits today easily.",
+  "type": "welcome",
+  "data": {
+    "foo": "bar"
+  }
+}
+
+### List Notifications
+GET {{baseUrl}}/api/notifications?page=1&per_page=10
+Authorization: Bearer {{accessToken}}
+
+### Get Unread Count
+GET {{baseUrl}}/api/notifications/unread-count
+Authorization: Bearer {{accessToken}}
+
+### Mark Notification as Read (Replace ID)
+POST {{baseUrl}}/api/notifications/YOUR_NOTIFICATION_ID_HERE/read
+Authorization: Bearer {{accessToken}}
+
+### Delete Notification (Replace ID)
+DELETE {{baseUrl}}/api/notifications/YOUR_NOTIFICATION_ID_HERE
+Authorization: Bearer {{accessToken}}
+
+### 11. List All Habits (with pagination)
+# Default: page=1, per_page=20
+# Response now includes { data: [...], meta: { pagination: {...} } }
+GET {{baseUrl}}/api/habits
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+### 12. List Habits - Page 2
+GET {{baseUrl}}/api/habits?page=2&per_page=10
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+### 13. List Active Habits Only
+GET {{baseUrl}}/api/habits?active=true
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+### 14. List Inactive Habits Only
+GET {{baseUrl}}/api/habits?inactive=true
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+### 15. Search Habits by Keyword
+# Searches in name and description
+GET {{baseUrl}}/api/habits?keyword=exercise
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+### 16. List Habits Sorted by Name (ascending)
+GET {{baseUrl}}/api/habits?sort_by=name&sort_direction=asc
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+### 17. List Habits Sorted by Created Date (newest first)
+GET {{baseUrl}}/api/habits?sort_by=created_at&sort_direction=desc
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+### 18. List Habits with Date Range Filter
+# Filter habits created between dates
+GET {{baseUrl}}/api/habits?start_date=2025-12-01&end_date=2025-12-31
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+### 19. Combined Filters (active + keyword + sorted + paginated)
+GET {{baseUrl}}/api/habits?active=true&keyword=morning&sort_by=name&sort_direction=asc&page=1&per_page=5
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+### 14. Get Single Habit by ID
+GET {{baseUrl}}/api/habits/{{createHabit.response.body.data.id}}
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+### 15. Update Habit - Change Name
+PUT {{baseUrl}}/api/habits/{{createHabit.response.body.data.id}}
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+{
+  "name": "Morning Workout - Updated"
+}
+
+### 16. Update Habit - Change Target
+PUT {{baseUrl}}/api/habits/{{createHabit.response.body.data.id}}
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+{
+  "target_count": 2
+}
+
+### 17. Update Habit - Full Update
+PUT {{baseUrl}}/api/habits/{{createHabit.response.body.data.id}}
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+{
+  "name": "Morning Workout Pro",
+  "description": "45 minutes of intense workout",
+  "frequency": "daily",
+  "target_count": 1
+}
+
+### 18. Deactivate Habit
+# Sets is_active to false
+POST {{baseUrl}}/api/habits/{{createHabit.response.body.data.id}}/deactivate
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+### 19. Activate Habit
+# Sets is_active to true
+POST {{baseUrl}}/api/habits/{{createHabit.response.body.data.id}}/activate
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+### 20. Delete Habit
+# Permanently removes the habit and its logs
+DELETE {{baseUrl}}/api/habits/{{createHabit.response.body.data.id}}
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+# ============================================================================
+# HABIT LOGS - TRACKING PROGRESS
+# ============================================================================
+
+### 21. Log Habit Completion (Today)
+# Records a habit completion
+# @name createLog
+POST {{baseUrl}}/api/habits/{{createHabit.response.body.data.id}}/logs
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+{
+  "log_date": "2026-01-01",
+  "count": 1,
+  "note": "Felt great today!"
+}
+
+### 22. Log Habit with Higher Count
+POST {{baseUrl}}/api/habits/{{createHabit.response.body.data.id}}/logs
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+{
+  "log_date": "2025-12-31",
+  "count": 2,
+  "note": "Did extra reps"
+}
+
+### 23. Log Habit for Past Date
+POST {{baseUrl}}/api/habits/{{createHabit.response.body.data.id}}/logs
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+{
+  "log_date": "2025-12-30",
+  "count": 1,
+  "note": "Catching up on missed day"
+}
+
+### 24. Log Without Note
+POST {{baseUrl}}/api/habits/{{createHabit.response.body.data.id}}/logs
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+{
+  "log_date": "2025-12-29",
+  "count": 1
+}
+
+### 25. Get All Logs for a Habit (with pagination)
+# Default: page=1, per_page=20
+# Response now includes { data: [...], meta: { pagination: {...} } }
+GET {{baseUrl}}/api/habits/{{createHabit.response.body.data.id}}/logs
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+### 26. Get Logs - Paginated
+GET {{baseUrl}}/api/habits/{{createHabit.response.body.data.id}}/logs?page=1&per_page=10
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+### 27. Get Logs with Date Range (Last Week)
+GET {{baseUrl}}/api/habits/{{createHabit.response.body.data.id}}/logs?start_date=2025-12-25&end_date=2026-01-01
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+### 28. Get Logs with Date Range (Last Month)
+GET {{baseUrl}}/api/habits/{{createHabit.response.body.data.id}}/logs?start_date=2025-12-01&end_date=2025-12-31
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+### 29. Get Logs Sorted by Count (descending)
+GET {{baseUrl}}/api/habits/{{createHabit.response.body.data.id}}/logs?sort_by=count&sort_direction=desc
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+### 30. Search Logs by Keyword in Notes
+GET {{baseUrl}}/api/habits/{{createHabit.response.body.data.id}}/logs?keyword=great
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+### 28. Update Habit Log - Change Count
+PUT {{baseUrl}}/api/habit-logs/{{createLog.response.body.data.id}}
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+{
+  "count": 3
+}
+
+### 29. Update Habit Log - Change Note
+PUT {{baseUrl}}/api/habit-logs/{{createLog.response.body.data.id}}
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+{
+  "note": "Updated note - actually did 3 sets!"
+}
+
+### 30. Update Habit Log - Full Update
+PUT {{baseUrl}}/api/habit-logs/{{createLog.response.body.data.id}}
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+{
+  "count": 4,
+  "note": "Exceeded my goal!"
+}
+
+### 31. Delete Habit Log
+DELETE {{baseUrl}}/api/habit-logs/{{createLog.response.body.data.id}}
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+# ============================================================================
+# ANALYTICS & STATISTICS
+# ============================================================================
+
+### 32. Get Habit Statistics
+# Returns total_logs, current_streak, longest_streak, completion_rate
+GET {{baseUrl}}/api/habits/{{createHabit.response.body.data.id}}/stats
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+### 33. Get User Dashboard
+# Returns summary: active_habits_count, total_logs_today, current_streak, etc.
+GET {{baseUrl}}/api/dashboard
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+### 34. Get Weekly Analytics
+# Returns daily completion data for the last 7 days
+GET {{baseUrl}}/api/analytics/weekly
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+# ============================================================================
+# API DOCUMENTATION
+# ============================================================================
+
+### 34. View API Docs Index
+GET {{baseUrl}}/docs/
+
+### 35. View Auth API Swagger UI
+GET {{baseUrl}}/docs/auth
+
+### 36. View Habits API Swagger UI
+GET {{baseUrl}}/docs/habits
+
+### 37. Get Auth OpenAPI Spec (JSON)
+GET {{baseUrl}}/docs/auth/openapi.json
+
+### 38. Get Habits OpenAPI Spec (JSON)
+GET {{baseUrl}}/docs/habits/openapi.json
+
+# ============================================================================
+# ERROR TESTING
+# ============================================================================
+
+### 39. Login with Wrong Password (401)
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "john@example.com",
+  "password": "wrongpassword"
+}
+
+### 40. Login with Non-existent User (401)
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "notexist@example.com",
+  "password": "password123"
+}
+
+### 41. Register with Invalid Email (400)
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "Test User",
+  "email": "invalid-email",
+  "password": "password123"
+}
+
+### 42. Register with Short Password (400)
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "Test User",
+  "email": "test@example.com",
+  "password": "123"
+}
+
+### 43. Create Habit without Auth (401)
+POST {{baseUrl}}/api/habits
+Content-Type: application/json
+
+{
+  "name": "Test Habit",
+  "frequency": "daily",
+  "target_count": 1
+}
+
+### 44. Create Habit with Invalid Frequency (400)
+POST {{baseUrl}}/api/habits
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+{
+  "name": "Invalid Habit",
+  "frequency": "hourly",
+  "target_count": 1
+}
+
+### 45. Create Habit with Zero Target (400)
+POST {{baseUrl}}/api/habits
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+{
+  "name": "Zero Target Habit",
+  "frequency": "daily",
+  "target_count": 0
+}
+
+### 46. Get Non-existent Habit (404)
+GET {{baseUrl}}/api/habits/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{login.response.body.data.access_token}}
+
+### 47. Access with Invalid Token (401)
+GET {{baseUrl}}/api/habits
+Authorization: Bearer invalid_token_here
+
+### 48. Access with Expired Token (401)
+GET {{baseUrl}}/api/habits
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDAwMDAwMDB9.expired
+
+# ============================================================================
+# BULK TESTING WORKFLOW
+# ============================================================================
+#
+# Quick workflow to test the full application:
+#
+# 1. Run "Health Check" to verify server is running
+# 2. Run "Register New User" to create an account
+# 3. Run "Login" and copy access_token to variable
+# 4. Run "Create Daily Habit" and copy habit_id to variable
+# 5. Run "Log Habit Completion" and copy log_id to variable
+# 6. Run "Get Habit Statistics" to see your progress
+# 7. Run "Get User Dashboard" for overall summary
+#
+# ============================================================================

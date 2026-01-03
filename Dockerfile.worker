@@ -1,0 +1,53 @@
+# --- TAHAP 1: BUILDER ---
+# Gunakan image alpine yang ringan untuk build
+FROM golang:1.25-alpine AS builder
+
+# Argumen untuk build-time variables
+ARG VERSION=dev
+ARG COMMIT=unknown
+ARG BUILD_TIME
+
+# Install dependensi sistem: sertifikat (untuk HTTPS) dan timezone
+RUN apk add --no-cache git ca-certificates tzdata
+WORKDIR /build
+
+# --- Caching Dependensi ---
+# 1. Salin file mod dan sum
+COPY go.mod go.sum ./
+# 2. Download dependensi (akan di-cache)
+RUN --mount=type=cache,target=/go/pkg/mod \
+    go mod download
+
+# 3. Salin sisa kode sumber
+COPY . .
+
+# 4. Build static binary
+# - CGO_ENABLED=0 untuk static build
+# - ldflags "-w -s" untuk mengurangi ukuran binary
+# - ldflags "-X" untuk menyuntikkan build-time variables
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+    -tags=viper_bind_struct \
+    -ldflags="-w -s \
+    -X main.version=${VERSION} \
+    -X main.commit=${COMMIT} \
+    -X main.buildTime=${BUILD_TIME}" \
+    -o worker ./cmd/worker
+
+# --- TAHAP 2: FINAL (PRODUKSI) ---
+# Gunakan image distroless non-root: super minimal dan aman
+FROM gcr.io/distroless/static-debian12:nonroot
+
+# Salin data timezone dari builder
+COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
+
+# Atur working directory
+WORKDIR /app
+
+# Salin binary ke /app (Nama binary 'worker' sekarang)
+COPY --from=builder /build/worker /app/worker
+
+# (Optional) Jika worker perlu migrations, salin juga.
+# Biasanya worker tidak menjalankan migration, tapi jika perlu:
+# COPY --from=builder /build/migrations /app/migrations
+
+ENTRYPOINT ["/app/worker"]

@@ -1,0 +1,14 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ethos-app-pdb
+  namespace: ethos-go
+  labels:
+    app.kubernetes.io/name: ethos
+    app.kubernetes.io/component: app
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ethos
+      app.kubernetes.io/component: app

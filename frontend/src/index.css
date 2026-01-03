@@ -1,0 +1,303 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===== Banking Design System ===== */
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply text-base-content bg-base-200;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
+  /* Improved focus states */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-primary/30 ring-offset-2;
+  }
+
+  /* ===== Theme Transition ===== */
+  /* Smooth transition for theme switching */
+  html,
+  html *,
+  html *::before,
+  html *::after {
+    transition-property: background-color, border-color, color, fill, stroke, box-shadow;
+    transition-duration: 0.2s;
+    transition-timing-function: ease-out;
+  }
+
+  /* Disable transition on initial page load to prevent flash */
+  html.no-transition,
+  html.no-transition *,
+  html.no-transition *::before,
+  html.no-transition *::after {
+    transition: none !important;
+  }
+
+  /* Ensure smooth scrollbar color transition */
+  :root {
+    color-scheme: light;
+  }
+
+  [data-theme='banking-dark'] {
+    color-scheme: dark;
+  }
+}
+
+@layer components {
+  /* ===== Card Styles ===== */
+  .card-banking {
+    @apply bg-base-100 border border-base-300 rounded-lg shadow-sm;
+    @apply transition-all duration-200;
+  }
+
+  .card-banking:hover {
+    @apply shadow-md border-base-300;
+  }
+
+  .card-banking-elevated {
+    @apply card-banking shadow-md;
+  }
+
+  /* ===== Stats Card ===== */
+  .stats-banking {
+    @apply bg-base-100 border border-base-300 rounded-lg overflow-hidden;
+  }
+
+  /* ===== Header Styles ===== */
+  .page-header {
+    @apply pb-6 border-b border-base-300 mb-8;
+  }
+
+  .page-title {
+    @apply text-2xl font-semibold text-base-content tracking-tight;
+  }
+
+  .page-subtitle {
+    @apply text-sm text-base-content/60 mt-1;
+  }
+
+  /* ===== Navigation ===== */
+  .nav-item {
+    @apply flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium;
+    @apply text-base-content/70 transition-all duration-150;
+  }
+
+  .nav-item:hover {
+    @apply bg-base-200 text-base-content;
+  }
+
+  .nav-item.active {
+    @apply bg-primary text-primary-content;
+  }
+
+  /* ===== Form Elements ===== */
+  .input-banking {
+    @apply input input-bordered bg-base-100 border-base-300;
+    @apply focus:border-primary focus:ring-1 focus:ring-primary/20;
+  }
+
+  .select-banking {
+    @apply select select-bordered bg-base-100 border-base-300;
+    @apply focus:border-primary focus:ring-1 focus:ring-primary/20;
+  }
+
+  /* ===== Button Styles ===== */
+  .btn-banking {
+    @apply font-medium tracking-wide;
+    @apply shadow-none hover:shadow-sm;
+    @apply transition-all duration-150;
+  }
+
+  .btn-banking-primary {
+    @apply btn-banking bg-primary text-primary-content;
+    @apply hover:bg-primary/90;
+    @apply border-primary;
+  }
+
+  .btn-banking-secondary {
+    @apply btn-banking bg-base-100 text-base-content;
+    @apply hover:bg-base-200;
+    @apply border border-base-300;
+  }
+
+  .btn-banking-ghost {
+    @apply btn-banking bg-transparent text-base-content;
+    @apply hover:bg-base-200;
+    @apply border-none;
+  }
+
+  /* ===== Badge Styles ===== */
+  .badge-banking {
+    @apply font-medium text-xs px-2.5 py-0.5 rounded;
+  }
+
+  .badge-banking-success {
+    @apply badge-banking bg-success/10 text-success;
+  }
+
+  .badge-banking-warning {
+    @apply badge-banking bg-warning/10 text-warning;
+  }
+
+  .badge-banking-error {
+    @apply badge-banking bg-error/10 text-error;
+  }
+
+  .badge-banking-info {
+    @apply badge-banking bg-info/10 text-info;
+  }
+
+  .badge-banking-neutral {
+    @apply badge-banking bg-base-200 text-base-content/70;
+  }
+
+  /* ===== Table Styles ===== */
+  .table-banking {
+    @apply w-full;
+  }
+
+  .table-banking th {
+    @apply text-left text-xs font-semibold text-base-content/60 uppercase tracking-wider;
+    @apply py-3 px-4 bg-base-200 border-b border-base-300;
+  }
+
+  .table-banking td {
+    @apply py-4 px-4 border-b border-base-200 text-sm;
+  }
+
+  .table-banking tr:hover td {
+    @apply bg-base-50;
+  }
+
+  /* ===== Sidebar Styles ===== */
+  .sidebar-banking {
+    @apply bg-base-100 border-r border-base-300;
+  }
+
+  .sidebar-logo {
+    @apply flex items-center gap-3 px-4 py-6;
+  }
+
+  .sidebar-logo-icon {
+    @apply w-10 h-10 rounded-lg bg-primary flex items-center justify-center;
+  }
+
+  /* ===== Alert/Toast Styles ===== */
+  .alert-banking {
+    @apply rounded-lg border p-4;
+  }
+
+  .alert-banking-success {
+    @apply alert-banking bg-success/5 border-success/20 text-success;
+  }
+
+  .alert-banking-error {
+    @apply alert-banking bg-error/5 border-error/20 text-error;
+  }
+
+  .alert-banking-warning {
+    @apply alert-banking bg-warning/5 border-warning/20 text-warning;
+  }
+
+  .alert-banking-info {
+    @apply alert-banking bg-info/5 border-info/20 text-info;
+  }
+
+  /* ===== Modal Styles ===== */
+  .modal-banking {
+    @apply bg-base-100 rounded-lg shadow-xl border border-base-300;
+  }
+
+  .modal-banking-header {
+    @apply px-6 py-4 border-b border-base-200;
+  }
+
+  .modal-banking-body {
+    @apply px-6 py-5;
+  }
+
+  .modal-banking-footer {
+    @apply px-6 py-4 bg-base-50 border-t border-base-200 rounded-b-lg;
+  }
+
+  /* ===== Progress Bar ===== */
+  .progress-banking {
+    @apply h-2 bg-base-200 rounded-full overflow-hidden;
+  }
+
+  .progress-banking-fill {
+    @apply h-full bg-primary rounded-full transition-all duration-300;
+  }
+
+  /* ===== Divider ===== */
+  .divider-banking {
+    @apply border-t border-base-200 my-4;
+  }
+}
+
+@layer utilities {
+  /* ===== Animation Utilities ===== */
+  .fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .slide-up {
+    animation: slideUp 0.4s ease-out;
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* ===== Text Utilities ===== */
+  .text-muted {
+    @apply text-base-content/60;
+  }
+
+  .text-heading {
+    @apply font-semibold text-base-content tracking-tight;
+  }
+
+  /* ===== Scrollbar Styling ===== */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: theme('colors.base-300') transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: theme('colors.base-300');
+    border-radius: 3px;
+  }
+}

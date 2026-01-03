@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ethos-go-config
+  namespace: ethos-go
+data:
+  APP_NAME: "ethos-go"
+  APP_ENV: "dev"
+  VERSION: "dev"
+  SERVER_PORT: "8080"
+
+  # Database Config
+  DB_HOST: "ethos-go-postgres"
+  DB_PORT: "5432"
+  DB_USER: "ethosgo"
+  DB_DB: "ethosgo"
+  DB_SSL_MODE: "disable"
+
+  # Redis Config
+  REDIS_HOST: "ethos-go-redis"
+  REDIS_PORT: "6379"
+  REDIS_DB: "0"
+
+  # Auth Config
+  AUTH_ACCESS_TOKEN_EXPIRY: "15m"
+  AUTH_REFRESH_TOKEN_EXPIRY: "24h"
+
+  # SMTP Config
+  SMTP_HOST: "smtp.gmail.com"
+  SMTP_PORT: "587"
+  SMTP_USER: "sammidev4@gmail.com"
+
+  # Web Push Config
+  VAPID_PUBLIC_KEY: "BOZJvE5-wi5VQsDjANHuH73plcQaK6pnxJmJOJNG0M_ZUfHMnWku086gQarw7UxcqbYtvzwSH6n2lL9fOPTl94A"
+  VAPID_SUBJECT: "mailto:admin@example.com"
+
+  # Observability (Disabled for basic deployment)
+  OTEL_ENABLE_TRACING: "false"
+  OTEL_ENABLE_METRICS: "false"
+  LOGGER_LEVEL: "debug"
+  LOGGER_OUTPUT: "stdout"

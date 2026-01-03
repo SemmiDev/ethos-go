@@ -1,0 +1,193 @@
+services:
+  # ============================================================================
+  # Application Services
+  # ============================================================================
+  app:
+    container_name: ethosgo-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VERSION: ${VERSION:-dev}
+        COMMIT: ${COMMIT:-unknown}
+        BUILD_TIME: ${BUILD_TIME:-unknown}
+    ports:
+      - '8080:8080'
+    env_file:
+      - .env
+    networks:
+      - ethosgo-network
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      tempo:
+        condition: service_started
+
+  worker:
+    container_name: ethosgo-worker
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    env_file:
+      - .env
+    networks:
+      - ethosgo-network
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ============================================================================
+  # Database Services
+  # ============================================================================
+  postgresql:
+    container_name: ethosgo-postgresql
+    image: postgres:17-alpine
+    env_file:
+      - .env
+    ports:
+      - '5432:5432'
+    volumes:
+      - ethosgo-postgresql-data-volume:/var/lib/postgresql/data
+    networks:
+      - ethosgo-network
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-ethosgo}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  redis:
+    container_name: ethosgo-redis
+    image: redis:8.0-alpine
+    ports:
+      - '6379:6379'
+    volumes:
+      - ethosgo-redis-data-volume:/data
+    networks:
+      - ethosgo-network
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'redis-cli', '--raw', 'incr', 'ping']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    depends_on:
+      - postgresql
+
+  # ============================================================================
+  # LGTM Stack: Loki (Logs), Grafana (Visualization), Tempo (Traces), Mimir (Metrics)
+  # ============================================================================
+
+  # Loki - Log aggregation
+  loki:
+    container_name: ethosgo-loki
+    image: grafana/loki:3.0.0
+    ports:
+      - '3100:3100'
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./observability/loki-config.yaml:/etc/loki/local-config.yaml:ro
+      - loki-data:/loki
+    networks:
+      - ethosgo-network
+    restart: unless-stopped
+
+  # Tempo - Distributed tracing backend
+  tempo:
+    container_name: ethosgo-tempo
+    image: grafana/tempo:2.4.0
+    ports:
+      - '3200:3200' # Tempo HTTP
+      - '4317:4317' # OTLP gRPC
+      - '4318:4318' # OTLP HTTP
+      - '9411:9411' # Zipkin
+    command: ['-config.file=/etc/tempo/tempo.yaml']
+    volumes:
+      - ./observability/tempo-config.yaml:/etc/tempo/tempo.yaml:ro
+      - tempo-data:/tmp/tempo
+    networks:
+      - ethosgo-network
+    restart: unless-stopped
+
+  # Prometheus - Scrapes metrics from app and other services
+  prometheus:
+    container_name: ethosgo-prometheus
+    image: prom/prometheus:v2.50.0
+    ports:
+      - '9090:9090'
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-remote-write-receiver'
+    volumes:
+      - ./observability/prometheus.yaml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    networks:
+      - ethosgo-network
+    restart: unless-stopped
+
+  # Grafana - Unified observability dashboard
+  grafana:
+    container_name: ethosgo-grafana
+    image: grafana/grafana:10.4.0
+    ports:
+      - '3000:3000'
+    env_file:
+      - .env
+    volumes:
+      - ./observability/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml:ro
+      - ./observability/grafana-dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml:ro
+      - ./observability/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    networks:
+      - ethosgo-network
+    restart: unless-stopped
+    depends_on:
+      - loki
+      - tempo
+      - prometheus
+
+  # Jaeger - Alternative tracing UI (optional, for comparison)
+  jaeger:
+    container_name: ethosgo-jaeger
+    image: jaegertracing/all-in-one:1.54
+    ports:
+      - '16686:16686' # Jaeger UI
+      - '14268:14268' # Jaeger HTTP collector
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+      - SPAN_STORAGE_TYPE=memory
+    networks:
+      - ethosgo-network
+    restart: unless-stopped
+
+networks:
+  ethosgo-network:
+    driver: bridge
+
+volumes:
+  ethosgo-postgresql-data-volume:
+    driver: local
+  ethosgo-redis-data-volume:
+    driver: local
+  loki-data:
+    driver: local
+  tempo-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local

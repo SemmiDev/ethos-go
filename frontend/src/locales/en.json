@@ -1,0 +1,521 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "filter": "Filter",
+    "all": "All",
+    "active": "Active",
+    "inactive": "Inactive",
+    "yes": "Yes",
+    "no": "No",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "submit": "Submit",
+    "close": "Close",
+    "view": "View",
+    "viewAll": "View All",
+    "noData": "No data available",
+    "required": "Required",
+    "optional": "Optional"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "habits": "Habits",
+    "analytics": "Analytics",
+    "notifications": "Notifications",
+    "settings": "Settings",
+    "logout": "Logout",
+    "login": "Login",
+    "register": "Register"
+  },
+  "landing": {
+    "hero": {
+      "title": "Build Better Habits,",
+      "titleHighlight": "Transform Your Life",
+      "subtitle": "Track your daily habits, build lasting routines, and achieve your goals with our beautiful and intuitive habit tracking platform.",
+      "cta": "Get Started Free",
+      "ctaSecondary": "Learn More"
+    },
+    "features": {
+      "title": "Everything you need to",
+      "titleHighlight": "build better habits",
+      "subtitle": "Our comprehensive tools help you track, analyze, and improve your daily routines.",
+      "habitTracking": {
+        "title": "Smart Habit Tracking",
+        "description": "Track your daily, weekly, and monthly habits with ease. Set reminders and never miss a day."
+      },
+      "analytics": {
+        "title": "Detailed Analytics",
+        "description": "Visualize your progress with beautiful charts. Understand your patterns and improve."
+      },
+      "streaks": {
+        "title": "Streaks & Milestones",
+        "description": "Stay motivated with streak tracking. Celebrate your milestones and achievements."
+      },
+      "reminders": {
+        "title": "Smart Reminders",
+        "description": "Get timely notifications to complete your habits. Never forget what matters."
+      },
+      "sync": {
+        "title": "Cross-Device Sync",
+        "description": "Access your habits from anywhere. Your data syncs seamlessly across all devices."
+      },
+      "secure": {
+        "title": "Privacy First",
+        "description": "Your data is encrypted and secure. We never share your personal information."
+      }
+    },
+    "stats": {
+      "users": "Active Users",
+      "habitsTracked": "Habits Tracked",
+      "completionRate": "Avg. Completion Rate",
+      "countries": "Countries"
+    },
+    "cta": {
+      "title": "Ready to transform your life?",
+      "subtitle": "Join thousands of people who are building better habits every day.",
+      "button": "Start Your Journey"
+    },
+    "footer": {
+      "tagline": "Build better habits, one day at a time.",
+      "product": "Product",
+      "features": "Features",
+      "pricing": "Pricing",
+      "testimonials": "Testimonials",
+      "company": "Company",
+      "about": "About",
+      "blog": "Blog",
+      "careers": "Careers",
+      "support": "Support",
+      "helpCenter": "Help Center",
+      "contact": "Contact",
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service",
+      "copyright": "All rights reserved."
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome back",
+      "subtitle": "Sign in to your account to continue",
+      "email": "Email Address",
+      "password": "Password",
+      "forgotPassword": "Forgot password?",
+      "submitButton": "Sign In",
+      "noAccount": "Don't have an account?",
+      "signUp": "Sign up"
+    },
+    "register": {
+      "title": "Create account",
+      "subtitle": "Start your journey to better habits",
+      "name": "Full Name",
+      "email": "Email Address",
+      "password": "Password",
+      "confirmPassword": "Confirm Password",
+      "submitButton": "Create Account",
+      "hasAccount": "Already have an account?",
+      "signIn": "Sign in",
+      "passwordHint": "Minimum 8 characters"
+    },
+    "verifyEmail": {
+      "title": "Verify Your Email",
+      "subtitle": "We've sent a verification code to your email",
+      "code": "Verification Code",
+      "submitButton": "Verify Email",
+      "resend": "Didn't receive the code?",
+      "resendButton": "Resend Code"
+    },
+    "forgotPassword": {
+      "title": "Forgot Password",
+      "subtitle": "Enter your email and we'll send you a reset code",
+      "email": "Email Address",
+      "submitButton": "Send Reset Code",
+      "backToLogin": "Back to login"
+    },
+    "resetPassword": {
+      "title": "Reset Password",
+      "subtitle": "Enter your new password",
+      "code": "Reset Code",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm New Password",
+      "submitButton": "Reset Password"
+    },
+    "google": {
+      "signIn": "Sign in with Google",
+      "continueWith": "Or continue with"
+    },
+    "validation": {
+      "emailRequired": "Email is required",
+      "emailInvalid": "Invalid email format",
+      "passwordRequired": "Password is required",
+      "passwordMin": "Password must be at least 8 characters",
+      "passwordMismatch": "Passwords do not match",
+      "nameRequired": "Name is required",
+      "nameMin": "Name must be at least 2 characters"
+    },
+    "features": {
+      "unlimited": "Track unlimited habits",
+      "analytics": "Detailed analytics & insights",
+      "secure": "Secure & private by design",
+      "free": "Free to get started",
+      "noCreditCard": "No credit card required",
+      "cancelAnytime": "Cancel anytime"
+    },
+    "rememberMe": "Remember me",
+    "terms": "I agree to the",
+    "termsOfService": "Terms of Service",
+    "and": "and",
+    "privacyPolicy": "Privacy Policy",
+    "welcomeBack": "Welcome back!",
+    "loginSuccess": "You have logged in successfully.",
+    "loginFailed": "Login Failed",
+    "accountCreated": "Account Created!",
+    "verifyEmailMessage": "Please check your email to verify your account.",
+    "registrationFailed": "Registration Failed",
+    "emailNotVerified": "Email Not Verified",
+    "verifyEmailPrompt": "Please verify your email address to continue. We will redirect you to the verification page."
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Track your progress and stay motivated",
+    "welcome": "Welcome back",
+    "todayProgress": "Today's Progress",
+    "weeklyProgress": "Weekly Progress",
+    "currentStreak": "Current Streak",
+    "longestStreak": "Longest Streak",
+    "totalLogs": "Total Logs",
+    "activeHabits": "Active Habits",
+    "completedToday": "Completed Today",
+    "quickLog": "Quick Log",
+    "recentActivity": "Recent Activity",
+    "noHabits": "No habits yet. Create your first habit to get started!",
+    "createFirst": "Create Your First Habit",
+    "days": "days",
+    "day": "day",
+    "todaysHabits": "Today's Habits",
+    "activeToTrack": "active habits to track",
+    "noHabitsYet": "No habits yet",
+    "createToStart": "Create your first habit to start tracking your progress.",
+    "moreHabits": "more habits",
+    "streakCard": {
+      "title": "Current Streak",
+      "subtitle": "Keep the fire burning!",
+      "nextMilestone": "Next milestone"
+    },
+    "tips": {
+      "title": "Quick Tips",
+      "tip1": "Start with just one habit to build momentum",
+      "tip2": "Log your progress at the same time each day",
+      "tip3": "Don't break the chain - consistency is key!"
+    }
+  },
+  "habits": {
+    "title": "My Habits",
+    "subtitle": "Manage and track your daily habits",
+    "createHabit": "Create Habit",
+    "noHabits": "No habits found",
+    "noHabitsDesc": "Create your first habit to start tracking",
+    "searchPlaceholder": "Search habits...",
+    "filters": {
+      "all": "All",
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "form": {
+      "name": "Habit Name",
+      "namePlaceholder": "e.g., Exercise, Read, Meditate",
+      "description": "Description",
+      "descriptionPlaceholder": "What's this habit about?",
+      "frequency": "Frequency",
+      "targetCount": "Target Count",
+      "targetCountHelp": "How many times per period?",
+      "reminderTime": "Daily Reminder",
+      "reminderTimeHelp": "We'll send you a notification at this time"
+    },
+    "frequency": {
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "monthly": "Monthly"
+    },
+    "actions": {
+      "edit": "Edit Habit",
+      "delete": "Delete Habit",
+      "activate": "Activate",
+      "deactivate": "Deactivate",
+      "logProgress": "Log Progress"
+    },
+    "modal": {
+      "createTitle": "Create New Habit",
+      "editTitle": "Edit Habit",
+      "deleteTitle": "Delete Habit",
+      "deleteConfirm": "Are you sure you want to delete this habit? This action cannot be undone.",
+      "logTitle": "Log Progress"
+    },
+    "log": {
+      "count": "Count",
+      "countHelp": "How many times did you complete this?",
+      "date": "Date",
+      "notes": "Notes",
+      "notesPlaceholder": "Any notes about this session?"
+    },
+    "stats": {
+      "totalLogs": "Total Logs",
+      "currentStreak": "Current Streak",
+      "longestStreak": "Longest Streak",
+      "completionRate": "Completion Rate"
+    },
+    "detail": {
+      "title": "Habit Details",
+      "logs": "Activity Logs",
+      "noLogs": "No logs yet. Start tracking your progress!",
+      "editLog": "Edit Log",
+      "deleteLog": "Delete Log"
+    }
+  },
+  "analytics": {
+    "title": "Analytics",
+    "subtitle": "Track your progress and insights",
+    "weeklyProgress": "Weekly Progress",
+    "weeklyProgressDesc": "Completion rate over the last 7 days",
+    "habitDistribution": "By Frequency",
+    "achievements": "Achievements",
+    "achievementsDesc": "Your milestones and rewards",
+    "completionTrend": "Completion Trend",
+    "bestDay": "Best Day",
+    "averageCompletion": "Average completion",
+    "noData": "Not enough data to display analytics. Keep tracking your habits!",
+    "stats": {
+      "totalHabits": "Total Habits",
+      "createdHabits": "created habits",
+      "weeklyCompletion": "Weekly Completion",
+      "thisWeek": "this week",
+      "bestStreak": "Best Streak",
+      "daysRecord": "days record",
+      "totalLogs": "Total Logs",
+      "allTime": "all time"
+    },
+    "frequency": {
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "monthly": "Monthly"
+    },
+    "achievementsList": {
+      "firstHabit": {
+        "title": "First Habit",
+        "desc": "Created first habit"
+      },
+      "sevenDayStreak": {
+        "title": "7-Day Streak",
+        "desc": "Maintained 7 day streak"
+      },
+      "thirtyDayMaster": {
+        "title": "30-Day Master",
+        "desc": "Reached 30 day streak"
+      },
+      "hundredLogs": {
+        "title": "100 Logs",
+        "desc": "Logged 100 times"
+      },
+      "unlocked": "Unlocked"
+    }
+  },
+  "help": {
+    "title": "Help Center",
+    "subtitle": "Get answers and support",
+    "searchPlaceholder": "Search for help...",
+    "quickLinks": {
+      "title": "Quick Links",
+      "dashboard": "Go to Dashboard",
+      "createHabit": "Create a Habit",
+      "viewAnalytics": "View Analytics",
+      "manageSettings": "Manage Settings"
+    },
+    "contact": {
+      "title": "Need More Help?",
+      "subtitle": "We're here to support you",
+      "email": "Email Support",
+      "emailDesc": "Get a response within 24 hours",
+      "docs": "Documentation",
+      "docsDesc": "Browse our detailed guides"
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "gettingStarted": {
+        "title": "Getting Started",
+        "q1": "How do I create my first habit?",
+        "a1": "Click the 'Create Habit' button on the Habits page. Fill in the name, description, frequency, and target count. You can also set a daily reminder time to receive notifications.",
+        "q2": "Can I set habits for specific days of the week?",
+        "a2": "Yes! When creating a habit, you can choose 'Weekly' frequency and select specific days of the week when you want to track that habit. This is perfect for habits like 'Gym on Monday, Wednesday, Friday'."
+      },
+      "tracking": {
+        "title": "Tracking & Progress",
+        "q1": "How do I log a habit completion?",
+        "a1": "Click on any habit card to view details, then click 'Log Progress'. You can log multiple completions if your target is more than 1. You can also quick-log from the dashboard.",
+        "q2": "What do the different colors mean?",
+        "a2": "Green indicates completed habits, yellow shows partially completed (for habits with targets), and gray represents habits not yet tracked for the day. Red indicates missed habits from previous days."
+      },
+      "analytics": {
+        "title": "Analytics & Insights",
+        "q1": "How is my completion rate calculated?",
+        "a1": "Your completion rate is the percentage of habit targets you've met over a given period. For daily habits, it's calculated daily. For weekly habits, it considers the entire week.",
+        "q2": "Can I export my habit data?",
+        "a2": "Currently, data export is not available but is on our roadmap. Stay tuned for updates! In the meantime, you can view comprehensive statistics on the Analytics page."
+      },
+      "account": {
+        "title": "Account & Security",
+        "q1": "How do I change my password?",
+        "a1": "Go to Settings > Security and click 'Change Password'. You'll need to enter your current password and then your new password twice to confirm.",
+        "q2": "How do I manage my active sessions?",
+        "a2": "In Settings > Active Sessions, you can view all devices where you're logged in. You can revoke access from any device or log out from all devices at once for security."
+      },
+      "notifications": {
+        "title": "Notifications",
+        "q1": "How do I set up reminders?",
+        "a1": "When creating or editing a habit, set the 'Daily Reminder' time. You'll receive a notification at that time reminding you to complete your habit.",
+        "q2": "Can I customize notification times?",
+        "a2": "Yes, you can set custom reminder times for each habit. Go to the habit detail page and configure the notification schedule that works best for you."
+      }
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "subtitle": "Stay updated on your progress",
+    "markAllRead": "Mark all as read",
+    "noNotifications": "No notifications",
+    "noNotificationsDesc": "You're all caught up!",
+    "types": {
+      "habitReminder": "Habit Reminder",
+      "streakMilestone": "Streak Milestone",
+      "achievement": "Achievement",
+      "welcome": "Welcome"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your account preferences",
+    "profile": {
+      "title": "Profile Information",
+      "subtitle": "Update your personal details",
+      "name": "Full Name",
+      "email": "Email Address",
+      "timezone": "Timezone",
+      "timezoneHelp": "Used for habit reminders and notifications",
+      "saveChanges": "Save Changes"
+    },
+    "appearance": {
+      "title": "Appearance",
+      "subtitle": "Customize how the app looks",
+      "theme": "Theme",
+      "systemPreference": "Use System Preference",
+      "systemPreferenceHelp": "When enabled, the app will automatically switch between light and dark mode based on your system settings.",
+      "light": "Light Mode",
+      "dark": "Dark Mode",
+      "currentTheme": "Current Theme",
+      "manuallySelected": "Manually selected",
+      "followingSystem": "Following system preference"
+    },
+    "language": {
+      "title": "Language",
+      "subtitle": "Choose your preferred language",
+      "current": "Current Language"
+    },
+    "sessions": {
+      "title": "Active Sessions",
+      "subtitle": "Manage your active sessions",
+      "current": "Current",
+      "active": "Active",
+      "revoke": "Revoke",
+      "logoutAll": "Log Out All Devices",
+      "noSessions": "No active sessions found."
+    },
+    "security": {
+      "title": "Security",
+      "subtitle": "Manage your password and security settings",
+      "changePassword": "Change Password",
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm New Password",
+      "passwordHint": "Enter new password (min. 8 characters)"
+    },
+    "danger": {
+      "title": "Danger Zone",
+      "subtitle": "Permanently delete your account and all data",
+      "deleteAccount": "Delete Account",
+      "deleteConfirm": "Are you sure you want to delete your account? All your data will be permanently removed."
+    },
+    "installApp": {
+      "title": "Install App",
+      "subtitle": "Install Ethos as an app on your device",
+      "pwaTitle": "Progressive Web App",
+      "pwaDesc": "Install Ethos as an app for quick access, offline support, and a native app experience.",
+      "howToInstall": "How to install:",
+      "chrome": "Click the install icon in the address bar, or Menu → \"Install Ethos\"",
+      "safariMac": "File → \"Add to Dock\" or Share → \"Add to Dock\"",
+      "safariIOS": "Tap Share → \"Add to Home Screen\"",
+      "firefox": "Menu → \"Install\" (if available)",
+      "readyToInstall": "Ready to Install",
+      "devNote": "Note: In development mode, the install prompt may not appear automatically. Build the production version to test the full PWA experience."
+    }
+  },
+  "toast": {
+    "habitCreated": "Your new habit has been created successfully.",
+    "habitUpdated": "Your habit has been updated successfully.",
+    "habitDeleted": "Habit deleted successfully.",
+    "habitActivated": "Habit activated successfully.",
+    "habitDeactivated": "Habit deactivated successfully.",
+    "progressLogged": "Your progress has been recorded.",
+    "logUpdated": "Your progress log has been updated.",
+    "logDeleted": "Log deleted successfully.",
+    "profileUpdated": "Your profile has been saved.",
+    "passwordChanged": "Your password has been updated.",
+    "sessionRevoked": "Session revoked successfully.",
+    "loggedOutAll": "Logged out from all devices.",
+    "emailVerified": "Email verified successfully.",
+    "verificationSent": "Verification email sent.",
+    "resetCodeSent": "Password reset code sent.",
+    "passwordReset": "Password reset successfully."
+  },
+  "commands": {
+    "placeholder": "Type a command or search...",
+    "noResults": "No results found",
+    "tryAgain": "Try a different search term",
+    "tips": {
+      "navigate": "Navigate",
+      "select": "Select",
+      "close": "Close"
+    },
+    "groups": {
+      "quick": "Quick Actions",
+      "navigation": "Navigation",
+      "habits": "Habits",
+      "actions": "Actions"
+    },
+    "actions": {
+      "createHabit": "Create New Habit",
+      "createHabitDesc": "Add a new habit to track",
+      "toggleTheme": "Switch to {{mode}} Mode",
+      "toggleThemeDesc": "Toggle app theme",
+      "switchLanguage": "Switch Language",
+      "switchLanguageDesc": "Change application language to {{lang}}",
+      "goDashboard": "Go to Dashboard",
+      "goHabits": "Go to Habits",
+      "goAnalytics": "Go to Analytics",
+      "goSettings": "Go to Settings",
+      "goNotifications": "Go to Notifications",
+      "goHelp": "Go to Help & Support",
+      "editProfile": "Edit Profile",
+      "editProfileDesc": "Update your profile information",
+      "logout": "Log Out",
+      "logoutDesc": "Sign out of your account"
+    }
+  }
+}
