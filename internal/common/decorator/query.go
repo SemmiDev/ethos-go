@@ -6,13 +6,14 @@ import (
 	"github.com/semmidev/ethos-go/internal/common/logger"
 )
 
-func ApplyQueryDecorators[H any, R any](handler QueryHandler[H, R], log logger.Logger, metricsClient MetricsClient) QueryHandler[H, R] {
+// ApplyQueryDecorators wraps a query handler with wide event enrichment and metrics.
+// The logging decorator now enriches the wide event instead of logging separately.
+func ApplyQueryDecorators[H any, R any](handler QueryHandler[H, R], _ logger.Logger, metricsClient MetricsClient) QueryHandler[H, R] {
 	return queryLoggingDecorator[H, R]{
 		base: queryMetricsDecorator[H, R]{
 			base:   handler,
 			client: metricsClient,
 		},
-		logger: log,
 	}
 }
 

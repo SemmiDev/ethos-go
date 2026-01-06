@@ -2,7 +2,8 @@ package main
 
 import (
 	"context"
-	"log"
+	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"os/signal"
@@ -10,7 +11,6 @@ import (
 	"time"
 
 	"github.com/hibiken/asynq"
-	"github.com/jmoiron/sqlx"
 	"github.com/semmidev/ethos-go/config"
 	authtask "github.com/semmidev/ethos-go/internal/auth/adapters/task"
 	authports "github.com/semmidev/ethos-go/internal/auth/ports"
@@ -33,87 +33,37 @@ var (
 	buildTime = "unknown"
 )
 
-// Application holds all initialized components
-type Application struct {
-	DB           *sqlx.DB
-	AsynqClient  *asynq.Client
-	OTELProvider *observability.Provider
-
-	// Module servers
-	AuthServer          *authports.AuthOpenAPIServer
-	HabitsServer        *habitports.OpenAPIServer
-	NotificationsServer *notificationports.NotificationOpenAPIServer
-
-	// Auth middleware
-	AuthMiddleware func(http.Handler) http.Handler
-}
-
+// main is deliberately kept simple: it only calls run().
 func main() {
 	ctx := context.Background()
+	if err := run(ctx, os.Stdout, os.Stderr); err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		os.Exit(1)
+	}
+}
+
+// run is the real entry point for the application.
+func run(ctx context.Context, _, _ io.Writer) error {
+	// Set up signal handling - context is cancelled on SIGINT or SIGTERM
+	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
+	defer cancel()
 
 	// Load configuration
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatalf("failed to load configuration: %v", err)
+		return fmt.Errorf("failed to load configuration: %w", err)
 	}
 
 	// Setup logger
 	appLogger, err := logger.New(cfg)
 	if err != nil {
-		log.Fatalf("failed to initialize logger: %v", err)
+		return fmt.Errorf("failed to initialize logger: %w", err)
 	}
 
 	appLogger.Info(ctx, "starting app",
 		logger.Field{Key: "env", Value: cfg.AppEnv},
 		logger.Field{Key: "version", Value: version},
 	)
-
-	// Bootstrap application
-	app, err := bootstrap(ctx, cfg, appLogger)
-	if err != nil {
-		log.Fatalf("failed to bootstrap application: %v", err)
-	}
-	defer app.close(ctx)
-
-	// Setup router
-	router := NewRouter(RouterConfig{
-		Config:              cfg,
-		AuthServer:          app.AuthServer,
-		HabitsServer:        app.HabitsServer,
-		NotificationsServer: app.NotificationsServer,
-		AuthMiddleware:      app.AuthMiddleware,
-		OTELProvider:        app.OTELProvider,
-	})
-
-	// Create and start server
-	server := NewServer(cfg, router, appLogger)
-
-	go func() {
-		if err := server.Start(ctx); err != nil && err != http.ErrServerClosed {
-			appLogger.Error(ctx, err, "server failed")
-			log.Fatalf("server startup failed: %v", err)
-		}
-	}()
-
-	// Wait for interrupt signal to gracefully shutdown
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-
-	// Graceful shutdown with timeout
-	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer shutdownCancel()
-
-	if err := server.Shutdown(shutdownCtx); err != nil {
-		appLogger.Error(shutdownCtx, err, "server forced to shutdown")
-	}
-
-	appLogger.Info(ctx, "server stopped")
-}
-
-// bootstrap initializes all application dependencies and modules
-func bootstrap(ctx context.Context, cfg *config.Config, appLogger logger.Logger) (*Application, error) {
-	app := &Application{}
 
 	// Initialize OpenTelemetry
 	otelProvider, err := observability.New(ctx, observability.Config{
@@ -126,10 +76,10 @@ func bootstrap(ctx context.Context, cfg *config.Config, appLogger logger.Logger)
 		SampleRate:     cfg.OTLPSampleRate,
 	})
 	if err != nil {
-		appLogger.Error(ctx, err, "failed to initialize OpenTelemetry")
-		return nil, err
+		return fmt.Errorf("failed to initialize OpenTelemetry: %w", err)
 	}
-	app.OTELProvider = otelProvider
+	defer otelProvider.Shutdown(ctx)
+
 	appLogger.Info(ctx, "OpenTelemetry initialized",
 		logger.Field{Key: "tracing", Value: cfg.OTLPEnableTracing},
 		logger.Field{Key: "metrics", Value: cfg.OTLPEnableMetrics},
@@ -137,17 +87,15 @@ func bootstrap(ctx context.Context, cfg *config.Config, appLogger logger.Logger)
 
 	// Initialize OpenTelemetry Metrics
 	if _, err := observability.InitMetrics(ctx); err != nil {
-		appLogger.Error(ctx, err, "failed to initialize metrics")
-		return nil, err
+		return fmt.Errorf("failed to initialize metrics: %w", err)
 	}
 
 	// Initialize database
 	db, err := database.NewSQLXConnection(cfg)
 	if err != nil {
-		appLogger.Error(ctx, err, "failed to initialize database")
-		return nil, err
+		return fmt.Errorf("failed to initialize database: %w", err)
 	}
-	app.DB = db
+	defer db.Close()
 	appLogger.Info(ctx, "database connection established")
 
 	// Initialize Asynq client
@@ -156,21 +104,20 @@ func bootstrap(ctx context.Context, cfg *config.Config, appLogger logger.Logger)
 		Password: cfg.RedisPassword,
 		DB:       cfg.RedisDB,
 	}
-	app.AsynqClient = asynq.NewClient(redisOpt)
+	asynqClient := asynq.NewClient(redisOpt)
+	defer asynqClient.Close()
 	appLogger.Info(ctx, "asynq client initialized")
 
 	// Initialize metrics client
 	metricsClient := &decorator.NoOpMetricsClient{}
 
-	// Initialize task dispatcher for habits
-	habitDispatcher := habittask.NewAsynqTaskDispatcher(app.AsynqClient, appLogger)
-
-	// Initialize task dispatcher for auth
-	taskDispatcher := authtask.NewAsynqTaskDispatcher(cfg, app.AsynqClient)
+	// Initialize task dispatchers
+	habitDispatcher := habittask.NewAsynqTaskDispatcher(asynqClient, appLogger)
+	authTaskDispatcher := authtask.NewAsynqTaskDispatcher(cfg, asynqClient)
 
 	// Initialize Auth module
-	authApp := authsvc.NewApplication(ctx, cfg, app.DB, taskDispatcher, appLogger, metricsClient)
-	app.AuthServer = authports.NewAuthOpenAPIServer(
+	authApp := authsvc.NewApplication(ctx, cfg, db, authTaskDispatcher, appLogger, metricsClient)
+	authServer := authports.NewAuthOpenAPIServer(
 		authApp.Commands.Register,
 		authApp.Commands.Login,
 		authApp.Commands.Logout,
@@ -189,28 +136,53 @@ func bootstrap(ctx context.Context, cfg *config.Config, appLogger logger.Logger)
 		authApp.Commands.DeleteAccount,
 		authApp.Queries.ExportUserData,
 	)
-	app.AuthMiddleware = authApp.AuthMiddleware
 
 	// Initialize Habits module
-	habitsApp := habitsvc.NewApplication(ctx, app.DB, habitDispatcher, appLogger, metricsClient)
-	app.HabitsServer = habitports.NewOpenAPIServer(habitsApp)
+	habitsApp := habitsvc.NewApplication(ctx, db, habitDispatcher, appLogger, metricsClient)
+	habitsServer := habitports.NewOpenAPIServer(habitsApp)
 
 	// Initialize Notifications module
-	notificationsApp := notificationsvc.NewApplication(app.DB, appLogger, metricsClient, cfg)
-	app.NotificationsServer = notificationports.NewNotificationOpenAPIServer(notificationsApp, cfg.VapidPublicKey)
+	notificationsApp := notificationsvc.NewApplication(db, appLogger, metricsClient, cfg)
+	notificationsServer := notificationports.NewNotificationOpenAPIServer(notificationsApp, cfg.VapidPublicKey)
 
-	return app, nil
-}
+	// Setup router
+	router := NewRouter(RouterConfig{
+		Config:              cfg,
+		AuthServer:          authServer,
+		HabitsServer:        habitsServer,
+		NotificationsServer: notificationsServer,
+		AuthMiddleware:      authApp.AuthMiddleware,
+		OTELProvider:        otelProvider,
+		Logger:              appLogger,
+	})
 
-// close releases all application resources
-func (app *Application) close(ctx context.Context) {
-	if app.DB != nil {
-		app.DB.Close()
+	// Create HTTP server
+	httpServer := NewServer(cfg, router, appLogger)
+
+	// Start server in a goroutine
+	serverErrors := make(chan error, 1)
+	go func() {
+		if err := httpServer.Start(ctx); err != nil && err != http.ErrServerClosed {
+			serverErrors <- err
+		}
+	}()
+
+	// Wait for either context cancellation or server error
+	select {
+	case err := <-serverErrors:
+		return fmt.Errorf("server error: %w", err)
+	case <-ctx.Done():
+		appLogger.Info(ctx, "shutdown signal received")
 	}
-	if app.AsynqClient != nil {
-		app.AsynqClient.Close()
+
+	// Graceful shutdown with timeout
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer shutdownCancel()
+
+	if err := httpServer.Shutdown(shutdownCtx); err != nil {
+		return fmt.Errorf("server forced to shutdown: %w", err)
 	}
-	if app.OTELProvider != nil {
-		app.OTELProvider.Shutdown(ctx)
-	}
+
+	appLogger.Info(ctx, "server stopped gracefully")
+	return nil
 }

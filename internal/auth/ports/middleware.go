@@ -11,6 +11,7 @@ import (
 	"github.com/semmidev/ethos-go/internal/common/apperror"
 	"github.com/semmidev/ethos-go/internal/common/auth"
 	"github.com/semmidev/ethos-go/internal/common/httputil"
+	"github.com/semmidev/ethos-go/internal/common/logger"
 )
 
 // contextKey is a custom type for context keys to avoid collisions.
@@ -92,6 +93,10 @@ func AuthMiddleware(tokenVerifier service.TokenVerifier, userReader user.UserRea
 				UserID: claims.UserID.String(),
 				Email:  user.Email,
 			})
+
+			// Enrich wide event with user context for Canonical Log Lines
+			// This adds user info to the single comprehensive log per request
+			logger.AddUserContext(ctx, claims.UserID.String(), user.Email)
 
 			// Call the next handler with the enriched context
 			next.ServeHTTP(w, r.WithContext(ctx))

@@ -12,6 +12,7 @@ import (
 	authports "github.com/semmidev/ethos-go/internal/auth/ports"
 	"github.com/semmidev/ethos-go/internal/common/docs"
 	"github.com/semmidev/ethos-go/internal/common/httputil"
+	"github.com/semmidev/ethos-go/internal/common/logger"
 	"github.com/semmidev/ethos-go/internal/common/observability"
 	genauth "github.com/semmidev/ethos-go/internal/generated/api/auth"
 	genhabits "github.com/semmidev/ethos-go/internal/generated/api/habits"
@@ -29,6 +30,7 @@ type RouterConfig struct {
 	NotificationsServer *notificationports.NotificationOpenAPIServer
 	AuthMiddleware      func(http.Handler) http.Handler
 	OTELProvider        *observability.Provider
+	Logger              logger.Logger
 }
 
 // NewRouter creates and configures the main chi router with all routes and middleware
@@ -36,7 +38,7 @@ func NewRouter(rc RouterConfig) chi.Router {
 	r := chi.NewRouter()
 
 	// Apply global middleware
-	applyGlobalMiddleware(r, rc.Config)
+	applyGlobalMiddleware(r, rc)
 
 	// Mount utility endpoints
 	mountUtilityEndpoints(r, rc.Config, rc.OTELProvider)
@@ -54,14 +56,34 @@ func NewRouter(rc RouterConfig) chi.Router {
 }
 
 // applyGlobalMiddleware adds all global middleware to the router
-func applyGlobalMiddleware(r chi.Router, cfg *config.Config) {
+func applyGlobalMiddleware(r chi.Router, rc RouterConfig) {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(60 * time.Second))
 	r.Use(corsMiddleware())
-	r.Use(observability.HTTPMiddleware(cfg.AppName))
+	r.Use(observability.HTTPMiddleware(rc.Config.AppName))
+
+	// Event middleware (Canonical Log Lines)
+	// This replaces chi's Logger middleware with a more powerful approach:
+	// one comprehensive log per request instead of many scattered logs
+	if rc.Logger != nil {
+		sampler := logger.NewSampler(logger.SamplerConfig{
+			Enabled:        true,
+			BaseRate:       rc.Config.EventSampleRate,
+			P99ThresholdMs: rc.Config.EventP99ThresholdMs,
+		})
+		r.Use(logger.EventMiddleware(logger.EventMiddlewareConfig{
+			ServiceName: rc.Config.AppName,
+			Version:     version,
+			Environment: rc.Config.AppEnv,
+			Logger:      rc.Logger,
+			Sampler:     sampler,
+		}))
+	} else {
+		// Fall back to chi's default logger if events are disabled
+		r.Use(middleware.Logger)
+	}
 }
 
 // mountUtilityEndpoints adds health, version, metrics, and ping endpoints

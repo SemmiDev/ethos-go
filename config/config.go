@@ -70,6 +70,10 @@ type Config struct {
 	GoogleClientID     string `mapstructure:"GOOGLE_CLIENT_ID" env:"GOOGLE_CLIENT_ID"`
 	GoogleClientSecret string `mapstructure:"GOOGLE_CLIENT_SECRET" env:"GOOGLE_CLIENT_SECRET"`
 	GoogleCallbackURL  string `mapstructure:"GOOGLE_CALLBACK_URL" env:"GOOGLE_CALLBACK_URL"`
+
+	// Event (Canonical Log Lines) configuration
+	EventSampleRate     float64 `mapstructure:"EVENT_SAMPLE_RATE" env:"EVENT_SAMPLE_RATE"`
+	EventP99ThresholdMs int64   `mapstructure:"EVENT_P99_THRESHOLD_MS" env:"EVENT_P99_THRESHOLD_MS"`
 }
 
 func (c *Config) DSN() string {
@@ -178,6 +182,14 @@ func (c *Config) setDefaults() {
 	}
 	if c.LoggerMaxAge == 0 {
 		c.LoggerMaxAge = 28 // 28 days
+	}
+
+	// Event defaults
+	if c.EventSampleRate == 0 {
+		c.EventSampleRate = 0.05 // 5% sampling for normal requests
+	}
+	if c.EventP99ThresholdMs == 0 {
+		c.EventP99ThresholdMs = 2000 // 2 seconds
 	}
 }
 

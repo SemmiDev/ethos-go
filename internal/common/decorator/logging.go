@@ -2,80 +2,89 @@ package decorator
 
 import (
 	"context"
-	"fmt"
+	"time"
 
 	"github.com/semmidev/ethos-go/internal/common/logger"
 )
 
+// commandLoggingDecorator enriches the wide event with command context.
+// Instead of logging separately, it adds command info to the request's wide event.
 type commandLoggingDecorator[C any] struct {
-	base   CommandHandler[C]
-	logger logger.Logger
+	base CommandHandler[C]
 }
 
 func (d commandLoggingDecorator[C]) Handle(ctx context.Context, cmd C) (err error) {
 	handlerType := generateActionName(cmd)
+	startTime := time.Now()
 
-	log := d.logger.With(
-		logger.Field{Key: "command", Value: handlerType},
-		logger.Field{Key: "command_body", Value: fmt.Sprintf("%#v", cmd)},
-	)
+	// Add command context to wide event
+	logger.SetCustom(ctx, "command", handlerType)
+	logger.SetCustom(ctx, "command_payload", cmd)
 
-	log.Debug(ctx, "Executing command")
-	defer func() {
-		if err == nil {
-			log.Info(ctx, "Command executed successfully")
-		} else {
-			log.Error(ctx, err, "Failed to execute command")
-		}
-	}()
+	err = d.base.Handle(ctx, cmd)
 
-	return d.base.Handle(ctx, cmd)
+	// Record command duration
+	durationMs := time.Since(startTime).Milliseconds()
+	logger.SetCustom(ctx, "command_duration_ms", durationMs)
+
+	// If there's an error, enrich the wide event with error context
+	if err != nil {
+		logger.AddError(ctx, "CommandError", handlerType, err.Error(), false)
+	}
+
+	return err
 }
 
+// commandResultLoggingDecorator enriches the wide event for commands with results.
 type commandResultLoggingDecorator[C any, R any] struct {
-	base   CommandHandlerWithResult[C, R]
-	logger logger.Logger
+	base CommandHandlerWithResult[C, R]
 }
 
 func (d commandResultLoggingDecorator[C, R]) Handle(ctx context.Context, cmd C) (result R, err error) {
 	handlerType := generateActionName(cmd)
+	startTime := time.Now()
 
-	log := d.logger.With(
-		logger.Field{Key: "command", Value: handlerType},
-		logger.Field{Key: "command_body", Value: fmt.Sprintf("%#v", cmd)},
-	)
+	// Add command context to wide event
+	logger.SetCustom(ctx, "command", handlerType)
+	logger.SetCustom(ctx, "command_payload", cmd)
 
-	log.Debug(ctx, "Executing command")
-	defer func() {
-		if err == nil {
-			log.Info(ctx, "Command executed successfully")
-		} else {
-			log.Error(ctx, err, "Failed to execute command")
-		}
-	}()
+	result, err = d.base.Handle(ctx, cmd)
 
-	return d.base.Handle(ctx, cmd)
+	// Record command duration
+	durationMs := time.Since(startTime).Milliseconds()
+	logger.SetCustom(ctx, "command_duration_ms", durationMs)
+
+	// If there's an error, enrich the wide event with error context
+	if err != nil {
+		logger.AddError(ctx, "CommandError", handlerType, err.Error(), false)
+	}
+
+	return result, err
 }
 
+// queryLoggingDecorator enriches the wide event with query context.
 type queryLoggingDecorator[C any, R any] struct {
-	base   QueryHandler[C, R]
-	logger logger.Logger
+	base QueryHandler[C, R]
 }
 
-func (d queryLoggingDecorator[C, R]) Handle(ctx context.Context, cmd C) (result R, err error) {
-	log := d.logger.With(
-		logger.Field{Key: "query", Value: generateActionName(cmd)},
-		logger.Field{Key: "query_body", Value: fmt.Sprintf("%#v", cmd)},
-	)
+func (d queryLoggingDecorator[C, R]) Handle(ctx context.Context, query C) (result R, err error) {
+	handlerType := generateActionName(query)
+	startTime := time.Now()
 
-	log.Debug(ctx, "Executing query")
-	defer func() {
-		if err == nil {
-			log.Info(ctx, "Query executed successfully")
-		} else {
-			log.Error(ctx, err, "Failed to execute query")
-		}
-	}()
+	// Add query context to wide event
+	logger.SetCustom(ctx, "query", handlerType)
+	logger.SetCustom(ctx, "query_payload", query)
 
-	return d.base.Handle(ctx, cmd)
+	result, err = d.base.Handle(ctx, query)
+
+	// Record query duration
+	durationMs := time.Since(startTime).Milliseconds()
+	logger.SetCustom(ctx, "query_duration_ms", durationMs)
+
+	// If there's an error, enrich the wide event with error context
+	if err != nil {
+		logger.AddError(ctx, "QueryError", handlerType, err.Error(), false)
+	}
+
+	return result, err
 }

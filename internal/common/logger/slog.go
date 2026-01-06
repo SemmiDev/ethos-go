@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-chi/chi/v5/middleware"
 	slogmulti "github.com/samber/slog-multi"
-	slogsampling "github.com/samber/slog-sampling"
 	"github.com/semmidev/ethos-go/config"
 	"go.opentelemetry.io/otel/trace"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -21,7 +21,7 @@ type slogLogger struct {
 }
 
 ////////////////////////////////////////////////////////////////
-// 3. PUBLIC CONSTRUCTOR
+// PUBLIC CONSTRUCTOR
 ////////////////////////////////////////////////////////////////
 
 func New(cfg *config.Config) (Logger, error) {
@@ -71,41 +71,18 @@ func New(cfg *config.Config) (Logger, error) {
 		combined = slogmulti.Fanout(handlers...)
 	}
 
-	/*
-	   Bayangkan ada bug kecil yang menulis log ini:
-	   ERROR: connection timeout
-
-	   Tanpa sampling:
-	   - Disk panas
-	   - CPU panas
-	   - Monitoring jadi tidak berguna
-	   - Kamu ikut panas
-
-	   Sampling berkata:
-	   “Tenang. Kita tidak perlu mencatat setiap teriakan.
-	   Kita cukup catat sebagian untuk tahu bahwa kebakaran sedang terjadi.”
-	*/
-
-	sampling := slogsampling.ThresholdSamplingOption{
-		// Durasi satu window sampling, periode pengamatan
-		Tick: cfg.LoggerTick,
-		// Jumlah log yang boleh lewat tanpa disaring di awal time window, jatah bebas
-		Threshold: uint64(cfg.LoggerThreshold),
-		// Setelah threshold lewat, hanya 1 dari setiap Rate log yang dicatat, filter setelah jatah habis
-		// Misalnya rate nya 10, maka setelah threshold lewat, hanya 1 dari 10 log yang dicatat
-		Rate: cfg.LoggerRate,
-	}
-
+	// Note: Log sampling is handled by the EventMiddleware's Sampler for HTTP requests.
+	// This logger outputs all logs passed to it; the sampling decision happens
+	// at the request level in the middleware, not at the individual log level.
 	handler := slogmulti.
 		Pipe(newRequestIDMiddleware()).
-		Pipe(sampling.NewMiddleware()).
 		Handler(combined)
 
 	return &slogLogger{handler: handler}, nil
 }
 
 ////////////////////////////////////////////////////////////////
-// 4. LOGGER METHODS (REAL SOURCE)
+// LOGGER METHODS (REAL SOURCE)
 ////////////////////////////////////////////////////////////////
 
 func (l *slogLogger) Debug(ctx context.Context, msg string, fields ...Field) {
@@ -173,7 +150,7 @@ func (h *requestIDHandler) Enabled(ctx context.Context, level slog.Level) bool {
 }
 
 func (h *requestIDHandler) Handle(ctx context.Context, r slog.Record) error {
-	if id, ok := ctx.Value("request_id").(string); ok && id != "" {
+	if id, ok := ctx.Value(middleware.RequestIDKey).(string); ok && id != "" {
 		r.AddAttrs(slog.String("request_id", id))
 	}
 

@@ -2,8 +2,11 @@ package main
 
 import (
 	"context"
-	"log"
+	"fmt"
+	"io"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/hibiken/asynq"
 	"github.com/semmidev/ethos-go/config"
@@ -20,43 +23,51 @@ import (
 )
 
 func main() {
-	// 1. Load Configuration
+	ctx := context.Background()
+	if err := run(ctx, os.Stdout, os.Stderr); err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		os.Exit(1)
+	}
+}
+
+func run(ctx context.Context, _, _ io.Writer) error {
+	// Set up signal handling
+	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
+	defer cancel()
+
+	// Load Configuration
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatalf("failed to load configuration: %v", err)
+		return fmt.Errorf("failed to load configuration: %w", err)
 	}
 
-	// 2. Setup Logger
+	// Setup Logger
 	appLogger, err := logger.New(cfg)
 	if err != nil {
-		log.Fatalf("failed to initialize logger: %v", err)
+		return fmt.Errorf("failed to initialize logger: %w", err)
 	}
-	ctx := context.Background()
+
 	appLogger.Info(ctx, "starting worker",
 		logger.Field{Key: "env", Value: cfg.AppEnv},
 	)
 
-	// 3. Initialize Database Connection
+	// Initialize Database Connection
 	db, err := database.NewSQLXConnection(cfg)
 	if err != nil {
-		appLogger.Error(ctx, err, "failed to connect to database")
-		os.Exit(1)
+		return fmt.Errorf("failed to connect to database: %w", err)
 	}
 	defer db.Close()
 
 	if err := db.Ping(); err != nil {
-		appLogger.Error(ctx, err, "failed to ping database")
-		os.Exit(1)
+		return fmt.Errorf("failed to ping database: %w", err)
 	}
 	appLogger.Info(ctx, "database connection established")
 
-	// 4. Initialize Dependency Apps
+	// Initialize Dependencies
 	metricsClient := &decorator.NoOpMetricsClient{}
-
-	// Auth Dependencies
 	sessionRepo := authadapter.NewPostgresSessionRepository(db)
 
-	// Initialize Asynq Client for dispatcher usage
+	// Initialize Asynq Client
 	redisOpt := asynq.RedisClientOpt{
 		Addr:     cfg.RedisDSN(),
 		Password: cfg.RedisPassword,
@@ -67,13 +78,12 @@ func main() {
 
 	// Initialize task dispatcher for habits
 	habitDispatcher := habittask.NewAsynqTaskDispatcher(asynqClient, appLogger)
-
 	habitsApp := habitsvc.NewApplication(ctx, db, habitDispatcher, appLogger, metricsClient)
 
 	// Notifications App
 	notificationsApp := notificationsvc.NewApplication(db, appLogger, metricsClient, cfg)
 
-	// 5. Setup Asynq Server (The Worker)
+	// Setup Asynq Server (The Worker)
 	srv := asynq.NewServer(
 		redisOpt,
 		asynq.Config{
@@ -85,34 +95,29 @@ func main() {
 		},
 	)
 
-	// 6. Register Task Processors
+	// Register Task Processors
 	mux := asynq.NewServeMux()
 
-	// Register Session Cleanup Processor
+	// Session Cleanup Processor
 	sessionCleanupProcessor := authtask.NewSessionCleanupProcessor(sessionRepo, appLogger)
 	mux.Handle(authtask.TaskSessionCleanup, sessionCleanupProcessor)
 
-	// Register Notification Task Processor
+	// Notification Task Processor
 	notifProcessor := notiftask.NewTaskProcessor(notificationsApp, habitsApp, appLogger)
-
-	// Task: Process Daily Reminders
 	mux.HandleFunc(notiftask.TaskProcessReminders, notifProcessor.ProcessTask)
-
-	// Task: Habit Created (Immediate Notification)
 	mux.HandleFunc(habittask.TaskHabitCreated, notifProcessor.ProcessHabitCreatedTask)
 
-	// Register Email Task Processor
+	// Email Task Processor
 	smtpClient, err := email.NewSMTPClient(cfg, appLogger)
 	if err != nil {
-		appLogger.Error(ctx, err, "failed to initialize smtp client")
-		os.Exit(1)
+		return fmt.Errorf("failed to initialize smtp client: %w", err)
 	}
 
 	authTaskProcessor := authtask.NewTaskProcessor(appLogger, smtpClient)
 	mux.HandleFunc(authtask.TaskSendVerifyEmail, authTaskProcessor.ProcessTaskSendVerifyEmail)
 	mux.HandleFunc(authtask.TaskSendForgotPasswordEmail, authTaskProcessor.ProcessTaskSendForgotPasswordEmail)
 
-	// 7. Setup Scheduler
+	// Setup Scheduler
 	scheduler := asynq.NewScheduler(
 		redisOpt,
 		&asynq.SchedulerOpts{
@@ -120,34 +125,49 @@ func main() {
 		},
 	)
 
-	// Schedule cleanup every 15 minutes
+	// Register scheduled tasks
 	if _, err := scheduler.Register("@every 15m", authtask.NewSessionCleanupTask()); err != nil {
-		appLogger.Error(ctx, err, "failed to register cleanup schedule")
-		os.Exit(1)
+		return fmt.Errorf("failed to register cleanup schedule: %w", err)
 	}
 
-	// Schedule Notification Reminders (every minute to support custom reminder times)
 	if _, err := scheduler.Register("* * * * *", notiftask.NewProcessRemindersTask()); err != nil {
-		appLogger.Error(ctx, err, "failed to register notification schedule")
-		os.Exit(1)
+		return fmt.Errorf("failed to register notification schedule: %w", err)
 	}
 
-	// 8. Run Everything
 	appLogger.Info(ctx, "starting worker and scheduler")
 
 	// Run Scheduler in a goroutine
+	schedulerErrors := make(chan error, 1)
 	go func() {
 		if err := scheduler.Run(); err != nil {
-			appLogger.Error(ctx, err, "scheduler failed")
-			os.Exit(1)
+			schedulerErrors <- err
 		}
 	}()
 
-	// Run Server (Blocking)
-	if err := srv.Run(mux); err != nil {
-		appLogger.Error(ctx, err, "worker server failed")
-		os.Exit(1)
+	// Run Server in a goroutine
+	serverErrors := make(chan error, 1)
+	go func() {
+		if err := srv.Run(mux); err != nil {
+			serverErrors <- err
+		}
+	}()
+
+	// Wait for shutdown signal or error
+	select {
+	case err := <-schedulerErrors:
+		return fmt.Errorf("scheduler failed: %w", err)
+	case err := <-serverErrors:
+		return fmt.Errorf("worker server failed: %w", err)
+	case <-ctx.Done():
+		appLogger.Info(ctx, "shutdown signal received")
 	}
+
+	// Graceful shutdown
+	srv.Shutdown()
+	scheduler.Shutdown()
+
+	appLogger.Info(ctx, "worker stopped gracefully")
+	return nil
 }
 
 // NewAsynqLogger adapts our structured logger to asynq logger interface

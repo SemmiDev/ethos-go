@@ -8,13 +8,14 @@ import (
 	"github.com/semmidev/ethos-go/internal/common/logger"
 )
 
-func ApplyCommandDecorators[H any](handler CommandHandler[H], log logger.Logger, metricsClient MetricsClient) CommandHandler[H] {
+// ApplyCommandDecorators wraps a command handler with wide event enrichment and metrics.
+// The logging decorator now enriches the wide event instead of logging separately.
+func ApplyCommandDecorators[H any](handler CommandHandler[H], _ logger.Logger, metricsClient MetricsClient) CommandHandler[H] {
 	return commandLoggingDecorator[H]{
 		base: commandMetricsDecorator[H]{
 			base:   handler,
 			client: metricsClient,
 		},
-		logger: log,
 	}
 }
 
@@ -22,13 +23,13 @@ type CommandHandler[C any] interface {
 	Handle(ctx context.Context, cmd C) error
 }
 
-func ApplyCommandResultDecorators[H any, R any](handler CommandHandlerWithResult[H, R], log logger.Logger, metricsClient MetricsClient) CommandHandlerWithResult[H, R] {
+// ApplyCommandResultDecorators wraps a command-with-result handler with wide event enrichment and metrics.
+func ApplyCommandResultDecorators[H any, R any](handler CommandHandlerWithResult[H, R], _ logger.Logger, metricsClient MetricsClient) CommandHandlerWithResult[H, R] {
 	return commandResultLoggingDecorator[H, R]{
 		base: commandResultMetricsDecorator[H, R]{
 			base:   handler,
 			client: metricsClient,
 		},
-		logger: log,
 	}
 }
 

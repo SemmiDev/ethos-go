@@ -64,11 +64,12 @@ func (s *OpenAPIServer) ListHabits(w http.ResponseWriter, r *http.Request, param
 	habitsList := make([]habits.Habit, 0, len(result.Habits))
 	for _, h := range result.Habits {
 		id, _ := uuid.Parse(h.HabitID)
+		freq := habits.HabitFrequency(h.Frequency)
 		habitsList = append(habitsList, habits.Habit{
 			Id:           id,
 			Name:         h.Name,
 			Description:  h.Description,
-			Frequency:    &h.Frequency,
+			Frequency:    &freq,
 			TargetCount:  &h.TargetCount,
 			ReminderTime: h.ReminderTime,
 			IsActive:     &h.IsActive,
@@ -134,11 +135,12 @@ func (s *OpenAPIServer) CreateHabit(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id, _ := uuid.Parse(h.HabitID)
+	freq := habits.HabitFrequency(h.Frequency)
 	resp := habits.Habit{
 		Id:           id,
 		Name:         h.Name,
 		Description:  h.Description,
-		Frequency:    &h.Frequency,
+		Frequency:    &freq,
 		TargetCount:  &h.TargetCount,
 		ReminderTime: h.ReminderTime,
 		IsActive:     &h.IsActive,
@@ -191,11 +193,12 @@ func (s *OpenAPIServer) GetHabit(w http.ResponseWriter, r *http.Request, habitId
 	}
 
 	id, _ := uuid.Parse(h.HabitID)
+	freq := habits.HabitFrequency(h.Frequency)
 	resp := habits.Habit{
 		Id:           id,
 		Name:         h.Name,
 		Description:  h.Description,
-		Frequency:    &h.Frequency,
+		Frequency:    &freq,
 		TargetCount:  &h.TargetCount,
 		ReminderTime: h.ReminderTime,
 		IsActive:     &h.IsActive,
@@ -247,11 +250,12 @@ func (s *OpenAPIServer) UpdateHabit(w http.ResponseWriter, r *http.Request, habi
 	}
 
 	id, _ := uuid.Parse(h.HabitID)
+	freq := habits.HabitFrequency(h.Frequency)
 	resp := habits.Habit{
 		Id:           id,
 		Name:         h.Name,
 		Description:  h.Description,
-		Frequency:    &h.Frequency,
+		Frequency:    &freq,
 		TargetCount:  &h.TargetCount,
 		ReminderTime: h.ReminderTime,
 		IsActive:     &h.IsActive,
