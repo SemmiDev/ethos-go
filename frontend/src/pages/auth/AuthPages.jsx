@@ -21,9 +21,7 @@ export const AuthLayout = ({ children, title, subtitle, features = [] }) => (
 
       <div className="relative z-10 flex-1 flex flex-col justify-center">
         <div className="flex items-center gap-3 mb-10">
-          <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur">
-            <Shield size={24} className="text-white" />
-          </div>
+          <img src="/logo.jpg" alt="Ethos Logo" className="w-12 h-12 rounded-xl object-cover" />
           <div>
             <h2 className="text-xl font-semibold text-white">Ethos</h2>
             <p className="text-xs text-white/60 uppercase tracking-wider">Habit Tracker</p>
@@ -59,9 +57,7 @@ export const AuthLayout = ({ children, title, subtitle, features = [] }) => (
         <div className="w-full max-w-sm mx-auto">
           {/* Mobile Logo */}
           <div className="lg:hidden flex flex-col items-center gap-3 mb-10">
-            <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
-              <Shield size={24} className="text-primary-content" />
-            </div>
+            <img src="/logo.jpg" alt="Ethos Logo" className="w-12 h-12 rounded-xl object-cover" />
             <div className="text-center">
               <h1 className="text-xl font-semibold text-base-content">Ethos</h1>
               <p className="text-xs text-base-content/50 uppercase tracking-wider">Habit Tracker</p>

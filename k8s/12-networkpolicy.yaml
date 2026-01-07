@@ -1,16 +1,17 @@
+# Network Policies for security - restricts traffic between pods
+# Apply only if your CNI supports NetworkPolicy (Calico, Cilium, etc.)
+---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: ethos-app-netpol
+  name: ethos-go-app-netpol
   namespace: ethos-go
   labels:
-    app.kubernetes.io/name: ethos
-    app.kubernetes.io/component: app
+    app: ethos-go
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/name: ethos
-      app.kubernetes.io/component: app
+      app: ethos-go
   policyTypes:
     - Ingress
     - Egress
@@ -20,7 +21,7 @@ spec:
     - from:
         - namespaceSelector:
             matchLabels:
-              kubernetes.io/metadata.name: ingress-nginx # Standard namespace label
+              kubernetes.io/metadata.name: ingress-nginx
       ports:
         - protocol: TCP
           port: 8080
@@ -50,7 +51,7 @@ spec:
     - to:
         - podSelector:
             matchLabels:
-              app: postgresql
+              app: ethos-go-postgres
       ports:
         - protocol: TCP
           port: 5432
@@ -59,23 +60,12 @@ spec:
     - to:
         - podSelector:
             matchLabels:
-              app: redis
+              app: ethos-go-redis
       ports:
         - protocol: TCP
           port: 6379
 
-    # Allow OTLP/Telemetry
-    - to:
-        - podSelector:
-            matchLabels:
-              app: otel-collector
-      ports:
-        - protocol: TCP
-          port: 4317
-        - protocol: TCP
-          port: 4318
-
-    # Allow HTTPS (External APIs)
+    # Allow HTTPS (External APIs - SMTP, OAuth, etc.)
     - to:
         - ipBlock:
             cidr: 0.0.0.0/0
@@ -86,18 +76,20 @@ spec:
       ports:
         - protocol: TCP
           port: 443
+
 ---
+# PostgreSQL Network Policy
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: postgresql-netpol
+  name: ethos-go-postgres-netpol
   namespace: ethos-go
   labels:
-    app: postgresql
+    app: ethos-go-postgres
 spec:
   podSelector:
     matchLabels:
-      app: postgresql
+      app: ethos-go-postgres
   policyTypes:
     - Ingress
     - Egress
@@ -107,8 +99,16 @@ spec:
     - from:
         - podSelector:
             matchLabels:
-              app.kubernetes.io/name: ethos
-              app.kubernetes.io/component: app
+              app: ethos-go
+      ports:
+        - protocol: TCP
+          port: 5432
+
+    # Allow from worker
+    - from:
+        - podSelector:
+            matchLabels:
+              app: ethos-go-worker
       ports:
         - protocol: TCP
           port: 5432
@@ -117,7 +117,7 @@ spec:
     - from:
         - podSelector:
             matchLabels:
-              job-name: migration-job
+              job-name: ethos-go-migration
       ports:
         - protocol: TCP
           port: 5432
@@ -131,18 +131,20 @@ spec:
       ports:
         - protocol: UDP
           port: 53
+
 ---
+# Redis Network Policy
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: redis-netpol
+  name: ethos-go-redis-netpol
   namespace: ethos-go
   labels:
-    app: redis
+    app: ethos-go-redis
 spec:
   podSelector:
     matchLabels:
-      app: redis
+      app: ethos-go-redis
   policyTypes:
     - Ingress
     - Egress
@@ -152,8 +154,16 @@ spec:
     - from:
         - podSelector:
             matchLabels:
-              app.kubernetes.io/name: ethos
-              app.kubernetes.io/component: app
+              app: ethos-go
+      ports:
+        - protocol: TCP
+          port: 6379
+
+    # Allow from worker
+    - from:
+        - podSelector:
+            matchLabels:
+              app: ethos-go-worker
       ports:
         - protocol: TCP
           port: 6379

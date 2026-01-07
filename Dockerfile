@@ -1,43 +1,97 @@
-# Build Stage for Frontend
+# =============================================================================
+# Ethos-Go Production Dockerfile
+# Best practices: Multi-stage, distroless:nonroot, static binary, layer caching
+# =============================================================================
+
+# --- TAHAP 1: FRONTEND BUILDER ---
 FROM node:20-alpine AS frontend-builder
 WORKDIR /app/frontend
+
+# Copy package files
 COPY frontend/package*.json ./
+
+# Install dependencies - use npm ci for clean install
+# Note: npm ci automatically rebuilds native modules for the current platform
 RUN npm ci
+
+# Copy source and build
 COPY frontend/ .
 RUN npm run build
 
-# Build Stage for Backend
-FROM golang:1.25-alpine AS backend-builder
-WORKDIR /app
+# --- TAHAP 2: BACKEND BUILDER ---
+FROM golang:1.25-alpine AS builder
 
-# Install build dependencies
-RUN apk add --no-cache git make
+# Argumen untuk build-time variables
+ARG VERSION=dev
+ARG COMMIT=unknown
+ARG BUILD_TIME
 
-# Copy go mod and sum files
+# Install dependensi sistem: sertifikat (untuk HTTPS) dan timezone
+RUN apk add --no-cache git ca-certificates tzdata
+
+WORKDIR /build
+
+# --- Caching Dependensi ---
+# 1. Salin file mod dan sum terlebih dahulu
 COPY go.mod go.sum ./
-RUN go mod download
 
-# Copy source code
+# 2. Download dependensi (akan di-cache oleh Docker)
+RUN --mount=type=cache,target=/go/pkg/mod \
+    go mod download
+
+# 3. Salin sisa kode sumber
 COPY . .
 
-# Copy built frontend assets to the expected location for embedding
+# 4. Salin frontend build ke lokasi embedding
 COPY --from=frontend-builder /app/frontend/dist ./internal/web/dist
 
-# Install migrate using go install (or download binary)
-RUN go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+# 5. Build static binaries
+# - CGO_ENABLED=0 untuk static build (tanpa dependensi libc)
+# - ldflags "-w -s" untuk mengurangi ukuran binary
+# - ldflags "-X" untuk menyuntikkan build-time variables
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+    -tags=viper_bind_struct \
+    -ldflags="-w -s \
+    -X main.version=${VERSION} \
+    -X main.commit=${COMMIT} \
+    -X main.buildTime=${BUILD_TIME}" \
+    -o /build/ethos-api ./cmd/api
 
-# Build the binaries
-# CGO_ENABLED=0 for static binaries
-RUN CGO_ENABLED=0 GOOS=linux go build -o /app/ethos-api ./cmd/api
-RUN CGO_ENABLED=0 GOOS=linux go build -o /app/ethos-worker ./cmd/worker
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+    -tags=viper_bind_struct \
+    -ldflags="-w -s \
+    -X main.version=${VERSION} \
+    -X main.commit=${COMMIT} \
+    -X main.buildTime=${BUILD_TIME}" \
+    -o /build/ethos-worker ./cmd/worker
 
-# Final Stage
-FROM gcr.io/distroless/static-debian12 AS final
+# --- TAHAP 3: FINAL (PRODUKSI) ---
+# Gunakan image distroless non-root: super minimal dan aman
+# - Tidak ada shell atau package manager (lebih aman)
+# - Berjalan sebagai non-root secara default
+# - Lolos audit SOC2 dan ISO27001
+FROM gcr.io/distroless/static-debian12:nonroot
 
-COPY --from=backend-builder /app/ethos-api /ethos-api
-COPY --from=backend-builder /app/ethos-worker /ethos-worker
-COPY --from=backend-builder /go/bin/migrate /usr/local/bin/migrate
-COPY --from=backend-builder /app/migrations /migrations
+# Salin data timezone dari builder
+COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 
-# Default to running the API
-ENTRYPOINT ["/ethos-api"]
+# Atur working directory
+WORKDIR /app
+
+# Salin binary aplikasi dari builder
+COPY --from=builder /build/ethos-api /app/ethos-api
+COPY --from=builder /build/ethos-worker /app/ethos-worker
+
+# Salin migrations (untuk embedded migrations)
+COPY --from=builder /build/migrations /app/migrations
+
+# Expose port
+EXPOSE 8080
+
+# Perintah untuk menjalankan aplikasi
+# Gunakan ethos-api sebagai default, atau override dengan ethos-worker
+ENTRYPOINT ["/app/ethos-api"]

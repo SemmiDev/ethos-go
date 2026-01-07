@@ -65,9 +65,7 @@ export function Sidebar() {
         {/* Logo */}
         <div className="px-5 py-6 border-b border-base-200">
           <Link to="/" className="flex items-center gap-3" onClick={closeDrawer}>
-            <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
-              <Shield size={18} className="text-primary-content" />
-            </div>
+            <img src="/logo.jpg" alt="Ethos Logo" className="w-10 h-10 rounded-lg object-cover" />
             <div>
               <h1 className="text-lg font-semibold text-base-content tracking-tight">Ethos</h1>
               <p className="text-[11px] text-base-content/50 font-medium uppercase tracking-wider">Habit Tracker</p>

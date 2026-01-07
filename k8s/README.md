@@ -1,21 +1,27 @@
 # Ethos-Go Kubernetes Deployment Guide
 
-This directory contains the production-ready Kubernetes manifests for deploying the Ethos-Go stack.
+This directory contains production-ready Kubernetes manifests for deploying the Ethos-Go stack.
 
 ## 📂 Architecture & Components
 
-All manifests are located in the `k8s/` directory.
+All manifests are numbered by deployment order:
 
-| Component      | Kind          | File                     | Description                                                      |
-| -------------- | ------------- | ------------------------ | ---------------------------------------------------------------- |
-| **Namespace**  | `Namespace`   | `namespace.yaml`         | Isolates resources in `ethos-go`.                                |
-| **Config**     | `ConfigMap`   | `configmap.yaml`         | Application configuration (e.g., DB_HOST, LOG_LEVEL).            |
-| **Security**   | `Secret`      | `secret.yaml`            | Sensitive data (DB_PASSWORD, JWT_SECRET).                        |
-| **Database**   | `StatefulSet` | `postgres.yaml`          | PostgreSQL 17. PVC ensures data persists across pod restarts.    |
-| **Cache**      | `Deployment`  | `redis.yaml`             | Redis 8.0. Stateless deployment using ephemeral storage.         |
-| **API/Web**    | `Deployment`  | `app-deployment.yaml`    | Main Go binary serving API & Frontend. Exposed via LoadBalancer. |
-| **Worker**     | `Deployment`  | `worker-deployment.yaml` | Same Go binary running in worker mode (Asynq background tasks).  |
-| **Migrations** | `Job`         | `migration-job.yaml`     | Ephemeral job to run schema migrations via `golang-migrate`.     |
+| #   | File                        | Kind            | Description                                                            |
+| --- | --------------------------- | --------------- | ---------------------------------------------------------------------- |
+| 01  | `01-namespace.yaml`         | `Namespace`     | Isolates resources in `ethos-go`.                                      |
+| 02  | `02-configmap.yaml`         | `ConfigMap`     | Application configuration (DB_HOST, LOG_LEVEL, etc.).                  |
+| 03  | `03-secret.yaml`            | `Secret`        | Sensitive data (DB_PASSWORD, JWT_SECRET).                              |
+| 04  | `04-postgres.yaml`          | `StatefulSet`   | PostgreSQL 17. PVC ensures data persists across pod restarts.          |
+| 05  | `05-redis.yaml`             | `Deployment`    | Redis 8.0. Stateless deployment using ephemeral storage.               |
+| 06  | `06-app-deployment.yaml`    | `Deployment`    | Main Go binary serving API & Frontend. **Runs migrations on startup.** |
+| 07  | `07-worker-deployment.yaml` | `Deployment`    | Same Go binary running in worker mode (Asynq background tasks).        |
+| 08  | `08-service.yaml`           | `Service`       | ClusterIP service for internal access.                                 |
+| 09  | `09-gateway.yaml`           | `Gateway`       | Gateway API with HTTPRoute for routing and TLS.                        |
+| 10  | `10-hpa.yaml`               | `HPA`           | Horizontal Pod Autoscaler (CPU/Memory based).                          |
+| 11  | `11-pdb.yaml`               | `PDB`           | Pod Disruption Budget for high availability.                           |
+| 12  | `12-networkpolicy.yaml`     | `NetworkPolicy` | Network isolation between pods.                                        |
+
+> **Note:** Database migrations are embedded in the application and run automatically on startup.
 
 ---
 
@@ -27,173 +33,135 @@ All manifests are located in the `k8s/` directory.
 - `kubectl` configured.
 - Docker for building images.
 
-### 1. Build & Push Image
-
-The manifests are configured to pull `sammidev/ethos-go:latest`.
+### Option 1: Using Deploy Script (Recommended)
 
 ```bash
-# Build
-docker build -t sammidev/ethos-go:latest .
+# Development deployment (skips gateway, HPA, network policies)
+./k8s/deploy.sh --dev
 
-# Push (Required for cluster to pull)
+# Production deployment (full deployment)
+./k8s/deploy.sh --prod
+```
+
+### Option 2: Manual Deployment
+
+#### 1. Build & Push Image
+
+```bash
+docker build -t sammidev/ethos-go:latest .
 docker push sammidev/ethos-go:latest
 ```
 
-### 2. Infrastructure Setup
-
-Deploy the foundation first.
+#### 2. Infrastructure Setup
 
 ```bash
-# Namespace
-kubectl apply -f k8s/namespace.yaml
-
-# Configuration
-kubectl apply -f k8s/configmap.yaml
-kubectl apply -f k8s/secret.yaml
-
-# Data Services
-kubectl apply -f k8s/postgres.yaml
-kubectl apply -f k8s/redis.yaml
+kubectl apply -f k8s/01-namespace.yaml
+kubectl apply -f k8s/02-configmap.yaml
+kubectl apply -f k8s/03-secret.yaml
+kubectl apply -f k8s/04-postgres.yaml
+kubectl apply -f k8s/05-redis.yaml
 ```
 
-**Wait** until Postgres and Redis are running:
+Wait for pods:
 
 ```bash
 kubectl get pods -n ethos-go -w
 ```
 
-### 3. Database Migration
-
-Initialize the database schema.
+#### 3. Deploy Application
 
 ```bash
-kubectl apply -f k8s/migration-job.yaml
+kubectl apply -f k8s/06-app-deployment.yaml
+kubectl apply -f k8s/07-worker-deployment.yaml
+kubectl apply -f k8s/08-service.yaml
 ```
 
-_Verify success:_ `kubectl logs job/ethos-go-migration -n ethos-go` (Should say `1/u init_schema`).
-
-### 4. Deploy Application
-
-Launch the API and Worker.
+#### 4. Access (Development)
 
 ```bash
-kubectl apply -f k8s/app-deployment.yaml
-kubectl apply -f k8s/worker-deployment.yaml
+kubectl port-forward svc/ethos-go-app 8080:80 -n ethos-go
 ```
-
-### 5. Access
 
 Open **[http://localhost:8080](http://localhost:8080)**.
 
-If using Minikube or cloud, get the external IP:
+---
+
+## 🏭 Production Deployment
+
+### Gateway API (Modern Alternative to Ingress)
+
+The project uses [Gateway API](https://gateway-api.sigs.k8s.io/) instead of legacy Ingress for production traffic routing.
+
+**Prerequisites:**
 
 ```bash
-kubectl get svc ethos-go-app -n ethos-go
+# 1. Install Gateway API CRDs
+kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.2.0/standard-install.yaml
+
+# 2. Install a Gateway Controller (choose one):
+# - Envoy Gateway: https://gateway.envoyproxy.io/
+# - Cilium: https://cilium.io/
+# - Istio: https://istio.io/
+# - NGINX Gateway Fabric: https://github.com/nginxinc/nginx-gateway-fabric
 ```
+
+**Deploy Gateway:**
+
+```bash
+# Update hostname in 09-gateway.yaml first!
+kubectl apply -f k8s/09-gateway.yaml
+```
+
+### Full Production Deployment
+
+```bash
+# Gateway API resources
+kubectl apply -f k8s/09-gateway.yaml
+
+# Auto-scaling
+kubectl apply -f k8s/10-hpa.yaml
+kubectl apply -f k8s/11-pdb.yaml
+
+# Network policies (requires compatible CNI)
+kubectl apply -f k8s/12-networkpolicy.yaml
+```
+
+### Production Requirements
+
+| Component         | Requirement                                                 |
+| ----------------- | ----------------------------------------------------------- |
+| **Gateway**       | Gateway API CRDs + Gateway Controller (Envoy, Cilium, etc.) |
+| **TLS**           | cert-manager with `letsencrypt-prod` cluster issuer         |
+| **HPA**           | metrics-server installed                                    |
+| **NetworkPolicy** | CNI that supports NetworkPolicy (Calico, Cilium)            |
 
 ---
 
-## 🔍 Advanced Debugging & Troubleshooting
+## 🔍 Debugging & Troubleshooting
 
-### 1. Pod Health & States
+### Pod Health
 
-| Status             | Likely Cause                                                   | Debug Action                                                |
-| ------------------ | -------------------------------------------------------------- | ----------------------------------------------------------- |
-| `CrashLoopBackOff` | Application panic, DB connection failure, or missing env vars. | `kubectl logs <pod> -n ethos-go` (Check for panic/error)    |
-| `ImagePullBackOff` | Image name typo, tag missing, or private registry auth failed. | `kubectl describe pod <pod> -n ethos-go` (Look at 'Events') |
-| `Pending`          | No nodes available, PVC not bound, or insufficient CPU/RAM.    | `kubectl describe pod <pod> -n ethos-go`                    |
-| `Evicted`          | Node out of disk or memory.                                    | Check node resources: `kubectl top nodes`                   |
+| Status             | Likely Cause                                          | Debug Action                     |
+| ------------------ | ----------------------------------------------------- | -------------------------------- |
+| `CrashLoopBackOff` | Application panic, DB connection failure, missing env | `kubectl logs <pod> -n ethos-go` |
+| `ImagePullBackOff` | Image name typo, tag missing, registry auth failed    | `kubectl describe pod <pod>`     |
+| `Pending`          | No nodes, PVC not bound, insufficient resources       | `kubectl describe pod <pod>`     |
 
-### 2. Log Analysis strategies
-
-**View logs of a crashing pod (previous instance):**
-If a pod crashes immediately, current logs might be empty. Check the _previous_ run:
-
-```bash
-kubectl logs <pod-name> -n ethos-go --previous
-```
-
-**Stream logs from all application pods:**
+### Log Analysis
 
 ```bash
 kubectl logs -f -l app=ethos-go -n ethos-go
-```
-
-**Stream worker logs:**
-
-```bash
 kubectl logs -f -l app=ethos-go-worker -n ethos-go
 ```
 
-### 3. Networking & Connectivity
-
-Since production images (Distroless/Alpine) are minimal, they might lack `curl` or `ping`.
-
-**A. Validate Service Discovery**
-Use a debug container to test DNS and connections inside the cluster.
+### Gateway Troubleshooting
 
 ```bash
-# Launch a temporary debug shell in the namespace
-kubectl run -i --tty --rm debug-shell --image=curlimages/curl --restart=Never -n ethos-go -- sh
-```
+# Check Gateway status
+kubectl get gateway,httproute -n ethos-go
 
-**B. Inside the debug shell:**
-
-```bash
-# 1. Test DNS resolution
-nslookup ethos-go-postgres
-nslookup ethos-go-redis
-nslookup ethos-go-app
-
-# 2. Test Connection to App
-curl -v http://ethos-go-app:8080/health
-
-# 3. Test Connection to Postgres Port
-curl -v telnet://ethos-go-postgres:5432
-```
-
-### 4. Storage (StatefulSet) Issues
-
-If `ethos-go-postgres-0` is stuck in `Pending`:
-
-1. **Check PVC Status:**
-
-   ```bash
-   kubectl get pvc -n ethos-go
-   ```
-
-   Status must be `Bound`.
-
-2. **Check StorageClass:**
-   If using Kind/Minikube, ensure a default storage class exists:
-
-   ```bash
-   kubectl get sc
-   ```
-
-3. **Reset Database (Data Wipe):**
-   _Warning: This deletes all data._
-   ```bash
-   kubectl delete statefulset ethos-go-postgres -n ethos-go
-   kubectl delete pvc postgres-data-ethos-go-postgres-0 -n ethos-go
-   kubectl apply -f k8s/postgres.yaml
-   ```
-
-### 5. Configuration Verification
-
-Ensure pods are receiving the correct environment variables.
-
-**Inspect a running pod's environment:**
-
-```bash
-kubectl exec <pod-name> -n ethos-go -- env | grep DB_
-```
-
-**Decode Secrets:**
-To see what password Kubernetes is actually injecting:
-
-```bash
-kubectl get secret ethos-go-secret -n ethos-go -o jsonpath="{.data.DB_PASSWORD}" | base64 --decode
+# Describe Gateway for events
+kubectl describe gateway ethos-go-gateway -n ethos-go
 ```
 
 ---
@@ -202,21 +170,13 @@ kubectl get secret ethos-go-secret -n ethos-go -o jsonpath="{.data.DB_PASSWORD}"
 
 ### Updating the Application
 
-When you change code:
-
-1. Rebuild & Push:
-   ```bash
-   docker build -t sammidev/ethos-go:latest .
-   docker push sammidev/ethos-go:latest
-   ```
-2. Rolling Restart:
-   ```bash
-   kubectl rollout restart deployment -n ethos-go
-   ```
+```bash
+docker build -t sammidev/ethos-go:latest .
+docker push sammidev/ethos-go:latest
+kubectl rollout restart deployment -n ethos-go
+```
 
 ### Scaling
-
-Scale workers to handle more background tasks:
 
 ```bash
 kubectl scale deployment ethos-go-worker --replicas=3 -n ethos-go
@@ -226,20 +186,6 @@ kubectl scale deployment ethos-go-worker --replicas=3 -n ethos-go
 
 ## 🧹 Clean Up
 
-To remove all resources created by this project:
-
-### Option 1: Delete Namespace (Recommended)
-
-This removes everything including data volumes.
-
 ```bash
 kubectl delete namespace ethos-go
-```
-
-### Option 2: Delete Resources Only
-
-Keeps the namespace but removes deployments and services.
-
-```bash
-kubectl delete -f k8s/
 ```

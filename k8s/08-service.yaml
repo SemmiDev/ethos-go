@@ -1,41 +1,38 @@
+# Service for internal cluster access (ClusterIP)
+# For development, use port-forward: kubectl port-forward svc/ethos-go-app 8080:80 -n ethos-go
 apiVersion: v1
 kind: Service
 metadata:
-  name: ethos-app
+  name: ethos-go-app
   namespace: ethos-go
   labels:
-    app.kubernetes.io/name: ethos
-    app.kubernetes.io/component: app
-    app.kubernetes.io/part-of: ethos-go
+    app: ethos-go
 spec:
   type: ClusterIP
   ports:
     - port: 80
-      targetPort: http
+      targetPort: 8080
       protocol: TCP
       name: http
   selector:
-    app.kubernetes.io/name: ethos
-    app.kubernetes.io/component: app
+    app: ethos-go
 
 ---
 # Headless service for direct pod access (useful for debugging)
 apiVersion: v1
 kind: Service
 metadata:
-  name: ethos-app-headless
+  name: ethos-go-headless
   namespace: ethos-go
   labels:
-    app.kubernetes.io/name: ethos
-    app.kubernetes.io/component: app
+    app: ethos-go
 spec:
   type: ClusterIP
   clusterIP: None
   ports:
     - port: 80
-      targetPort: http
+      targetPort: 8080
       protocol: TCP
       name: http
   selector:
-    app.kubernetes.io/name: ethos
-    app.kubernetes.io/component: app
+    app: ethos-go

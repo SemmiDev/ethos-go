@@ -1,0 +1,14 @@
+# Pod Disruption Budget for high availability during maintenance
+# Ensures at least 1 pod is always running during voluntary disruptions
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ethos-go-pdb
+  namespace: ethos-go
+  labels:
+    app: ethos-go
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: ethos-go

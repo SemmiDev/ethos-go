@@ -146,14 +146,13 @@ export function LandingPage() {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2">
-              <motion.div
-                className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center"
+              <motion.img
+                src="/logo.jpg"
+                alt="Ethos Logo"
+                className="w-12 h-12 rounded-lg object-cover"
                 whileHover={{ scale: 1.05, rotate: 5 }}
                 whileTap={{ scale: 0.95 }}
-              >
-                <Shield size={18} className="text-primary-content" />
-              </motion.div>
-              <span className="text-xl font-bold text-base-content">Ethos</span>
+              />
             </Link>
 
             {/* Nav Links */}
@@ -593,10 +592,7 @@ export function LandingPage() {
           >
             {/* Logo */}
             <motion.div className="flex items-center gap-2" whileHover={{ scale: 1.02 }}>
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                <Shield size={16} className="text-primary-content" />
-              </div>
-              <span className="text-lg font-bold text-base-content">Ethos</span>
+              <img src="/logo.jpg" alt="Ethos Logo" className="w-10 h-10 rounded-lg object-cover" />
             </motion.div>
 
             {/* Links */}

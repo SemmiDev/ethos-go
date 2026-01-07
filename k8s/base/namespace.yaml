@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: ethos-go
-  labels:
-    name: ethos-go
-    environment: production
-    app: ethos-go

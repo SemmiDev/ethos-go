@@ -24,13 +24,17 @@ _Build better habits, one day at a time._
 
 It combines a robust Go backend with a modern React frontend into a **single executable**, making deployment as simple as copying one file. No external web servers or confusing CORS configurations required.
 
-## Demo
+## Screenshots
 
 <div align="center">
 
-[![Watch the Demo](https://img.youtube.com/vi/r3k16YPBQmg/maxresdefault.jpg)](https://youtu.be/r3k16YPBQmg)
+|               Landing Page               |                  Dashboard                   |
+| :--------------------------------------: | :------------------------------------------: |
+| ![Landing](docs/screenshots/landing.png) | ![Dashboard](docs/screenshots/dashboard.png) |
 
-_Click the image above to watch the demo video_
+|                 Habits                 |                  Analytics                   |
+| :------------------------------------: | :------------------------------------------: |
+| ![Habits](docs/screenshots/habits.png) | ![Analytics](docs/screenshots/analytics.png) |
 
 </div>
 

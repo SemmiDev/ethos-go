@@ -1,0 +1,133 @@
+# Kubernetes Gateway API resources for production
+# Replaces legacy Ingress with modern Gateway API (https://gateway-api.sigs.k8s.io/)
+#
+# Prerequisites:
+# 1. Install Gateway API CRDs: kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.2.0/standard-install.yaml
+# 2. Install a Gateway Controller (e.g., Envoy Gateway, Cilium, Istio, NGINX Gateway Fabric)
+#
+# Update the hostname to your domain before deploying!
+
+---
+# Gateway - defines the infrastructure (load balancer, listeners)
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: ethos-go-gateway
+  namespace: ethos-go
+  labels:
+    app: ethos-go
+  annotations:
+    # Cert-manager for automatic TLS (if using cert-manager)
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  gatewayClassName: envoy  # Change to your gateway class (envoy, cilium, istio, nginx)
+  listeners:
+    # HTTP listener - redirects to HTTPS
+    - name: http
+      protocol: HTTP
+      port: 80
+      hostname: ethos.example.com  # Change to your domain
+      allowedRoutes:
+        namespaces:
+          from: Same
+
+    # HTTPS listener - main traffic
+    - name: https
+      protocol: HTTPS
+      port: 443
+      hostname: ethos.example.com  # Change to your domain
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: ethos-go-tls
+            kind: Secret
+      allowedRoutes:
+        namespaces:
+          from: Same
+
+---
+# HTTPRoute - defines routing rules for the application
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: ethos-go-route
+  namespace: ethos-go
+  labels:
+    app: ethos-go
+spec:
+  parentRefs:
+    - name: ethos-go-gateway
+      sectionName: https
+  hostnames:
+    - ethos.example.com  # Change to your domain
+  rules:
+    # Route all traffic to the app service
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: ethos-go-app
+          port: 80
+          weight: 100
+      timeouts:
+        request: 60s
+        backendRequest: 30s
+
+---
+# HTTPRoute for HTTP to HTTPS redirect
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: ethos-go-redirect
+  namespace: ethos-go
+  labels:
+    app: ethos-go
+spec:
+  parentRefs:
+    - name: ethos-go-gateway
+      sectionName: http
+  hostnames:
+    - ethos.example.com  # Change to your domain
+  rules:
+    - filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            statusCode: 301
+
+---
+# ReferenceGrant - allows Gateway to reference secrets in the namespace
+# (Required if Gateway and TLS secret are in different namespaces)
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: ethos-go-reference-grant
+  namespace: ethos-go
+spec:
+  from:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      namespace: ethos-go
+  to:
+    - group: ""
+      kind: Secret
+
+---
+# BackendTLSPolicy - optional TLS configuration for backend connections
+# Uncomment if you need mTLS between gateway and backend
+# apiVersion: gateway.networking.k8s.io/v1alpha3
+# kind: BackendTLSPolicy
+# metadata:
+#   name: ethos-go-backend-tls
+#   namespace: ethos-go
+# spec:
+#   targetRefs:
+#     - group: ""
+#       kind: Service
+#       name: ethos-go-app
+#   validation:
+#     caCertificateRefs:
+#       - name: ca-cert
+#         kind: ConfigMap
+#     hostname: ethos-go-app.ethos-go.svc.cluster.local

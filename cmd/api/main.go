@@ -24,6 +24,7 @@ import (
 	habitsvc "github.com/semmidev/ethos-go/internal/habits/service"
 	notificationports "github.com/semmidev/ethos-go/internal/notifications/ports"
 	notificationsvc "github.com/semmidev/ethos-go/internal/notifications/service"
+	"github.com/semmidev/ethos-go/migrations"
 )
 
 // Build-time variables injected via ldflags
@@ -97,6 +98,12 @@ func run(ctx context.Context, _, _ io.Writer) error {
 	}
 	defer db.Close()
 	appLogger.Info(ctx, "database connection established")
+
+	// Run database migrations
+	if err := database.RunMigrations(cfg.DSN(), migrations.FS, "."); err != nil {
+		return fmt.Errorf("failed to run migrations: %w", err)
+	}
+	appLogger.Info(ctx, "database migrations completed")
 
 	// Initialize Asynq client
 	redisOpt := asynq.RedisClientOpt{
