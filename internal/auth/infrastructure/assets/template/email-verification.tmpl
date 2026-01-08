@@ -1,0 +1,131 @@
+{{define "htmlBody"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email Verification</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: #F8FAFC;
+      color: #1E293B;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .container {
+      max-width: 520px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    .card {
+      background-color: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+    .header {
+      background-color: #0A2540;
+      padding: 24px 32px;
+      text-align: center;
+    }
+    .header-title {
+      color: #FFFFFF;
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.025em;
+    }
+    .body {
+      padding: 32px;
+    }
+    .greeting {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1E293B;
+      margin-bottom: 16px;
+    }
+    .message {
+      color: #475569;
+      font-size: 15px;
+      margin-bottom: 24px;
+    }
+    .code-box {
+      background-color: #F8FAFC;
+      border: 2px dashed #0A2540;
+      border-radius: 6px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .code {
+      font-size: 32px;
+      font-weight: 700;
+      color: #0A2540;
+      letter-spacing: 0.2em;
+      font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+    }
+    .info {
+      color: #475569;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+    .info strong {
+      color: #1E293B;
+    }
+    .signature {
+      color: #475569;
+      font-size: 14px;
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid #E2E8F0;
+    }
+    .signature strong {
+      color: #1E293B;
+    }
+    .footer {
+      background-color: #F8FAFC;
+      padding: 16px 32px;
+      text-align: center;
+      border-top: 1px solid #E2E8F0;
+    }
+    .footer-text {
+      color: #94A3B8;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="header">
+        <div class="header-title">Email Verification</div>
+      </div>
+      <div class="body">
+        <div class="greeting">Halo, {{.Name}}</div>
+        <p class="message">Berikut adalah kode verifikasi Anda:</p>
+        <div class="code-box">
+          <span class="code">{{.VerificationCode}}</span>
+        </div>
+        <p class="info">Silakan masukkan kode ini untuk memverifikasi alamat email Anda. Kode ini akan kedaluwarsa dalam <strong>{{.VerificationCodeExpiration}} menit</strong>.</p>
+        <p class="info">Jika Anda tidak meminta ini, abaikan email ini.</p>
+        <div class="signature">
+          Salam hormat,<br>
+          <strong>Tim Support {{.From}}</strong>
+        </div>
+      </div>
+      <div class="footer">
+        <p class="footer-text">Email ini dikirim otomatis oleh sistem. Jangan membalas email ini.</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+{{end}}

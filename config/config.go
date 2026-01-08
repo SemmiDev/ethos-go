@@ -14,9 +14,6 @@ import (
 type Config struct {
 	AppName      string `mapstructure:"APP_NAME" env:"APP_NAME"`
 	AppEnv       string `mapstructure:"APP_ENV" env:"APP_ENV"`
-	AppVersion   string `mapstructure:"APP_VERSION" env:"APP_VERSION"`
-	AppCommit    string `mapstructure:"APP_COMMIT" env:"APP_COMMIT"`
-	AppBuildTime string `mapstructure:"APP_BUILD_TIME" env:"APP_BUILD_TIME"`
 	AppURL       string `mapstructure:"APP_URL" env:"APP_URL"`
 	AppClientURL string `mapstructure:"APP_CLIENT_URL" env:"APP_CLIENT_URL"`
 
@@ -74,6 +71,12 @@ type Config struct {
 	// Event (Canonical Log Lines) configuration
 	EventSampleRate     float64 `mapstructure:"EVENT_SAMPLE_RATE" env:"EVENT_SAMPLE_RATE"`
 	EventP99ThresholdMs int64   `mapstructure:"EVENT_P99_THRESHOLD_MS" env:"EVENT_P99_THRESHOLD_MS"`
+
+	// NATS configuration
+	NATSUrl           string `mapstructure:"NATS_URL" env:"NATS_URL"`
+	NATSStreamName    string `mapstructure:"NATS_STREAM_NAME" env:"NATS_STREAM_NAME"`
+	NATSConsumerName  string `mapstructure:"NATS_CONSUMER_NAME" env:"NATS_CONSUMER_NAME"`
+	NATSMaxReconnects int    `mapstructure:"NATS_MAX_RECONNECTS" env:"NATS_MAX_RECONNECTS"`
 }
 
 func (c *Config) DSN() string {

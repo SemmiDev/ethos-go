@@ -5,8 +5,10 @@ import (
 
 	"github.com/semmidev/ethos-go/internal/common/apperror"
 	"github.com/semmidev/ethos-go/internal/common/decorator"
+	"github.com/semmidev/ethos-go/internal/common/events"
 	"github.com/semmidev/ethos-go/internal/common/logger"
 	"github.com/semmidev/ethos-go/internal/common/validator"
+	habitevents "github.com/semmidev/ethos-go/internal/habits/domain/events"
 	"github.com/semmidev/ethos-go/internal/habits/domain/habit"
 )
 
@@ -22,12 +24,14 @@ type DeactivateHabitHandler decorator.CommandHandler[DeactivateHabit]
 type deactivateHabitHandler struct {
 	repo      habit.Repository
 	validator *validator.Validator
+	publisher events.Publisher
 }
 
 // NewDeactivateHabitHandler creates a new handler with decorators
 func NewDeactivateHabitHandler(
 	repo habit.Repository,
 	validator *validator.Validator,
+	publisher events.Publisher, // Injected
 	log logger.Logger,
 	metricsClient decorator.MetricsClient,
 ) DeactivateHabitHandler {
@@ -39,6 +43,7 @@ func NewDeactivateHabitHandler(
 		deactivateHabitHandler{
 			repo:      repo,
 			validator: validator,
+			publisher: publisher,
 		},
 		log,
 		metricsClient,
@@ -59,7 +64,7 @@ func (h deactivateHabitHandler) Handle(ctx context.Context, cmd DeactivateHabit)
 	}
 
 	// Use repository UpdateFn pattern
-	return h.repo.UpdateHabit(
+	err := h.repo.UpdateHabit(
 		ctx,
 		cmd.HabitID,
 		cmd.UserID,
@@ -71,4 +76,13 @@ func (h deactivateHabitHandler) Handle(ctx context.Context, cmd DeactivateHabit)
 			return habit, nil
 		},
 	)
+	if err != nil {
+		return err
+	}
+
+	// Publish HabitDeactivated event
+	event := habitevents.NewHabitDeactivated(cmd.HabitID, cmd.UserID)
+	_ = h.publisher.Publish(ctx, event)
+
+	return nil
 }

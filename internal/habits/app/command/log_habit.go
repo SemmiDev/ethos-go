@@ -6,8 +6,10 @@ import (
 
 	"github.com/semmidev/ethos-go/internal/common/apperror"
 	"github.com/semmidev/ethos-go/internal/common/decorator"
+	"github.com/semmidev/ethos-go/internal/common/events"
 	"github.com/semmidev/ethos-go/internal/common/logger"
 	"github.com/semmidev/ethos-go/internal/common/validator"
+	habitevents "github.com/semmidev/ethos-go/internal/habits/domain/events"
 	"github.com/semmidev/ethos-go/internal/habits/domain/habit"
 	"github.com/semmidev/ethos-go/internal/habits/domain/habitlog"
 )
@@ -30,6 +32,7 @@ type logHabitHandler struct {
 	logRepo   habitlog.Repository
 	validator *validator.Validator
 	streakSvc *habit.StreakService
+	publisher events.Publisher
 }
 
 // NewLogHabitHandler creates a new handler with decorators
@@ -37,6 +40,7 @@ func NewLogHabitHandler(
 	habitRepo habit.Repository,
 	logRepo habitlog.Repository,
 	validator *validator.Validator,
+	publisher events.Publisher, // Injected
 	log logger.Logger,
 	metricsClient decorator.MetricsClient,
 ) LogHabitHandler {
@@ -53,6 +57,7 @@ func NewLogHabitHandler(
 			logRepo:   logRepo,
 			validator: validator,
 			streakSvc: habit.NewStreakService(),
+			publisher: publisher,
 		},
 		log,
 		metricsClient,
@@ -121,6 +126,29 @@ func (h logHabitHandler) Handle(ctx context.Context, cmd LogHabit) error {
 	if err := h.habitRepo.UpsertStats(ctx, stats); err != nil {
 		return err
 	}
+
+	if err := h.habitRepo.UpsertStats(ctx, stats); err != nil {
+		return err
+	}
+
+	// Calculate total count for today
+	totalToday := 0
+	for _, l := range logs {
+		if l.LogDate().Equal(newLog.LogDate()) || (l.LogDate().Year() == newLog.LogDate().Year() && l.LogDate().YearDay() == newLog.LogDate().YearDay()) {
+			totalToday += l.Count()
+		}
+	}
+
+	// Publish HabitCompleted event
+	event := habitevents.NewHabitCompleted(
+		cmd.HabitID,
+		cmd.UserID,
+		cmd.LogID,
+		cmd.LogDate,
+		cmd.Count,
+		totalToday,
+	)
+	_ = h.publisher.Publish(ctx, event)
 
 	return nil
 }

@@ -7,15 +7,19 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/hibiken/asynq"
 	"github.com/semmidev/ethos-go/config"
 	authadapter "github.com/semmidev/ethos-go/internal/auth/adapters"
 	authtask "github.com/semmidev/ethos-go/internal/auth/adapters/task"
 	"github.com/semmidev/ethos-go/internal/common/database"
-	"github.com/semmidev/ethos-go/internal/common/decorator"
 	"github.com/semmidev/ethos-go/internal/common/email"
+	"github.com/semmidev/ethos-go/internal/common/events"
+	"github.com/semmidev/ethos-go/internal/common/events/handlers"
 	"github.com/semmidev/ethos-go/internal/common/logger"
+	"github.com/semmidev/ethos-go/internal/common/metrics"
+	"github.com/semmidev/ethos-go/internal/common/outbox"
 	habittask "github.com/semmidev/ethos-go/internal/habits/adapters/task"
 	habitsvc "github.com/semmidev/ethos-go/internal/habits/service"
 	notiftask "github.com/semmidev/ethos-go/internal/notifications/adapters/task"
@@ -64,8 +68,74 @@ func run(ctx context.Context, _, _ io.Writer) error {
 	appLogger.Info(ctx, "database connection established")
 
 	// Initialize Dependencies
-	metricsClient := &decorator.NoOpMetricsClient{}
-	sessionRepo := authadapter.NewPostgresSessionRepository(db)
+	metricsClient := metrics.NewPrometheusMetricsClient()
+	sessionRepo := authadapter.NewSessionPostgresRepository(db)
+
+	// Initialize NATS
+	var eventPublisher events.Publisher
+	var eventConsumer *events.Consumer
+
+	if cfg.NATSUrl != "" {
+		// NATS Publisher
+		natsPublisher, err := events.NewNATSPublisher(ctx, events.NATSConfig{
+			URL:           cfg.NATSUrl,
+			StreamName:    cfg.NATSStreamName,
+			MaxReconnects: cfg.NATSMaxReconnects,
+			ReconnectWait: 2 * time.Second,
+		}, appLogger)
+		if err != nil {
+			appLogger.Error(ctx, err, "failed to initialize NATS publisher")
+			// We continue, but outbox processor won't be able to publish
+			eventPublisher = events.NewNoOpPublisher()
+		} else {
+			eventPublisher = natsPublisher
+			defer natsPublisher.Close()
+			appLogger.Info(ctx, "NATS publisher initialized")
+		}
+
+		// NATS Consumer
+		natsConsumer, err := events.NewConsumer(ctx, events.ConsumerConfig{
+			NATSConfig: events.NATSConfig{
+				URL:           cfg.NATSUrl,
+				StreamName:    cfg.NATSStreamName,
+				MaxReconnects: cfg.NATSMaxReconnects,
+				ReconnectWait: 2 * time.Second,
+			},
+			ConsumerName: cfg.NATSConsumerName,
+			QueueGroup:   cfg.NATSConsumerName + "-group", // Load balance among workers
+		}, appLogger)
+		if err != nil {
+			appLogger.Error(ctx, err, "failed to initialize NATS consumer")
+		} else {
+			eventConsumer = natsConsumer
+			defer eventConsumer.Close()
+			appLogger.Info(ctx, "NATS consumer initialized")
+
+			// Register Event Handlers
+			eventConsumer.RegisterHandler(handlers.NewUserRegisteredHandler(appLogger))
+			eventConsumer.RegisterHandler(handlers.NewHabitCreatedHandler(appLogger))
+			eventConsumer.RegisterHandler(handlers.NewHabitCompletedHandler(appLogger))
+
+			// Start Consumer
+			if err := eventConsumer.Start(ctx, cfg.NATSConsumerName, cfg.NATSConsumerName+"-group"); err != nil {
+				appLogger.Error(ctx, err, "failed to start NATS consumer")
+			}
+		}
+	} else {
+		eventPublisher = events.NewNoOpPublisher()
+		appLogger.Warn(ctx, "NATS not configured, skipping event integration")
+	}
+
+	// Initialize Outbox Processor
+	outboxRepo := outbox.NewRepository(db)
+	outboxProcessor := outbox.NewProcessor(
+		outboxRepo,
+		eventPublisher,
+		appLogger,
+		1*time.Second, // Poll every second
+		50,            // Batch size
+	)
+	go outboxProcessor.Start(ctx) // Start in background
 
 	// Initialize Asynq Client
 	redisOpt := asynq.RedisClientOpt{
@@ -78,7 +148,7 @@ func run(ctx context.Context, _, _ io.Writer) error {
 
 	// Initialize task dispatcher for habits
 	habitDispatcher := habittask.NewAsynqTaskDispatcher(asynqClient, appLogger)
-	habitsApp := habitsvc.NewApplication(ctx, db, habitDispatcher, appLogger, metricsClient)
+	habitsApp := habitsvc.NewApplication(ctx, db, habitDispatcher, eventPublisher, appLogger, metricsClient)
 
 	// Notifications App
 	notificationsApp := notificationsvc.NewApplication(db, appLogger, metricsClient, cfg)

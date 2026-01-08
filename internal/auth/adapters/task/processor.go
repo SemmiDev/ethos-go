@@ -9,7 +9,7 @@ import (
 
 	"github.com/hibiken/asynq"
 	"github.com/semmidev/ethos-go/internal/auth/domain/gateway"
-	"github.com/semmidev/ethos-go/internal/common/assets"
+	"github.com/semmidev/ethos-go/internal/auth/infrastructure/assets"
 	"github.com/semmidev/ethos-go/internal/common/email"
 	"github.com/semmidev/ethos-go/internal/common/logger"
 )

@@ -7,8 +7,8 @@ import (
 
 	"github.com/google/uuid"
 	openapi_types "github.com/oapi-codegen/runtime/types"
+	authctx "github.com/semmidev/ethos-go/internal/auth/infrastructure/context"
 	"github.com/semmidev/ethos-go/internal/common/apperror"
-	"github.com/semmidev/ethos-go/internal/common/auth"
 	"github.com/semmidev/ethos-go/internal/common/httputil"
 	"github.com/semmidev/ethos-go/internal/common/model"
 	habits "github.com/semmidev/ethos-go/internal/generated/api/habits"
@@ -31,7 +31,7 @@ var _ habits.ServerInterface = (*OpenAPIServer)(nil)
 // List all habits
 // (GET /habits)
 func (s *OpenAPIServer) ListHabits(w http.ResponseWriter, r *http.Request, params habits.ListHabitsParams) {
-	user, err := auth.UserFromCtx(r.Context())
+	user, err := authctx.UserFromCtx(r.Context())
 	if err != nil {
 		httputil.Error(w, r, apperror.Unauthorized("unauthorized"))
 		return
@@ -85,7 +85,7 @@ func (s *OpenAPIServer) ListHabits(w http.ResponseWriter, r *http.Request, param
 // Create a new habit
 // (POST /habits)
 func (s *OpenAPIServer) CreateHabit(w http.ResponseWriter, r *http.Request) {
-	user, err := auth.UserFromCtx(r.Context())
+	user, err := authctx.UserFromCtx(r.Context())
 	if err != nil {
 		httputil.Error(w, r, apperror.Unauthorized("unauthorized"))
 		return
@@ -154,7 +154,7 @@ func (s *OpenAPIServer) CreateHabit(w http.ResponseWriter, r *http.Request) {
 // Delete a habit
 // (DELETE /habits/{habitId})
 func (s *OpenAPIServer) DeleteHabit(w http.ResponseWriter, r *http.Request, habitId openapi_types.UUID) {
-	user, err := auth.UserFromCtx(r.Context())
+	user, err := authctx.UserFromCtx(r.Context())
 	if err != nil {
 		httputil.Error(w, r, apperror.Unauthorized("unauthorized"))
 		return
@@ -176,7 +176,7 @@ func (s *OpenAPIServer) DeleteHabit(w http.ResponseWriter, r *http.Request, habi
 // Get a habit by ID
 // (GET /habits/{habitId})
 func (s *OpenAPIServer) GetHabit(w http.ResponseWriter, r *http.Request, habitId openapi_types.UUID) {
-	user, err := auth.UserFromCtx(r.Context())
+	user, err := authctx.UserFromCtx(r.Context())
 	if err != nil {
 		httputil.Error(w, r, apperror.Unauthorized("unauthorized"))
 		return
@@ -212,7 +212,7 @@ func (s *OpenAPIServer) GetHabit(w http.ResponseWriter, r *http.Request, habitId
 // Update a habit
 // (PUT /habits/{habitId})
 func (s *OpenAPIServer) UpdateHabit(w http.ResponseWriter, r *http.Request, habitId openapi_types.UUID) {
-	user, err := auth.UserFromCtx(r.Context())
+	user, err := authctx.UserFromCtx(r.Context())
 	if err != nil {
 		httputil.Error(w, r, apperror.Unauthorized("unauthorized"))
 		return
@@ -269,7 +269,7 @@ func (s *OpenAPIServer) UpdateHabit(w http.ResponseWriter, r *http.Request, habi
 // Activate a habit
 // (POST /habits/{habitId}/activate)
 func (s *OpenAPIServer) ActivateHabit(w http.ResponseWriter, r *http.Request, habitId openapi_types.UUID) {
-	user, err := auth.UserFromCtx(r.Context())
+	user, err := authctx.UserFromCtx(r.Context())
 	if err != nil {
 		httputil.Error(w, r, apperror.Unauthorized("unauthorized"))
 		return
@@ -291,7 +291,7 @@ func (s *OpenAPIServer) ActivateHabit(w http.ResponseWriter, r *http.Request, ha
 // Deactivate a habit
 // (POST /habits/{habitId}/deactivate)
 func (s *OpenAPIServer) DeactivateHabit(w http.ResponseWriter, r *http.Request, habitId openapi_types.UUID) {
-	user, err := auth.UserFromCtx(r.Context())
+	user, err := authctx.UserFromCtx(r.Context())
 	if err != nil {
 		httputil.Error(w, r, apperror.Unauthorized("unauthorized"))
 		return
@@ -313,7 +313,7 @@ func (s *OpenAPIServer) DeactivateHabit(w http.ResponseWriter, r *http.Request, 
 // Get habit statistics
 // (GET /habits/{habitId}/stats)
 func (s *OpenAPIServer) GetHabitStats(w http.ResponseWriter, r *http.Request, habitId openapi_types.UUID) {
-	user, err := auth.UserFromCtx(r.Context())
+	user, err := authctx.UserFromCtx(r.Context())
 	if err != nil {
 		httputil.Error(w, r, apperror.Unauthorized("unauthorized"))
 		return
@@ -341,7 +341,7 @@ func (s *OpenAPIServer) GetHabitStats(w http.ResponseWriter, r *http.Request, ha
 // Log a habit
 // (POST /habits/{habitId}/logs)
 func (s *OpenAPIServer) LogHabit(w http.ResponseWriter, r *http.Request, habitId openapi_types.UUID) {
-	user, err := auth.UserFromCtx(r.Context())
+	user, err := authctx.UserFromCtx(r.Context())
 	if err != nil {
 		httputil.Error(w, r, apperror.Unauthorized("unauthorized"))
 		return
@@ -385,7 +385,7 @@ func (s *OpenAPIServer) LogHabit(w http.ResponseWriter, r *http.Request, habitId
 // Get habit logs
 // (GET /habits/{habitId}/logs)
 func (s *OpenAPIServer) GetHabitLogs(w http.ResponseWriter, r *http.Request, habitId openapi_types.UUID, params habits.GetHabitLogsParams) {
-	user, err := auth.UserFromCtx(r.Context())
+	user, err := authctx.UserFromCtx(r.Context())
 	if err != nil {
 		httputil.Error(w, r, apperror.Unauthorized("unauthorized"))
 		return
@@ -439,7 +439,7 @@ func (s *OpenAPIServer) GetHabitLogs(w http.ResponseWriter, r *http.Request, hab
 // Update a habit log
 // (PUT /habit-logs/{logId})
 func (s *OpenAPIServer) UpdateHabitLog(w http.ResponseWriter, r *http.Request, logId openapi_types.UUID) {
-	user, err := auth.UserFromCtx(r.Context())
+	user, err := authctx.UserFromCtx(r.Context())
 	if err != nil {
 		httputil.Error(w, r, apperror.Unauthorized("unauthorized"))
 		return
@@ -475,7 +475,7 @@ func (s *OpenAPIServer) UpdateHabitLog(w http.ResponseWriter, r *http.Request, l
 // Delete a habit log
 // (DELETE /habit-logs/{logId})
 func (s *OpenAPIServer) DeleteHabitLog(w http.ResponseWriter, r *http.Request, logId openapi_types.UUID) {
-	user, err := auth.UserFromCtx(r.Context())
+	user, err := authctx.UserFromCtx(r.Context())
 	if err != nil {
 		httputil.Error(w, r, apperror.Unauthorized("unauthorized"))
 		return
@@ -497,7 +497,7 @@ func (s *OpenAPIServer) DeleteHabitLog(w http.ResponseWriter, r *http.Request, l
 // Get user dashboard
 // (GET /dashboard)
 func (s *OpenAPIServer) GetDashboard(w http.ResponseWriter, r *http.Request) {
-	user, err := auth.UserFromCtx(r.Context())
+	user, err := authctx.UserFromCtx(r.Context())
 	if err != nil {
 		httputil.Error(w, r, apperror.Unauthorized("unauthorized"))
 		return
@@ -527,7 +527,7 @@ func (s *OpenAPIServer) GetDashboard(w http.ResponseWriter, r *http.Request) {
 // Get weekly analytics data
 // (GET /analytics/weekly)
 func (s *OpenAPIServer) GetWeeklyAnalytics(w http.ResponseWriter, r *http.Request) {
-	user, err := auth.UserFromCtx(r.Context())
+	user, err := authctx.UserFromCtx(r.Context())
 	if err != nil {
 		httputil.Error(w, r, apperror.Unauthorized("unauthorized"))
 		return

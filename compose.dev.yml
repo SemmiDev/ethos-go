@@ -88,6 +88,28 @@ services:
       - postgresql
 
   # ============================================================================
+  # Messaging Services
+  # ============================================================================
+  nats:
+    container_name: ethosgo-nats
+    image: nats:2.10-alpine
+    ports:
+      - '4222:4222'   # NATS Client
+      - '8222:8222'   # HTTP Monitoring
+    command: ["--jetstream", "--store_dir", "/data", "-m", "8222"]
+    volumes:
+      - ethosgo-nats-data-volume:/data
+    networks:
+      - ethosgo-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8222/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ============================================================================
   # LGTM Stack: Loki (Logs), Grafana (Visualization), Tempo (Traces), Mimir (Metrics)
   # ============================================================================
 
@@ -182,6 +204,8 @@ volumes:
   ethosgo-postgresql-data-volume:
     driver: local
   ethosgo-redis-data-volume:
+    driver: local
+  ethosgo-nats-data-volume:
     driver: local
   loki-data:
     driver: local

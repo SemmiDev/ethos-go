@@ -4,10 +4,12 @@ import (
 	"context"
 	"time"
 
+	authevents "github.com/semmidev/ethos-go/internal/auth/domain/events"
 	"github.com/semmidev/ethos-go/internal/auth/domain/service"
 	"github.com/semmidev/ethos-go/internal/auth/domain/user"
 	"github.com/semmidev/ethos-go/internal/common/apperror"
 	"github.com/semmidev/ethos-go/internal/common/decorator"
+	"github.com/semmidev/ethos-go/internal/common/events"
 	"github.com/semmidev/ethos-go/internal/common/logger"
 	"github.com/semmidev/ethos-go/internal/common/validator"
 )
@@ -24,12 +26,14 @@ type resetPasswordHandler struct {
 	userRepo       user.Repository
 	passwordHasher service.PasswordHasher
 	validator      *validator.Validator
+	publisher      events.Publisher
 }
 
 func NewResetPasswordHandler(
 	userRepo user.Repository,
 	passwordHasher service.PasswordHasher,
 	validator *validator.Validator,
+	publisher events.Publisher, // Injected
 	log logger.Logger,
 	metricsClient decorator.MetricsClient,
 ) ResetPasswordHandler {
@@ -38,6 +42,7 @@ func NewResetPasswordHandler(
 			userRepo:       userRepo,
 			passwordHasher: passwordHasher,
 			validator:      validator,
+			publisher:      publisher,
 		},
 		log,
 		metricsClient,
@@ -75,6 +80,10 @@ func (h resetPasswordHandler) Handle(ctx context.Context, cmd ResetPasswordComma
 	if err := h.userRepo.Update(ctx, u); err != nil {
 		return apperror.InternalError(err)
 	}
+
+	// Publish PasswordChanged event
+	event := authevents.NewPasswordChanged(u.UserID.String(), u.Email)
+	_ = h.publisher.Publish(ctx, event)
 
 	return nil
 }

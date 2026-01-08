@@ -5,8 +5,10 @@ import (
 
 	"github.com/semmidev/ethos-go/internal/common/apperror"
 	"github.com/semmidev/ethos-go/internal/common/decorator"
+	"github.com/semmidev/ethos-go/internal/common/events"
 	"github.com/semmidev/ethos-go/internal/common/logger"
 	"github.com/semmidev/ethos-go/internal/common/validator"
+	habitevents "github.com/semmidev/ethos-go/internal/habits/domain/events"
 	"github.com/semmidev/ethos-go/internal/habits/domain/habit"
 	domaintask "github.com/semmidev/ethos-go/internal/habits/domain/task"
 )
@@ -31,6 +33,7 @@ type createHabitHandler struct {
 	repo       habit.Repository
 	validator  *validator.Validator
 	dispatcher domaintask.TaskDispatcher
+	publisher  events.Publisher
 }
 
 // NewCreateHabitHandler creates a new handler with decorators
@@ -38,6 +41,7 @@ func NewCreateHabitHandler(
 	repo habit.Repository,
 	validator *validator.Validator,
 	dispatcher domaintask.TaskDispatcher,
+	publisher events.Publisher, // Injected publisher
 	log logger.Logger,
 	metricsClient decorator.MetricsClient,
 ) CreateHabitHandler {
@@ -50,6 +54,7 @@ func NewCreateHabitHandler(
 			repo:       repo,
 			validator:  validator,
 			dispatcher: dispatcher,
+			publisher:  publisher,
 		},
 		log,
 		metricsClient,
@@ -113,6 +118,16 @@ func (h createHabitHandler) Handle(ctx context.Context, cmd CreateHabit) error {
 	// We ignore error here to not fail the transaction if notification fails,
 	// but in production, we should log it properly (h.notifier implementation typically logs).
 	_ = h.dispatcher.DispatchHabitCreated(ctx, cmd.HabitID, cmd.UserID, cmd.Name)
+
+	// Publish HabitCreated event
+	event := habitevents.NewHabitCreated(
+		newHabit.HabitID(),
+		newHabit.UserID(),
+		newHabit.Name(),
+		newHabit.Frequency().String(),
+		newHabit.TargetCount(),
+	)
+	_ = h.publisher.Publish(ctx, event)
 
 	return nil
 }

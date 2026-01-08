@@ -4,11 +4,13 @@ import (
 	"context"
 	"time"
 
+	authevents "github.com/semmidev/ethos-go/internal/auth/domain/events"
 	"github.com/semmidev/ethos-go/internal/auth/domain/service"
 	"github.com/semmidev/ethos-go/internal/auth/domain/session"
 	"github.com/semmidev/ethos-go/internal/auth/domain/user"
 	"github.com/semmidev/ethos-go/internal/common/apperror"
 	"github.com/semmidev/ethos-go/internal/common/decorator"
+	"github.com/semmidev/ethos-go/internal/common/events"
 	"github.com/semmidev/ethos-go/internal/common/logger"
 	"github.com/semmidev/ethos-go/internal/common/random"
 	"github.com/semmidev/ethos-go/internal/common/validator"
@@ -41,6 +43,7 @@ type loginHandler struct {
 	tokenIssuer    service.TokenIssuer
 	authService    *session.AuthenticationService
 	validator      *validator.Validator
+	publisher      events.Publisher
 }
 
 func NewLoginHandler(
@@ -50,6 +53,7 @@ func NewLoginHandler(
 	tokenIssuer service.TokenIssuer,
 	authService *session.AuthenticationService,
 	validator *validator.Validator,
+	publisher events.Publisher, // Injected publisher
 	log logger.Logger,
 	metricsClient decorator.MetricsClient,
 ) LoginHandler {
@@ -61,6 +65,7 @@ func NewLoginHandler(
 			tokenIssuer:    tokenIssuer,
 			authService:    authService,
 			validator:      validator,
+			publisher:      publisher,
 		},
 		log,
 		metricsClient,
@@ -136,6 +141,15 @@ func (h loginHandler) Handle(ctx context.Context, cmd LoginCommand) (*LoginResul
 	if err := h.sessionRepo.Create(ctx, newSession); err != nil {
 		return nil, apperror.DatabaseError("create session", err)
 	}
+
+	// Publish UserLoggedIn event
+	event := authevents.NewUserLoggedIn(
+		foundUser.UserID.String(),
+		foundUser.Email,
+		cmd.UserAgent,
+		cmd.ClientIP,
+	)
+	_ = h.publisher.Publish(ctx, event)
 
 	return &LoginResult{
 		AccessToken:  accessToken,

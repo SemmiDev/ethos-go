@@ -7,8 +7,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/semmidev/ethos-go/internal/auth/app/command"
 	"github.com/semmidev/ethos-go/internal/auth/app/query"
+	authctx "github.com/semmidev/ethos-go/internal/auth/infrastructure/context"
 	"github.com/semmidev/ethos-go/internal/common/apperror"
-	commonAuth "github.com/semmidev/ethos-go/internal/common/auth"
 	"github.com/semmidev/ethos-go/internal/common/httputil"
 	"github.com/semmidev/ethos-go/internal/common/model"
 	"github.com/semmidev/ethos-go/internal/generated/api/auth"
@@ -81,7 +81,7 @@ func NewAuthOpenAPIServer(
 // (GET /auth/sessions)
 func (s *AuthOpenAPIServer) ListSessions(w http.ResponseWriter, r *http.Request, params auth.ListSessionsParams) {
 	// Get user from context
-	user, err := commonAuth.UserFromCtx(r.Context())
+	user, err := authctx.UserFromCtx(r.Context())
 	if err != nil {
 		httputil.Error(w, r, apperror.Unauthorized("unauthorized"))
 		return
@@ -254,7 +254,7 @@ func (s *AuthOpenAPIServer) LogoutAll(w http.ResponseWriter, r *http.Request) {
 // Get current user profile
 // (GET /auth/profile)
 func (s *AuthOpenAPIServer) GetProfile(w http.ResponseWriter, r *http.Request) {
-	user, err := commonAuth.UserFromCtx(r.Context())
+	user, err := authctx.UserFromCtx(r.Context())
 	if err != nil {
 		httputil.Error(w, r, apperror.Unauthorized("unauthorized"))
 		return
@@ -280,7 +280,7 @@ func (s *AuthOpenAPIServer) GetProfile(w http.ResponseWriter, r *http.Request) {
 // Update user profile
 // (PUT /auth/profile)
 func (s *AuthOpenAPIServer) UpdateProfile(w http.ResponseWriter, r *http.Request) {
-	user, err := commonAuth.UserFromCtx(r.Context())
+	user, err := authctx.UserFromCtx(r.Context())
 	if err != nil {
 		httputil.Error(w, r, apperror.Unauthorized("unauthorized"))
 		return
@@ -321,7 +321,7 @@ func (s *AuthOpenAPIServer) UpdateProfile(w http.ResponseWriter, r *http.Request
 // Change user password
 // (POST /auth/change-password)
 func (s *AuthOpenAPIServer) ChangePassword(w http.ResponseWriter, r *http.Request) {
-	user, err := commonAuth.UserFromCtx(r.Context())
+	user, err := authctx.UserFromCtx(r.Context())
 	if err != nil {
 		httputil.Error(w, r, apperror.Unauthorized("unauthorized"))
 		return
@@ -491,7 +491,7 @@ func (s *AuthOpenAPIServer) GoogleCallback(w http.ResponseWriter, r *http.Reques
 // (DELETE /auth/sessions/other)
 func (s *AuthOpenAPIServer) RevokeOtherSessions(w http.ResponseWriter, r *http.Request) {
 	// Get user from context
-	user, err := commonAuth.UserFromCtx(r.Context())
+	user, err := authctx.UserFromCtx(r.Context())
 	if err != nil {
 		httputil.Error(w, r, apperror.Unauthorized("unauthorized"))
 		return
@@ -524,7 +524,7 @@ func (s *AuthOpenAPIServer) RevokeOtherSessions(w http.ResponseWriter, r *http.R
 // (GET /auth/export)
 func (s *AuthOpenAPIServer) ExportUserData(w http.ResponseWriter, r *http.Request) {
 	// Get user from context
-	user, err := commonAuth.UserFromCtx(r.Context())
+	user, err := authctx.UserFromCtx(r.Context())
 	if err != nil {
 		httputil.Error(w, r, apperror.Unauthorized("unauthorized"))
 		return
@@ -545,7 +545,7 @@ func (s *AuthOpenAPIServer) ExportUserData(w http.ResponseWriter, r *http.Reques
 // (DELETE /auth/account)
 func (s *AuthOpenAPIServer) DeleteAccount(w http.ResponseWriter, r *http.Request) {
 	// Get user from context
-	user, err := commonAuth.UserFromCtx(r.Context())
+	user, err := authctx.UserFromCtx(r.Context())
 	if err != nil {
 		httputil.Error(w, r, apperror.Unauthorized("unauthorized"))
 		return

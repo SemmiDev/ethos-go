@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	commonerrors "github.com/semmidev/ethos-go/internal/common/errors"
+	"github.com/semmidev/ethos-go/internal/common/apperror"
 )
 
 // HabitLog represents a record of habit completion on a specific date
@@ -23,10 +23,10 @@ var (
 	ErrEmptyLogID   = errors.New("empty log id")
 	ErrEmptyHabitID = errors.New("empty habit id")
 	ErrEmptyUserID  = errors.New("empty user id")
-	ErrInvalidCount = commonerrors.NewIncorrectInputError("count must be positive", "invalid-count")
-	ErrInvalidDate  = commonerrors.NewIncorrectInputError("invalid log date", "invalid-date")
-	ErrNotFound     = commonerrors.NewNotFoundError("habit log not found", "log-not-found")
-	ErrUnauthorized = commonerrors.NewUnauthorizedError("user cannot access this log", "unauthorized")
+	ErrInvalidCount = apperror.ValidationFailed("count must be positive")
+	ErrInvalidDate  = apperror.ValidationFailed("invalid log date")
+	ErrNotFound     = apperror.NotFound("habit log", "")
+	ErrUnauthorized = apperror.Unauthorized("user cannot access this log")
 )
 
 // NewHabitLog creates a new habit log entry with validation

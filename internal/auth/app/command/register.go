@@ -6,11 +6,13 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	authevents "github.com/semmidev/ethos-go/internal/auth/domain/events"
 	"github.com/semmidev/ethos-go/internal/auth/domain/gateway"
 	"github.com/semmidev/ethos-go/internal/auth/domain/service"
 	"github.com/semmidev/ethos-go/internal/auth/domain/user"
 	"github.com/semmidev/ethos-go/internal/common/apperror"
 	"github.com/semmidev/ethos-go/internal/common/decorator"
+	"github.com/semmidev/ethos-go/internal/common/events"
 	"github.com/semmidev/ethos-go/internal/common/logger"
 	"github.com/semmidev/ethos-go/internal/common/random"
 	"github.com/semmidev/ethos-go/internal/common/validator"
@@ -38,6 +40,7 @@ type registerHandler struct {
 	passwordHasher service.PasswordHasher
 	validator      *validator.Validator
 	dispatcher     gateway.TaskDispatcher
+	eventPublisher events.Publisher
 }
 
 func NewRegisterHandler(
@@ -45,6 +48,7 @@ func NewRegisterHandler(
 	passwordHasher service.PasswordHasher,
 	validator *validator.Validator,
 	dispatcher gateway.TaskDispatcher,
+	eventPublisher events.Publisher,
 	log logger.Logger,
 	metricsClient decorator.MetricsClient,
 ) RegisterHandler {
@@ -54,6 +58,7 @@ func NewRegisterHandler(
 			passwordHasher: passwordHasher,
 			validator:      validator,
 			dispatcher:     dispatcher,
+			eventPublisher: eventPublisher,
 		},
 		log,
 		metricsClient,
@@ -124,6 +129,15 @@ func (h registerHandler) Handle(ctx context.Context, cmd RegisterCommand) (*Regi
 		// Retrying might duplicate user create if not careful.
 		// Since user is created, we return success. User logic: if not received, click Resend.
 	}
+
+	// Publish UserRegistered event
+	event := authevents.NewUserRegistered(
+		userID.String(),
+		cmd.Email,
+		cmd.Name,
+		"email",
+	)
+	_ = h.eventPublisher.Publish(ctx, event) // Non-blocking, log errors in publisher
 
 	return &RegisterResult{
 		UserID: userID,

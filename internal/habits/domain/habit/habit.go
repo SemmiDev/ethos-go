@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	commonerrors "github.com/semmidev/ethos-go/internal/common/errors"
+	"github.com/semmidev/ethos-go/internal/common/apperror"
 )
 
 type Habit struct {
@@ -24,11 +24,11 @@ type Habit struct {
 var (
 	ErrAlreadyActive      = errors.New("habit is already active")
 	ErrAlreadyInactive    = errors.New("habit is already inactive")
-	ErrEmptyName          = commonerrors.NewIncorrectInputError("habit name cannot be empty", "empty-name")
-	ErrInvalidTargetCount = commonerrors.NewIncorrectInputError("target count must be positive", "invalid-target")
-	ErrInvalidReminder    = commonerrors.NewIncorrectInputError("invalid reminder time format (HH:MM)", "invalid-reminder")
-	ErrNotFound           = commonerrors.NewNotFoundError("habit not found", "habit-not-found")
-	ErrUnauthorized       = commonerrors.NewUnauthorizedError("user cannot access this habit", "unauthorized")
+	ErrEmptyName          = apperror.ValidationFailed("habit name cannot be empty")
+	ErrInvalidTargetCount = apperror.ValidationFailed("target count must be positive")
+	ErrInvalidReminder    = apperror.ValidationFailed("invalid reminder time format (HH:MM)")
+	ErrNotFound           = apperror.NotFound("habit", "")
+	ErrUnauthorized       = apperror.Unauthorized("user cannot access this habit")
 )
 
 func NewHabit(

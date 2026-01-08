@@ -5,6 +5,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/semmidev/ethos-go/internal/common/decorator"
+	"github.com/semmidev/ethos-go/internal/common/events"
 	"github.com/semmidev/ethos-go/internal/common/logger"
 	"github.com/semmidev/ethos-go/internal/common/validator"
 	"github.com/semmidev/ethos-go/internal/habits/adapters"
@@ -19,6 +20,7 @@ func NewApplication(
 	ctx context.Context,
 	db *sqlx.DB,
 	dispatcher domaintask.TaskDispatcher,
+	eventPublisher events.Publisher, // Added eventPublisher
 	log logger.Logger,
 	metricsClient decorator.MetricsClient,
 ) app.Application {
@@ -35,6 +37,7 @@ func NewApplication(
 				habitRepo,
 				validate,
 				dispatcher,
+				eventPublisher,
 				log,
 				metricsClient,
 			),
@@ -53,12 +56,14 @@ func NewApplication(
 			ActivateHabit: command.NewActivateHabitHandler(
 				habitRepo,
 				validate,
+				eventPublisher,
 				log,
 				metricsClient,
 			),
 			DeactivateHabit: command.NewDeactivateHabitHandler(
 				habitRepo,
 				validate,
+				eventPublisher,
 				log,
 				metricsClient,
 			),
@@ -66,6 +71,7 @@ func NewApplication(
 				habitRepo,
 				habitLogRepo,
 				validate,
+				eventPublisher,
 				log,
 				metricsClient,
 			),

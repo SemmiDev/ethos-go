@@ -15,7 +15,7 @@ import (
 )
 
 // ListSessions retrieves a paginated list of sessions for a user with filtering options.
-func (r *PostgresSessionRepository) ListSessions(
+func (r *SessionPostgresRepository) ListSessions(
 	ctx context.Context,
 	userID uuid.UUID,
 	includeBlocked, includeExpired bool,
@@ -86,19 +86,19 @@ func (r *PostgresSessionRepository) ListSessions(
 	return sessions, totalCount, nil
 }
 
-// PostgresSessionRepository implements the SessionRepository interface.
-type PostgresSessionRepository struct {
+// SessionPostgresRepository implements the SessionRepository interface.
+type SessionPostgresRepository struct {
 	db *sqlx.DB
 }
 
-func NewPostgresSessionRepository(db *sqlx.DB) *PostgresSessionRepository {
-	return &PostgresSessionRepository{
+func NewSessionPostgresRepository(db *sqlx.DB) *SessionPostgresRepository {
+	return &SessionPostgresRepository{
 		db: db,
 	}
 }
 
 // Create inserts a new session into the database.
-func (r *PostgresSessionRepository) Create(ctx context.Context, s *session.Session) error {
+func (r *SessionPostgresRepository) Create(ctx context.Context, s *session.Session) error {
 	query := `
 		INSERT INTO sessions (
 			session_id, user_id, refresh_token, user_agent,
@@ -127,7 +127,7 @@ func (r *PostgresSessionRepository) Create(ctx context.Context, s *session.Sessi
 }
 
 // FindByID retrieves a session by its unique identifier.
-func (r *PostgresSessionRepository) FindByID(ctx context.Context, sessionID uuid.UUID) (*session.Session, error) {
+func (r *SessionPostgresRepository) FindByID(ctx context.Context, sessionID uuid.UUID) (*session.Session, error) {
 	query := `
 		SELECT
 			session_id, user_id, refresh_token, user_agent,
@@ -150,7 +150,7 @@ func (r *PostgresSessionRepository) FindByID(ctx context.Context, sessionID uuid
 }
 
 // FindByRefreshToken looks up a session using its refresh token.
-func (r *PostgresSessionRepository) FindByRefreshToken(ctx context.Context, refreshToken string) (*session.Session, error) {
+func (r *SessionPostgresRepository) FindByRefreshToken(ctx context.Context, refreshToken string) (*session.Session, error) {
 	query := `
 		SELECT
 			session_id, user_id, refresh_token, user_agent,
@@ -173,7 +173,7 @@ func (r *PostgresSessionRepository) FindByRefreshToken(ctx context.Context, refr
 }
 
 // FindAllByUserID returns all sessions for a specific user.
-func (r *PostgresSessionRepository) FindAllByUserID(ctx context.Context, userID uuid.UUID) ([]*session.Session, error) {
+func (r *SessionPostgresRepository) FindAllByUserID(ctx context.Context, userID uuid.UUID) ([]*session.Session, error) {
 	query := `
 		SELECT
 			session_id, user_id, refresh_token, user_agent,
@@ -193,7 +193,7 @@ func (r *PostgresSessionRepository) FindAllByUserID(ctx context.Context, userID 
 }
 
 // Update modifies an existing session in the database.
-func (r *PostgresSessionRepository) Update(ctx context.Context, s *session.Session) error {
+func (r *SessionPostgresRepository) Update(ctx context.Context, s *session.Session) error {
 	query := `
 		UPDATE sessions
 		SET
@@ -228,7 +228,7 @@ func (r *PostgresSessionRepository) Update(ctx context.Context, s *session.Sessi
 }
 
 // Delete permanently removes a session from the database.
-func (r *PostgresSessionRepository) Delete(ctx context.Context, sessionID uuid.UUID) error {
+func (r *SessionPostgresRepository) Delete(ctx context.Context, sessionID uuid.UUID) error {
 	query := `DELETE FROM sessions WHERE session_id = $1`
 
 	result, err := r.db.ExecContext(ctx, query, sessionID)
@@ -248,7 +248,7 @@ func (r *PostgresSessionRepository) Delete(ctx context.Context, sessionID uuid.U
 }
 
 // DeleteAllByUserID removes all sessions for a user.
-func (r *PostgresSessionRepository) DeleteAllByUserID(ctx context.Context, userID uuid.UUID) error {
+func (r *SessionPostgresRepository) DeleteAllByUserID(ctx context.Context, userID uuid.UUID) error {
 	query := `DELETE FROM sessions WHERE user_id = $1`
 
 	_, err := r.db.ExecContext(ctx, query, userID)
@@ -260,7 +260,7 @@ func (r *PostgresSessionRepository) DeleteAllByUserID(ctx context.Context, userI
 }
 
 // DeleteExpired removes all sessions that have passed their expiration time.
-func (r *PostgresSessionRepository) DeleteExpired(ctx context.Context) (int64, error) {
+func (r *SessionPostgresRepository) DeleteExpired(ctx context.Context) (int64, error) {
 	query := `
 		DELETE FROM sessions
 		WHERE expires_at < NOW() AND NOT is_blocked
@@ -280,7 +280,7 @@ func (r *PostgresSessionRepository) DeleteExpired(ctx context.Context) (int64, e
 }
 
 // translateError converts database-specific errors to domain errors.
-func (r *PostgresSessionRepository) translateError(err error, operation string) error {
+func (r *SessionPostgresRepository) translateError(err error, operation string) error {
 	// Check for PostgreSQL-specific errors
 	var pgErr *pq.Error
 	if errors.As(err, &pgErr) {

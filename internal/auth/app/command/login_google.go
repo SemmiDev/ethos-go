@@ -6,11 +6,13 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/semmidev/ethos-go/internal/auth/adapters/google"
+	authevents "github.com/semmidev/ethos-go/internal/auth/domain/events"
 	"github.com/semmidev/ethos-go/internal/auth/domain/service"
 	"github.com/semmidev/ethos-go/internal/auth/domain/session"
 	"github.com/semmidev/ethos-go/internal/auth/domain/user"
 	"github.com/semmidev/ethos-go/internal/common/apperror"
 	"github.com/semmidev/ethos-go/internal/common/decorator"
+	"github.com/semmidev/ethos-go/internal/common/events"
 	"github.com/semmidev/ethos-go/internal/common/logger"
 	"github.com/semmidev/ethos-go/internal/common/random"
 )
@@ -29,6 +31,7 @@ type loginGoogleHandler struct {
 	sessionRepo   session.Repository
 	tokenIssuer   service.TokenIssuer
 	authService   *session.AuthenticationService
+	publisher     events.Publisher
 }
 
 func NewLoginGoogleHandler(
@@ -37,6 +40,7 @@ func NewLoginGoogleHandler(
 	sessionRepo session.Repository,
 	tokenIssuer service.TokenIssuer,
 	authService *session.AuthenticationService,
+	publisher events.Publisher, // Injected
 	log logger.Logger,
 	metricsClient decorator.MetricsClient,
 ) LoginGoogleHandler {
@@ -47,6 +51,7 @@ func NewLoginGoogleHandler(
 			sessionRepo:   sessionRepo,
 			tokenIssuer:   tokenIssuer,
 			authService:   authService,
+			publisher:     publisher,
 		},
 		log,
 		metricsClient,
@@ -121,6 +126,15 @@ func (h loginGoogleHandler) Handle(ctx context.Context, cmd LoginGoogleCommand) 
 	if err := h.sessionRepo.Create(ctx, newSession); err != nil {
 		return nil, apperror.DatabaseError("create session", err)
 	}
+
+	// Publish UserLoggedIn event
+	event := authevents.NewUserLoggedIn(
+		foundUser.UserID.String(),
+		foundUser.Email,
+		cmd.UserAgent,
+		cmd.ClientIP,
+	)
+	_ = h.publisher.Publish(ctx, event)
 
 	return &LoginResult{
 		AccessToken:  accessToken,

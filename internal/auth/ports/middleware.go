@@ -8,8 +8,8 @@ import (
 
 	"github.com/semmidev/ethos-go/internal/auth/domain/service"
 	"github.com/semmidev/ethos-go/internal/auth/domain/user"
+	authctx "github.com/semmidev/ethos-go/internal/auth/infrastructure/context"
 	"github.com/semmidev/ethos-go/internal/common/apperror"
-	"github.com/semmidev/ethos-go/internal/common/auth"
 	"github.com/semmidev/ethos-go/internal/common/httputil"
 	"github.com/semmidev/ethos-go/internal/common/logger"
 )
@@ -89,7 +89,7 @@ func AuthMiddleware(tokenVerifier service.TokenVerifier, userReader user.UserRea
 			ctx = context.WithValue(ctx, emailKey, user.Email)
 
 			// Also set the common auth context for other modules (like habits) that rely on it
-			ctx = auth.ContextWithUser(ctx, auth.User{
+			ctx = authctx.ContextWithUser(ctx, authctx.User{
 				UserID: claims.UserID.String(),
 				Email:  user.Email,
 			})

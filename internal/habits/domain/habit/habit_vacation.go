@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	commonerrors "github.com/semmidev/ethos-go/internal/common/errors"
+	"github.com/semmidev/ethos-go/internal/common/apperror"
 )
 
 // HabitVacation represents a period where a habit is paused
@@ -20,10 +20,10 @@ type HabitVacation struct {
 var (
 	ErrVacationEmptyID      = errors.New("vacation id cannot be empty")
 	ErrVacationEmptyHabitID = errors.New("habit id cannot be empty")
-	ErrVacationInvalidDates = commonerrors.NewIncorrectInputError("end date must be after start date", "invalid-vacation-dates")
-	ErrVacationNotFound     = commonerrors.NewNotFoundError("vacation not found", "vacation-not-found")
-	ErrVacationAlreadyEnded = commonerrors.NewIncorrectInputError("vacation has already ended", "vacation-ended")
-	ErrVacationOverlap      = commonerrors.NewIncorrectInputError("vacation dates overlap with an existing vacation", "vacation-overlap")
+	ErrVacationInvalidDates = apperror.ValidationFailed("end date must be after start date")
+	ErrVacationNotFound     = apperror.NotFound("vacation", "")
+	ErrVacationAlreadyEnded = apperror.ValidationFailed("vacation has already ended")
+	ErrVacationOverlap      = apperror.ValidationFailed("vacation dates overlap with an existing vacation")
 )
 
 // NewHabitVacation creates a new vacation period for a habit

@@ -13,15 +13,15 @@ import (
 	"github.com/semmidev/ethos-go/internal/auth/domain/user"
 )
 
-type PostgresUserRepository struct {
+type UserPostgresRepository struct {
 	db *sqlx.DB
 }
 
-func NewPostgresUserRepository(db *sqlx.DB) *PostgresUserRepository {
-	return &PostgresUserRepository{db: db}
+func NewUserPostgresRepository(db *sqlx.DB) *UserPostgresRepository {
+	return &UserPostgresRepository{db: db}
 }
 
-func (r *PostgresUserRepository) Create(ctx context.Context, u *user.User) error {
+func (r *UserPostgresRepository) Create(ctx context.Context, u *user.User) error {
 	query := `
 		INSERT INTO users (
 			user_id, email, name, hashed_password, is_active,
@@ -58,7 +58,7 @@ func (r *PostgresUserRepository) Create(ctx context.Context, u *user.User) error
 	return nil
 }
 
-func (r *PostgresUserRepository) FindByEmail(ctx context.Context, email string) (*user.User, error) {
+func (r *UserPostgresRepository) FindByEmail(ctx context.Context, email string) (*user.User, error) {
 	query := `
 		SELECT
 			user_id, email, name, hashed_password, is_active,
@@ -81,7 +81,7 @@ func (r *PostgresUserRepository) FindByEmail(ctx context.Context, email string) 
 	return &u, nil
 }
 
-func (r *PostgresUserRepository) FindByID(ctx context.Context, userID uuid.UUID) (*user.User, error) {
+func (r *UserPostgresRepository) FindByID(ctx context.Context, userID uuid.UUID) (*user.User, error) {
 	query := `
 		SELECT
 			user_id, email, name, hashed_password, is_active,
@@ -104,7 +104,7 @@ func (r *PostgresUserRepository) FindByID(ctx context.Context, userID uuid.UUID)
 	return &u, nil
 }
 
-func (r *PostgresUserRepository) Update(ctx context.Context, u *user.User) error {
+func (r *UserPostgresRepository) Update(ctx context.Context, u *user.User) error {
 	u.UpdatedAt = time.Now()
 
 	query := `
@@ -151,7 +151,7 @@ func (r *PostgresUserRepository) Update(ctx context.Context, u *user.User) error
 	return nil
 }
 
-func (r *PostgresUserRepository) Delete(ctx context.Context, userID uuid.UUID) error {
+func (r *UserPostgresRepository) Delete(ctx context.Context, userID uuid.UUID) error {
 	query := `DELETE FROM users WHERE user_id = $1`
 	res, err := r.db.ExecContext(ctx, query, userID)
 	if err != nil {

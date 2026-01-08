@@ -5,9 +5,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	authevents "github.com/semmidev/ethos-go/internal/auth/domain/events"
 	"github.com/semmidev/ethos-go/internal/auth/domain/user"
 	"github.com/semmidev/ethos-go/internal/common/apperror"
 	"github.com/semmidev/ethos-go/internal/common/decorator"
+	"github.com/semmidev/ethos-go/internal/common/events"
 	"github.com/semmidev/ethos-go/internal/common/logger"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -100,12 +102,14 @@ type ChangePasswordCommand struct {
 type ChangePasswordHandler decorator.CommandHandler[ChangePasswordCommand]
 
 type changePasswordHandler struct {
-	repo user.Repository
+	repo      user.Repository
+	publisher events.Publisher
 }
 
 // NewChangePasswordHandler creates a new handler with decorators
 func NewChangePasswordHandler(
 	repo user.Repository,
+	publisher events.Publisher, // Injected
 	log logger.Logger,
 	metricsClient decorator.MetricsClient,
 ) ChangePasswordHandler {
@@ -114,7 +118,10 @@ func NewChangePasswordHandler(
 	}
 
 	return decorator.ApplyCommandDecorators[ChangePasswordCommand](
-		changePasswordHandler{repo: repo},
+		changePasswordHandler{
+			repo:      repo,
+			publisher: publisher,
+		},
 		log,
 		metricsClient,
 	)
@@ -152,6 +159,10 @@ func (h changePasswordHandler) Handle(ctx context.Context, cmd ChangePasswordCom
 	if err := h.repo.Update(ctx, existingUser); err != nil {
 		return apperror.InternalError(err)
 	}
+
+	// Publish PasswordChanged event
+	event := authevents.NewPasswordChanged(existingUser.UserID.String(), existingUser.Email)
+	_ = h.publisher.Publish(ctx, event)
 
 	return nil
 }

@@ -16,9 +16,10 @@ import (
 	authports "github.com/semmidev/ethos-go/internal/auth/ports"
 	authsvc "github.com/semmidev/ethos-go/internal/auth/service"
 	"github.com/semmidev/ethos-go/internal/common/database"
-	"github.com/semmidev/ethos-go/internal/common/decorator"
 	"github.com/semmidev/ethos-go/internal/common/logger"
+	"github.com/semmidev/ethos-go/internal/common/metrics"
 	"github.com/semmidev/ethos-go/internal/common/observability"
+	"github.com/semmidev/ethos-go/internal/common/outbox"
 	habittask "github.com/semmidev/ethos-go/internal/habits/adapters/task"
 	habitports "github.com/semmidev/ethos-go/internal/habits/ports"
 	habitsvc "github.com/semmidev/ethos-go/internal/habits/service"
@@ -116,14 +117,22 @@ func run(ctx context.Context, _, _ io.Writer) error {
 	appLogger.Info(ctx, "asynq client initialized")
 
 	// Initialize metrics client
-	metricsClient := &decorator.NoOpMetricsClient{}
+	metricsClient := metrics.NewPrometheusMetricsClient()
+
+	// Initialize Outbox (for reliable event publishing)
+	outboxRepo := outbox.NewRepository(db)
+	outboxPublisher := outbox.NewPublisher(outboxRepo)
+	appLogger.Info(ctx, "Outbox publisher initialized")
+
+	// Use OutboxPublisher for services
+	eventPublisher := outboxPublisher
 
 	// Initialize task dispatchers
 	habitDispatcher := habittask.NewAsynqTaskDispatcher(asynqClient, appLogger)
 	authTaskDispatcher := authtask.NewAsynqTaskDispatcher(cfg, asynqClient)
 
 	// Initialize Auth module
-	authApp := authsvc.NewApplication(ctx, cfg, db, authTaskDispatcher, appLogger, metricsClient)
+	authApp := authsvc.NewApplication(ctx, cfg, db, authTaskDispatcher, eventPublisher, appLogger, metricsClient)
 	authServer := authports.NewAuthOpenAPIServer(
 		authApp.Commands.Register,
 		authApp.Commands.Login,
@@ -145,7 +154,7 @@ func run(ctx context.Context, _, _ io.Writer) error {
 	)
 
 	// Initialize Habits module
-	habitsApp := habitsvc.NewApplication(ctx, db, habitDispatcher, appLogger, metricsClient)
+	habitsApp := habitsvc.NewApplication(ctx, db, habitDispatcher, eventPublisher, appLogger, metricsClient)
 	habitsServer := habitports.NewOpenAPIServer(habitsApp)
 
 	// Initialize Notifications module

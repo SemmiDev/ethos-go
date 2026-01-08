@@ -15,6 +15,7 @@ import (
 	"github.com/semmidev/ethos-go/internal/auth/domain/session"
 	"github.com/semmidev/ethos-go/internal/auth/ports"
 	"github.com/semmidev/ethos-go/internal/common/decorator"
+	"github.com/semmidev/ethos-go/internal/common/events"
 	"github.com/semmidev/ethos-go/internal/common/logger"
 	"github.com/semmidev/ethos-go/internal/common/validator"
 )
@@ -25,12 +26,13 @@ func NewApplication(
 	cfg *config.Config,
 	db *sqlx.DB,
 	dispatcher gateway.TaskDispatcher,
+	eventPublisher events.Publisher,
 	log logger.Logger,
 	metricsClient decorator.MetricsClient,
 ) app.Application {
 	// Create adapters (infrastructure)
-	userRepo := adapters.NewPostgresUserRepository(db)
-	sessionRepo := adapters.NewPostgresSessionRepository(db)
+	userRepo := adapters.NewUserPostgresRepository(db)
+	sessionRepo := adapters.NewSessionPostgresRepository(db)
 	passwordHasher := adapters.NewBcryptPasswordHasher()
 	tokenIssuer := adapters.NewJWTTokenIssuer(cfg)
 	validate := validator.New("en")
@@ -55,6 +57,7 @@ func NewApplication(
 				passwordHasher,
 				validate,
 				dispatcher,
+				eventPublisher,
 				log,
 				metricsClient,
 			),
@@ -65,6 +68,7 @@ func NewApplication(
 				tokenIssuer,
 				authService,
 				validate,
+				eventPublisher,
 				log,
 				metricsClient,
 			),
@@ -92,12 +96,14 @@ func NewApplication(
 			),
 			ChangePassword: command.NewChangePasswordHandler(
 				userRepo,
+				eventPublisher,
 				log,
 				metricsClient,
 			),
 			VerifyEmail: command.NewVerifyEmailHandler(
 				userRepo,
 				validate,
+				eventPublisher,
 				log,
 				metricsClient,
 			),
@@ -119,6 +125,7 @@ func NewApplication(
 				userRepo,
 				passwordHasher,
 				validate,
+				eventPublisher,
 				log,
 				metricsClient,
 			),
@@ -128,6 +135,7 @@ func NewApplication(
 				sessionRepo,
 				tokenIssuer,
 				authService,
+				eventPublisher,
 				log,
 				metricsClient,
 			),
@@ -166,7 +174,7 @@ func NewApplication(
 			),
 			ExportUserData: query.NewExportUserDataHandler(
 				userRepo,
-				db,
+				adapters.NewExportDataPostgresRepository(db),
 				log,
 				metricsClient,
 			),

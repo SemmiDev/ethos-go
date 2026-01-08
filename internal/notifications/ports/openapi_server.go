@@ -8,8 +8,8 @@ import (
 	"github.com/go-chi/render"
 	"github.com/google/uuid"
 	openapi_types "github.com/oapi-codegen/runtime/types"
+	authctx "github.com/semmidev/ethos-go/internal/auth/infrastructure/context"
 	"github.com/semmidev/ethos-go/internal/common/apperror"
-	"github.com/semmidev/ethos-go/internal/common/auth"
 	"github.com/semmidev/ethos-go/internal/common/httputil"
 	"github.com/semmidev/ethos-go/internal/common/model"
 	notifications "github.com/semmidev/ethos-go/internal/generated/api/notifications"
@@ -36,7 +36,7 @@ var _ notifications.ServerInterface = (*NotificationOpenAPIServer)(nil)
 
 // ListNotifications implements notifications.ServerInterface
 func (s *NotificationOpenAPIServer) ListNotifications(w http.ResponseWriter, r *http.Request, params notifications.ListNotificationsParams) {
-	user, err := auth.UserFromCtx(r.Context())
+	user, err := authctx.UserFromCtx(r.Context())
 	if err != nil {
 		httputil.Error(w, r, apperror.Unauthorized("unauthorized"))
 		return
@@ -79,7 +79,7 @@ func (s *NotificationOpenAPIServer) ListNotifications(w http.ResponseWriter, r *
 
 // GetUnreadCount implements notifications.ServerInterface
 func (s *NotificationOpenAPIServer) GetUnreadCount(w http.ResponseWriter, r *http.Request) {
-	user, err := auth.UserFromCtx(r.Context())
+	user, err := authctx.UserFromCtx(r.Context())
 	if err != nil {
 		httputil.Error(w, r, apperror.Unauthorized("unauthorized"))
 		return
@@ -108,7 +108,7 @@ func (s *NotificationOpenAPIServer) GetUnreadCount(w http.ResponseWriter, r *htt
 
 // MarkAsRead implements notifications.ServerInterface
 func (s *NotificationOpenAPIServer) MarkAsRead(w http.ResponseWriter, r *http.Request, notificationId openapi_types.UUID) {
-	user, err := auth.UserFromCtx(r.Context())
+	user, err := authctx.UserFromCtx(r.Context())
 	if err != nil {
 		httputil.Error(w, r, apperror.Unauthorized("unauthorized"))
 		return
@@ -128,7 +128,7 @@ func (s *NotificationOpenAPIServer) MarkAsRead(w http.ResponseWriter, r *http.Re
 
 // MarkAllAsRead implements notifications.ServerInterface
 func (s *NotificationOpenAPIServer) MarkAllAsRead(w http.ResponseWriter, r *http.Request) {
-	user, err := auth.UserFromCtx(r.Context())
+	user, err := authctx.UserFromCtx(r.Context())
 	if err != nil {
 		httputil.Error(w, r, apperror.Unauthorized("unauthorized"))
 		return
@@ -147,7 +147,7 @@ func (s *NotificationOpenAPIServer) MarkAllAsRead(w http.ResponseWriter, r *http
 
 // CreateNotification implements notifications.ServerInterface
 func (s *NotificationOpenAPIServer) CreateNotification(w http.ResponseWriter, r *http.Request) {
-	user, err := auth.UserFromCtx(r.Context())
+	user, err := authctx.UserFromCtx(r.Context())
 	if err != nil {
 		httputil.Error(w, r, apperror.Unauthorized("unauthorized"))
 		return
@@ -182,7 +182,7 @@ func (s *NotificationOpenAPIServer) CreateNotification(w http.ResponseWriter, r 
 
 // DeleteNotification implements notifications.ServerInterface
 func (s *NotificationOpenAPIServer) DeleteNotification(w http.ResponseWriter, r *http.Request, notificationId openapi_types.UUID) {
-	user, err := auth.UserFromCtx(r.Context())
+	user, err := authctx.UserFromCtx(r.Context())
 	if err != nil {
 		httputil.Error(w, r, apperror.Unauthorized("unauthorized"))
 		return
@@ -217,7 +217,7 @@ func (s *NotificationOpenAPIServer) GetVapidPublicKey(w http.ResponseWriter, r *
 
 // SubscribePush implements notifications.ServerInterface
 func (s *NotificationOpenAPIServer) SubscribePush(w http.ResponseWriter, r *http.Request) {
-	user, err := auth.UserFromCtx(r.Context())
+	user, err := authctx.UserFromCtx(r.Context())
 	if err != nil {
 		httputil.Error(w, r, apperror.Unauthorized("unauthorized"))
 		return
@@ -250,7 +250,7 @@ func (s *NotificationOpenAPIServer) SubscribePush(w http.ResponseWriter, r *http
 
 // UnsubscribePush implements notifications.ServerInterface
 func (s *NotificationOpenAPIServer) UnsubscribePush(w http.ResponseWriter, r *http.Request) {
-	_, err := auth.UserFromCtx(r.Context())
+	_, err := authctx.UserFromCtx(r.Context())
 	if err != nil {
 		httputil.Error(w, r, apperror.Unauthorized("unauthorized"))
 		return
