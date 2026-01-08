@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/semmidev/ethos-go/internal/common/random"
 )
 
 type NotificationType string
@@ -36,7 +36,7 @@ func NewNotification(userID string, notifType NotificationType, title, message s
 	}
 
 	return &Notification{
-		ID:        uuid.New().String(),
+		ID:        random.NewUUID().String(),
 		UserID:    userID,
 		Type:      notifType,
 		Title:     title,

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/semmidev/ethos-go/internal/common/random"
 )
 
 // Subscription represents a Web Push subscription
@@ -23,7 +24,7 @@ type Subscription struct {
 func NewSubscription(userID uuid.UUID, endpoint, p256dh, auth, userAgent string) *Subscription {
 	now := time.Now()
 	return &Subscription{
-		ID:        uuid.New(),
+		ID:        random.NewUUID(),
 		UserID:    userID,
 		Endpoint:  endpoint,
 		P256dh:    p256dh,

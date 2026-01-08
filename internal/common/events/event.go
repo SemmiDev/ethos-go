@@ -3,7 +3,7 @@ package events
 import (
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/semmidev/ethos-go/internal/common/random"
 )
 
 // Event is the base interface for all domain events
@@ -32,7 +32,7 @@ type BaseEvent struct {
 // NewBaseEvent creates a new base event with auto-generated ID and current timestamp
 func NewBaseEvent(eventType, aggregateType, aggregateID string) BaseEvent {
 	return BaseEvent{
-		ID:          uuid.New().String(),
+		ID:          random.NewUUID().String(),
 		Type:        eventType,
 		Occurred:    time.Now().UTC(),
 		AggregateId: aggregateID,

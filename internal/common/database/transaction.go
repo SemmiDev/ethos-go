@@ -9,26 +9,29 @@ import (
 )
 
 // RunInTx executes a function within a database transaction.
-// It automatically commits the transaction if the function returns nil,
-// or rolls back if the function returns an error or panics.
-//
-// Usage:
-//
-//	err := database.RunInTx(ctx, db, func(tx *sqlx.Tx) error {
-//	    // perform database operations
-//	    return nil
-//	})
-func RunInTx(ctx context.Context, db *sqlx.DB, fn func(tx *sqlx.Tx) error) (err error) {
-	tx, err := db.BeginTxx(ctx, nil)
+// The db argument must be *sqlx.DB to start a transaction.
+// If *sqlx.Tx or other DBTX is passed, it executes without starting a new transaction (nested tx not supported).
+func RunInTx(ctx context.Context, db DBTX, fn func(tx *sqlx.Tx) error) (err error) {
+	// If it's already a transaction, just run the function
+	if tx, ok := db.(*sqlx.Tx); ok {
+		return fn(tx)
+	}
+
+	// It must be *sqlx.DB to start a transaction
+	conn, ok := db.(*sqlx.DB)
+	if !ok {
+		return errors.New("RunInTx: db must be *sqlx.DB or *sqlx.Tx")
+	}
+
+	tx, err := conn.BeginTxx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("begin transaction: %w", err)
 	}
 
 	defer func() {
 		if p := recover(); p != nil {
-			// Rollback on panic
 			_ = tx.Rollback()
-			panic(p) // Re-throw panic after rollback
+			panic(p)
 		}
 	}()
 

@@ -5,17 +5,17 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/semmidev/ethos-go/internal/auth/app/query"
+	"github.com/semmidev/ethos-go/internal/common/database"
 )
 
 // ExportDataPostgresRepository implements query.ExportDataRepository
 type ExportDataPostgresRepository struct {
-	db *sqlx.DB
+	db database.DBTX
 }
 
 // NewExportDataPostgresRepository creates a new export data repository
-func NewExportDataPostgresRepository(db *sqlx.DB) *ExportDataPostgresRepository {
+func NewExportDataPostgresRepository(db database.DBTX) *ExportDataPostgresRepository {
 	return &ExportDataPostgresRepository{db: db}
 }
 

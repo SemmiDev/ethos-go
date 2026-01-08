@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/semmidev/ethos-go/config"
+	"github.com/semmidev/ethos-go/internal/common/random"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -22,7 +23,7 @@ func TestJWT(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(jwtService, ShouldNotBeNil)
 
-		userID := uuid.New()
+		userID := random.NewUUID()
 		expDuration := time.Hour
 
 		Convey("When generating a token", func() {

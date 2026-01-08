@@ -24,6 +24,11 @@ type LoginCommand struct {
 	ClientIP  string `json:"client_ip"`
 }
 
+func (c LoginCommand) Validate() error {
+	v := validator.New("en")
+	return v.Validate(c)
+}
+
 // LoginResult contains everything the client needs after successful authentication
 type LoginResult struct {
 	AccessToken  string
@@ -74,7 +79,7 @@ func NewLoginHandler(
 
 func (h loginHandler) Handle(ctx context.Context, cmd LoginCommand) (*LoginResult, error) {
 	// Validate input
-	if err := h.validator.Validate(cmd); err != nil {
+	if err := cmd.Validate(); err != nil {
 		if validationErrors, ok := validator.GetValidationErrors(err); ok {
 			details := make(map[string]interface{})
 			for _, ve := range validationErrors {

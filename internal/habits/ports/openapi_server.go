@@ -11,6 +11,7 @@ import (
 	"github.com/semmidev/ethos-go/internal/common/apperror"
 	"github.com/semmidev/ethos-go/internal/common/httputil"
 	"github.com/semmidev/ethos-go/internal/common/model"
+	"github.com/semmidev/ethos-go/internal/common/random"
 	habits "github.com/semmidev/ethos-go/internal/generated/api/habits"
 	"github.com/semmidev/ethos-go/internal/habits/app"
 	"github.com/semmidev/ethos-go/internal/habits/app/command"
@@ -97,7 +98,7 @@ func (s *OpenAPIServer) CreateHabit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	habitID := uuid.New().String()
+	habitID := random.NewUUID().String()
 
 	frequency := "daily"
 	if req.Frequency != nil {
@@ -355,7 +356,7 @@ func (s *OpenAPIServer) LogHabit(w http.ResponseWriter, r *http.Request, habitId
 
 	formattedDate := req.LogDate.Time
 
-	logID := uuid.New().String()
+	logID := random.NewUUID().String()
 
 	err = s.app.Commands.LogHabit.Handle(r.Context(), command.LogHabit{
 		LogID:   logID,

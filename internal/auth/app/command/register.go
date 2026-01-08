@@ -25,6 +25,11 @@ type RegisterCommand struct {
 	Password string `json:"password" validate:"required,min=8"`
 }
 
+func (c RegisterCommand) Validate() error {
+	v := validator.New("en")
+	return v.Validate(c)
+}
+
 // RegisterResult contains the newly created user information
 type RegisterResult struct {
 	UserID uuid.UUID
@@ -67,7 +72,7 @@ func NewRegisterHandler(
 
 func (h registerHandler) Handle(ctx context.Context, cmd RegisterCommand) (*RegisterResult, error) {
 	// Validate input
-	if err := h.validator.Validate(cmd); err != nil {
+	if err := cmd.Validate(); err != nil {
 		if validationErrors, ok := validator.GetValidationErrors(err); ok {
 			details := make(map[string]interface{})
 			for _, ve := range validationErrors {

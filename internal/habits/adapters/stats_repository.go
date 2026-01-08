@@ -5,16 +5,16 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/jmoiron/sqlx"
+	"github.com/semmidev/ethos-go/internal/common/database"
 	"github.com/semmidev/ethos-go/internal/habits/app/query"
 )
 
 // StatsRepository handles statistics calculations
 type StatsRepository struct {
-	db *sqlx.DB
+	db database.DBTX
 }
 
-func NewStatsRepository(db *sqlx.DB) *StatsRepository {
+func NewStatsRepository(db database.DBTX) *StatsRepository {
 	return &StatsRepository{db: db}
 }
 

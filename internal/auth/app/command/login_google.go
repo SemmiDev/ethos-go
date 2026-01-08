@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/semmidev/ethos-go/internal/auth/adapters/google"
 	authevents "github.com/semmidev/ethos-go/internal/auth/domain/events"
 	"github.com/semmidev/ethos-go/internal/auth/domain/service"
@@ -78,7 +77,7 @@ func (h loginGoogleHandler) Handle(ctx context.Context, cmd LoginGoogleCommand) 
 		// (In production, check specific error type)
 
 		// Create new user
-		userID := uuid.New()
+		userID := random.NewUUID()
 		newUser := user.NewGoogleUser(userID, userInfo.Email, userInfo.Name, userInfo.ID)
 
 		if err := h.userRepo.Create(ctx, newUser); err != nil {

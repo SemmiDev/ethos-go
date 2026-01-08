@@ -7,10 +7,10 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 	"github.com/semmidev/ethos-go/internal/auth/domain/session"
 	"github.com/semmidev/ethos-go/internal/auth/domain/user"
+	"github.com/semmidev/ethos-go/internal/common/database"
 	"github.com/semmidev/ethos-go/internal/common/model"
 )
 
@@ -68,7 +68,7 @@ func (r *SessionPostgresRepository) ListSessions(
 	// Get total count (for pagination)
 	countQuery := "SELECT COUNT(*) FROM (" + query + ") as count_table"
 	var totalCount int
-	err := r.db.QueryRowContext(ctx, countQuery, args...).Scan(&totalCount)
+	err := r.db.QueryRowxContext(ctx, countQuery, args...).Scan(&totalCount)
 	if err != nil {
 		return nil, 0, r.translateError(err, "count sessions")
 	}
@@ -88,10 +88,10 @@ func (r *SessionPostgresRepository) ListSessions(
 
 // SessionPostgresRepository implements the SessionRepository interface.
 type SessionPostgresRepository struct {
-	db *sqlx.DB
+	db database.DBTX
 }
 
-func NewSessionPostgresRepository(db *sqlx.DB) *SessionPostgresRepository {
+func NewSessionPostgresRepository(db database.DBTX) *SessionPostgresRepository {
 	return &SessionPostgresRepository{
 		db: db,
 	}

@@ -27,10 +27,10 @@ type habitLogModel struct {
 }
 
 type HabitLogPostgresRepository struct {
-	db *sqlx.DB
+	db database.DBTX
 }
 
-func NewHabitLogPostgresRepository(db *sqlx.DB) *HabitLogPostgresRepository {
+func NewHabitLogPostgresRepository(db database.DBTX) *HabitLogPostgresRepository {
 	return &HabitLogPostgresRepository{db: db}
 }
 

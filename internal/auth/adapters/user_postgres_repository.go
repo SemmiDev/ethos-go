@@ -8,16 +8,16 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 	"github.com/semmidev/ethos-go/internal/auth/domain/user"
+	"github.com/semmidev/ethos-go/internal/common/database"
 )
 
 type UserPostgresRepository struct {
-	db *sqlx.DB
+	db database.DBTX
 }
 
-func NewUserPostgresRepository(db *sqlx.DB) *UserPostgresRepository {
+func NewUserPostgresRepository(db database.DBTX) *UserPostgresRepository {
 	return &UserPostgresRepository{db: db}
 }
 

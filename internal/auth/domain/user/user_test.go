@@ -3,10 +3,10 @@ package user_test
 import (
 	"testing"
 
-	"github.com/google/uuid"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/semmidev/ethos-go/internal/auth/domain/user"
+	"github.com/semmidev/ethos-go/internal/common/random"
 )
 
 func TestNewUser(t *testing.T) {
@@ -15,7 +15,7 @@ func TestNewUser(t *testing.T) {
 	Convey("Given the User domain", t, func() {
 
 		Convey("When creating a new user with email auth", func() {
-			userID := uuid.New()
+			userID := random.NewUUID()
 			u := user.NewUser(userID, "test@example.com", "Test User", "hashedpassword123")
 
 			Convey("Then it should have correct UserID", func() {
@@ -59,7 +59,7 @@ func TestNewGoogleUser(t *testing.T) {
 	Convey("Given Google OAuth registration", t, func() {
 
 		Convey("When creating a new Google user", func() {
-			userID := uuid.New()
+			userID := random.NewUUID()
 			u := user.NewGoogleUser(userID, "google@example.com", "Google User", "google-id-12345")
 
 			Convey("Then it should have correct UserID", func() {

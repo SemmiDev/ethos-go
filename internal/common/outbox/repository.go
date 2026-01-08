@@ -6,8 +6,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
+	"github.com/semmidev/ethos-go/internal/common/database"
 	"github.com/semmidev/ethos-go/internal/common/events"
+	"github.com/semmidev/ethos-go/internal/common/random"
 )
 
 // OutboxEntry represents an event stored in the outbox table
@@ -27,11 +28,11 @@ type OutboxEntry struct {
 
 // Repository handles outbox persistence
 type Repository struct {
-	db *sqlx.DB
+	db database.DBTX
 }
 
 // NewRepository creates a new outbox repository
-func NewRepository(db *sqlx.DB) *Repository {
+func NewRepository(db database.DBTX) *Repository {
 	return &Repository{db: db}
 }
 
@@ -47,7 +48,7 @@ func (r *Repository) Insert(ctx context.Context, event events.Event, aggregateTy
 		VALUES ($1, $2, $3, $4, $5)
 	`
 	_, err = r.db.ExecContext(ctx, query,
-		uuid.New(),
+		random.NewUUID(),
 		event.EventType(),
 		aggregateType,
 		event.AggregateID(),

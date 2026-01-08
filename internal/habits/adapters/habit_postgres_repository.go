@@ -50,10 +50,10 @@ type vacationModel struct {
 }
 
 type HabitPostgresRepository struct {
-	db *sqlx.DB
+	db database.DBTX
 }
 
-func NewHabitPostgresRepository(db *sqlx.DB) *HabitPostgresRepository {
+func NewHabitPostgresRepository(db database.DBTX) *HabitPostgresRepository {
 	return &HabitPostgresRepository{db: db}
 }
 
