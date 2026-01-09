@@ -19,7 +19,7 @@ type CreateHabit struct {
 	UserID             string
 	Name               string  `json:"name" validate:"required,min=3,max=100"`
 	Description        *string `json:"description"`
-	Frequency          string  `json:"frequency" validate:"required,oneof=daily weekly monthly custom"`
+	Frequency          string  `json:"frequency" validate:"required,oneof=daily weekly monthly"`
 	RecurrenceDays     *int16  `json:"recurrence_days"`     // Bitmask: Sun=1, Mon=2, etc. nil = all days
 	RecurrenceInterval *int    `json:"recurrence_interval"` // Every N periods. nil = 1
 	TargetCount        int     `json:"target_count" validate:"required,min=1"`

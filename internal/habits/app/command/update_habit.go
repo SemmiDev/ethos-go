@@ -16,7 +16,7 @@ type UpdateHabit struct {
 	UserID             string
 	Name               *string `json:"name" validate:"omitempty,min=3,max=100"`
 	Description        *string `json:"description"` // Nullable
-	Frequency          *string `json:"frequency" validate:"omitempty,oneof=daily weekly monthly custom"`
+	Frequency          *string `json:"frequency" validate:"omitempty,oneof=daily weekly monthly"`
 	RecurrenceDays     *int16  `json:"recurrence_days"`
 	RecurrenceInterval *int    `json:"recurrence_interval"`
 	TargetCount        *int    `json:"target_count" validate:"omitempty,min=1"`
