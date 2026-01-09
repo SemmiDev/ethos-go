@@ -14,6 +14,17 @@ import (
 	"github.com/semmidev/ethos-go/internal/common/model"
 )
 
+// SessionPostgresRepository implements the SessionRepository interface.
+type SessionPostgresRepository struct {
+	db database.DBTX
+}
+
+func NewSessionPostgresRepository(db database.DBTX) *SessionPostgresRepository {
+	return &SessionPostgresRepository{
+		db: db,
+	}
+}
+
 // ListSessions retrieves a paginated list of sessions for a user with filtering options.
 func (r *SessionPostgresRepository) ListSessions(
 	ctx context.Context,
@@ -34,10 +45,10 @@ func (r *SessionPostgresRepository) ListSessions(
 
 	// Conditions
 	if !includeBlocked {
-		query += fmt.Sprintf(" AND is_blocked = false")
+		query += " AND is_blocked = false"
 	}
 	if !includeExpired {
-		query += fmt.Sprintf(" AND expires_at > NOW()")
+		query += " AND expires_at > NOW()"
 	}
 
 	// Dynamic sorting
@@ -77,24 +88,18 @@ func (r *SessionPostgresRepository) ListSessions(
 	query += fmt.Sprintf(" LIMIT $%d OFFSET $%d", argIdx, argIdx+1)
 	args = append(args, limit, offset)
 
-	var sessions []*session.Session
-	err = r.db.SelectContext(ctx, &sessions, query, args...)
+	var models []SessionModel
+	err = r.db.SelectContext(ctx, &models, query, args...)
 	if err != nil {
 		return nil, 0, r.translateError(err, "list sessions")
 	}
 
-	return sessions, totalCount, nil
-}
-
-// SessionPostgresRepository implements the SessionRepository interface.
-type SessionPostgresRepository struct {
-	db database.DBTX
-}
-
-func NewSessionPostgresRepository(db database.DBTX) *SessionPostgresRepository {
-	return &SessionPostgresRepository{
-		db: db,
+	sessions := make([]*session.Session, len(models))
+	for i, m := range models {
+		sessions[i] = m.ToSession()
 	}
+
+	return sessions, totalCount, nil
 }
 
 // Create inserts a new session into the database.
@@ -108,15 +113,15 @@ func (r *SessionPostgresRepository) Create(ctx context.Context, s *session.Sessi
 	`
 
 	_, err := r.db.ExecContext(ctx, query,
-		s.SessionID,
-		s.UserID,
-		s.RefreshToken,
-		s.UserAgent,
-		s.ClientIP,
-		s.IsBlocked,
-		s.ExpiresAt,
-		s.CreatedAt,
-		s.UpdatedAt,
+		s.SessionID(),
+		s.UserID(),
+		s.RefreshToken(),
+		s.UserAgent(),
+		s.ClientIP(),
+		s.IsBlocked(),
+		s.ExpiresAt(),
+		s.CreatedAt(),
+		s.UpdatedAt(),
 	)
 
 	if err != nil {
@@ -136,8 +141,8 @@ func (r *SessionPostgresRepository) FindByID(ctx context.Context, sessionID uuid
 		WHERE session_id = $1
 	`
 
-	var s session.Session
-	err := r.db.QueryRowxContext(ctx, query, sessionID).StructScan(&s)
+	var m SessionModel
+	err := r.db.QueryRowxContext(ctx, query, sessionID).StructScan(&m)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -146,7 +151,7 @@ func (r *SessionPostgresRepository) FindByID(ctx context.Context, sessionID uuid
 		return nil, r.translateError(err, "find session by id")
 	}
 
-	return &s, nil
+	return m.ToSession(), nil
 }
 
 // FindByRefreshToken looks up a session using its refresh token.
@@ -159,8 +164,8 @@ func (r *SessionPostgresRepository) FindByRefreshToken(ctx context.Context, refr
 		WHERE refresh_token = $1
 	`
 
-	var s session.Session
-	err := r.db.QueryRowxContext(ctx, query, refreshToken).StructScan(&s)
+	var m SessionModel
+	err := r.db.QueryRowxContext(ctx, query, refreshToken).StructScan(&m)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -169,7 +174,7 @@ func (r *SessionPostgresRepository) FindByRefreshToken(ctx context.Context, refr
 		return nil, r.translateError(err, "find session by refresh token")
 	}
 
-	return &s, nil
+	return m.ToSession(), nil
 }
 
 // FindAllByUserID returns all sessions for a specific user.
@@ -183,10 +188,15 @@ func (r *SessionPostgresRepository) FindAllByUserID(ctx context.Context, userID 
 		ORDER BY created_at DESC
 	`
 
-	var sessions []*session.Session
-	err := r.db.SelectContext(ctx, &sessions, query, userID)
+	var models []SessionModel
+	err := r.db.SelectContext(ctx, &models, query, userID)
 	if err != nil {
 		return nil, r.translateError(err, "find sessions by user id")
+	}
+
+	sessions := make([]*session.Session, len(models))
+	for i, m := range models {
+		sessions[i] = m.ToSession()
 	}
 
 	return sessions, nil
@@ -205,11 +215,11 @@ func (r *SessionPostgresRepository) Update(ctx context.Context, s *session.Sessi
 	`
 
 	result, err := r.db.ExecContext(ctx, query,
-		s.SessionID,
-		s.RefreshToken,
-		s.IsBlocked,
-		s.ExpiresAt,
-		s.UpdatedAt,
+		s.SessionID(),
+		s.RefreshToken(),
+		s.IsBlocked(),
+		s.ExpiresAt(),
+		s.UpdatedAt(),
 	)
 
 	if err != nil {

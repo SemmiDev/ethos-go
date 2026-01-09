@@ -95,14 +95,14 @@ func UnmarshalHabitLogFromDatabase(
 }
 
 // Getters (read-only access)
-func (l HabitLog) LogID() string        { return l.logID }
-func (l HabitLog) HabitID() string      { return l.habitID }
-func (l HabitLog) UserID() string       { return l.userID }
-func (l HabitLog) LogDate() time.Time   { return l.logDate }
-func (l HabitLog) Count() int           { return l.count }
-func (l HabitLog) Note() *string        { return l.note }
-func (l HabitLog) CreatedAt() time.Time { return l.createdAt }
-func (l HabitLog) UpdatedAt() time.Time { return l.updatedAt }
+func (l *HabitLog) LogID() string        { return l.logID }
+func (l *HabitLog) HabitID() string      { return l.habitID }
+func (l *HabitLog) UserID() string       { return l.userID }
+func (l *HabitLog) LogDate() time.Time   { return l.logDate }
+func (l *HabitLog) Count() int           { return l.count }
+func (l *HabitLog) Note() *string        { return l.note }
+func (l *HabitLog) CreatedAt() time.Time { return l.createdAt }
+func (l *HabitLog) UpdatedAt() time.Time { return l.updatedAt }
 
 // UpdateCount modifies the count for this log entry
 func (l *HabitLog) UpdateCount(newCount int) error {
@@ -131,7 +131,7 @@ func (l *HabitLog) UpdateNote(newNote *string) {
 }
 
 // CanBeViewedBy checks if the user has permission to view this log
-func (l HabitLog) CanBeViewedBy(userID string) error {
+func (l *HabitLog) CanBeViewedBy(userID string) error {
 	if l.userID != userID {
 		return ErrUnauthorized
 	}
@@ -139,7 +139,7 @@ func (l HabitLog) CanBeViewedBy(userID string) error {
 }
 
 // CanBeModifiedBy checks if the user has permission to modify this log
-func (l HabitLog) CanBeModifiedBy(userID string) error {
+func (l *HabitLog) CanBeModifiedBy(userID string) error {
 	if l.userID != userID {
 		return ErrUnauthorized
 	}

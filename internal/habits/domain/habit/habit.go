@@ -102,19 +102,19 @@ func UnmarshalHabitFromDatabase(
 	return h, nil
 }
 
-func (h Habit) HabitID() string        { return h.habitID }
-func (h Habit) UserID() string         { return h.userID }
-func (h Habit) Name() string           { return h.name }
-func (h Habit) Description() *string   { return h.description }
-func (h Habit) Frequency() Frequency   { return h.frequency }
-func (h Habit) Recurrence() Recurrence { return h.recurrence }
-func (h Habit) TargetCount() int       { return h.targetCount }
-func (h Habit) ReminderTime() *string  { return h.reminderTime }
-func (h Habit) IsActive() bool         { return h.isActive }
-func (h Habit) CreatedAt() time.Time   { return h.createdAt }
-func (h Habit) UpdatedAt() time.Time   { return h.updatedAt }
+func (h *Habit) HabitID() string        { return h.habitID }
+func (h *Habit) UserID() string         { return h.userID }
+func (h *Habit) Name() string           { return h.name }
+func (h *Habit) Description() *string   { return h.description }
+func (h *Habit) Frequency() Frequency   { return h.frequency }
+func (h *Habit) Recurrence() Recurrence { return h.recurrence }
+func (h *Habit) TargetCount() int       { return h.targetCount }
+func (h *Habit) ReminderTime() *string  { return h.reminderTime }
+func (h *Habit) IsActive() bool         { return h.isActive }
+func (h *Habit) CreatedAt() time.Time   { return h.createdAt }
+func (h *Habit) UpdatedAt() time.Time   { return h.updatedAt }
 
-func (h Habit) CanBeViewedBy(userID string) error {
+func (h *Habit) CanBeViewedBy(userID string) error {
 	if h.userID != userID {
 		return ErrUnauthorized
 	}

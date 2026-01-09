@@ -72,7 +72,7 @@ func (h listSessionsHandler) Handle(ctx context.Context, query ListSessionsQuery
 	// Convert domain models to DTOs
 	dtos := make([]*SessionDTO, len(sessions))
 	for i, s := range sessions {
-		isCurrent := s.SessionID.String() == query.CurrentSessionID
+		isCurrent := s.SessionID().String() == query.CurrentSessionID
 		dtos[i] = toSessionDTO(s, isCurrent)
 	}
 
@@ -104,12 +104,12 @@ func (h listSessionsHandler) translateError(err error, operation string) *apperr
 // repeat it in multiple places.
 func toSessionDTO(s *session.Session, isCurrent bool) *SessionDTO {
 	return &SessionDTO{
-		SessionID: s.SessionID.String(),
-		UserAgent: s.UserAgent,
-		ClientIP:  s.ClientIP,
-		IsBlocked: s.IsBlocked,
-		ExpiresAt: s.ExpiresAt,
-		CreatedAt: s.CreatedAt,
+		SessionID: s.SessionID().String(),
+		UserAgent: s.UserAgent(),
+		ClientIP:  s.ClientIP(),
+		IsBlocked: s.IsBlocked(),
+		ExpiresAt: s.ExpiresAt(),
+		CreatedAt: s.CreatedAt(),
 		IsActive:  s.IsValid(), // Use domain logic to compute this
 		IsCurrent: isCurrent,
 	}

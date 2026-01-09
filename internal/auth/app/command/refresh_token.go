@@ -71,13 +71,13 @@ func (h refreshTokenHandler) Handle(ctx context.Context, cmd RefreshTokenCommand
 	refreshTokenExpiry := now.Add(h.authService.RefreshTokenTTL())
 
 	// Issue new access token
-	accessToken, err := h.tokenIssuer.IssueAccessToken(ctx, sess.UserID, accessTokenExpiry)
+	accessToken, err := h.tokenIssuer.IssueAccessToken(ctx, sess.UserID(), accessTokenExpiry)
 	if err != nil {
 		return nil, apperror.InternalError(err)
 	}
 
 	// Issue new refresh token
-	newRefreshToken, err := h.tokenIssuer.IssueRefreshToken(ctx, sess.SessionID, refreshTokenExpiry)
+	newRefreshToken, err := h.tokenIssuer.IssueRefreshToken(ctx, sess.SessionID(), refreshTokenExpiry)
 	if err != nil {
 		return nil, apperror.InternalError(err)
 	}

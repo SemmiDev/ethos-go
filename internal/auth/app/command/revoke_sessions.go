@@ -65,12 +65,12 @@ func (h revokeAllOtherSessionsHandler) Handle(ctx context.Context, cmd RevokeAll
 	revokedCount := 0
 	for _, sess := range sessions {
 		// Skip the current session
-		if sess.SessionID == currentSessionID {
+		if sess.SessionID() == currentSessionID {
 			continue
 		}
 
 		// Block/revoke this session
-		sess.IsBlocked = true
+		sess.Block()
 		if err := h.sessionRepo.Update(ctx, sess); err != nil {
 			// Log but continue with other sessions
 			continue

@@ -75,7 +75,7 @@ func (h getSessionHandler) Handle(ctx context.Context, query GetSessionQuery) (*
 	}
 
 	// Verify the session belongs to the requesting user
-	if sess.UserID != userID {
+	if sess.UserID() != userID {
 		return nil, apperror.OperationNotAllowed(
 			"view session",
 			"session does not belong to this user",
