@@ -33,7 +33,7 @@ func NewResendVerificationHandler(
 	log logger.Logger,
 	metricsClient decorator.MetricsClient,
 ) ResendVerificationHandler {
-	return decorator.ApplyCommandDecorators[ResendVerificationCommand](
+	return decorator.ApplyCommandDecorators(
 		resendVerificationHandler{
 			userRepo:   userRepo,
 			validator:  validator,

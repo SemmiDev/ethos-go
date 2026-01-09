@@ -35,7 +35,7 @@ func NewDeleteHabitHandler(
 		panic("nil habit repository")
 	}
 
-	return decorator.ApplyCommandDecorators[DeleteHabit](
+	return decorator.ApplyCommandDecorators(
 		deleteHabitHandler{
 			repo:      repo,
 			validator: validator,

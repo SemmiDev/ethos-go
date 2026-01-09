@@ -33,7 +33,7 @@ func NewCreateNotificationHandler(
 	log logger.Logger,
 	metricsClient decorator.MetricsClient,
 ) CreateNotificationHandler {
-	return decorator.ApplyCommandDecorators[CreateNotification](
+	return decorator.ApplyCommandDecorators(
 		createNotificationHandler{
 			repo:        repo,
 			pushService: pushService,

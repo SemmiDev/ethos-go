@@ -44,7 +44,7 @@ func NewListSessionsHandler(
 	log logger.Logger,
 	metricsClient decorator.MetricsClient,
 ) ListSessionsHandler {
-	return decorator.ApplyQueryDecorators[ListSessionsQuery, ListSessionsResult](
+	return decorator.ApplyQueryDecorators(
 		listSessionsHandler{readModel: readModel},
 		log,
 		metricsClient,

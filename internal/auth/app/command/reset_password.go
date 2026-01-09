@@ -37,7 +37,7 @@ func NewResetPasswordHandler(
 	log logger.Logger,
 	metricsClient decorator.MetricsClient,
 ) ResetPasswordHandler {
-	return decorator.ApplyCommandDecorators[ResetPasswordCommand](
+	return decorator.ApplyCommandDecorators(
 		resetPasswordHandler{
 			userRepo:       userRepo,
 			passwordHasher: passwordHasher,

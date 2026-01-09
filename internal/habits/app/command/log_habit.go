@@ -51,7 +51,7 @@ func NewLogHabitHandler(
 		panic("nil habit log repository")
 	}
 
-	return decorator.ApplyCommandDecorators[LogHabit](
+	return decorator.ApplyCommandDecorators(
 		logHabitHandler{
 			habitRepo: habitRepo,
 			logRepo:   logRepo,

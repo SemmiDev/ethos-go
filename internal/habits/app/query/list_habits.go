@@ -42,7 +42,7 @@ func NewListHabitsHandler(
 		panic("nil read model")
 	}
 
-	return decorator.ApplyQueryDecorators[ListHabits, ListHabitsResult](
+	return decorator.ApplyQueryDecorators(
 		listHabitsHandler{readModel: readModel},
 		log,
 		metricsClient,

@@ -33,7 +33,7 @@ func NewForgotPasswordHandler(
 	log logger.Logger,
 	metricsClient decorator.MetricsClient,
 ) ForgotPasswordHandler {
-	return decorator.ApplyCommandDecorators[ForgotPasswordCommand](
+	return decorator.ApplyCommandDecorators(
 		forgotPasswordHandler{
 			userRepo:   userRepo,
 			validator:  validator,

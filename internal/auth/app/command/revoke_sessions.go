@@ -38,7 +38,7 @@ func NewRevokeAllOtherSessionsHandler(
 		panic("nil session repo")
 	}
 
-	return decorator.ApplyCommandResultDecorators[RevokeAllOtherSessionsCommand, RevokeAllOtherSessionsResult](
+	return decorator.ApplyCommandResultDecorators(
 		revokeAllOtherSessionsHandler{sessionRepo: sessionRepo},
 		log,
 		metricsClient,

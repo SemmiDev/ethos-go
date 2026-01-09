@@ -34,7 +34,7 @@ func NewGetWeeklyAnalyticsHandler(
 		panic("nil read model")
 	}
 
-	return decorator.ApplyQueryDecorators[GetWeeklyAnalytics, *WeeklyAnalytics](
+	return decorator.ApplyQueryDecorators(
 		getWeeklyAnalyticsHandler{readModel: readModel},
 		log,
 		metricsClient,

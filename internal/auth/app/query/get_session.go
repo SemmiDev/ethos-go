@@ -44,7 +44,7 @@ func NewGetSessionHandler(
 	log logger.Logger,
 	metricsClient decorator.MetricsClient,
 ) GetSessionHandler {
-	return decorator.ApplyQueryDecorators[GetSessionQuery, *SessionDTO](
+	return decorator.ApplyQueryDecorators(
 		getSessionHandler{sessionRepo: sessionRepo},
 		log,
 		metricsClient,

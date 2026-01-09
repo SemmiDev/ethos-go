@@ -33,7 +33,7 @@ func NewVerifyEmailHandler(
 	log logger.Logger,
 	metricsClient decorator.MetricsClient,
 ) VerifyEmailHandler {
-	return decorator.ApplyCommandDecorators[VerifyEmailCommand](
+	return decorator.ApplyCommandDecorators(
 		verifyEmailHandler{
 			userRepo:  userRepo,
 			validator: validator,

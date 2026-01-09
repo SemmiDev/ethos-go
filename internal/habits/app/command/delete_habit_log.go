@@ -35,7 +35,7 @@ func NewDeleteHabitLogHandler(
 		panic("nil habit log repository")
 	}
 
-	return decorator.ApplyCommandDecorators[DeleteHabitLog](
+	return decorator.ApplyCommandDecorators(
 		deleteHabitLogHandler{
 			repo:      repo,
 			validator: validator,

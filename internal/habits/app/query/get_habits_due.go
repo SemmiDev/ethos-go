@@ -28,7 +28,7 @@ func NewGetHabitsDueHandler(
 		panic("nil read model")
 	}
 
-	return decorator.ApplyQueryDecorators[GetHabitsDue, []ReminderHabit](
+	return decorator.ApplyQueryDecorators(
 		getHabitsDueHandler{readModel: readModel},
 		log,
 		metricsClient,

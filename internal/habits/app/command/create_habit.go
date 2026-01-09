@@ -49,7 +49,7 @@ func NewCreateHabitHandler(
 		panic("nil habit repository")
 	}
 
-	return decorator.ApplyCommandDecorators[CreateHabit](
+	return decorator.ApplyCommandDecorators(
 		createHabitHandler{
 			repo:       repo,
 			validator:  validator,

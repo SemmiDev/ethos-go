@@ -35,7 +35,7 @@ func NewRefreshTokenHandler(
 	log logger.Logger,
 	metricsClient decorator.MetricsClient,
 ) RefreshTokenHandler {
-	return decorator.ApplyCommandResultDecorators[RefreshTokenCommand, *RefreshTokenResult](
+	return decorator.ApplyCommandResultDecorators(
 		refreshTokenHandler{
 			sessionRepo: sessionRepo,
 			tokenIssuer: tokenIssuer,

@@ -62,7 +62,7 @@ func NewLoginHandler(
 	log logger.Logger,
 	metricsClient decorator.MetricsClient,
 ) LoginHandler {
-	return decorator.ApplyCommandResultDecorators[LoginCommand, *LoginResult](
+	return decorator.ApplyCommandResultDecorators(
 		loginHandler{
 			sessionRepo:    sessionRepo,
 			userRepo:       userRepo,

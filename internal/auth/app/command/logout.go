@@ -25,7 +25,7 @@ func NewLogoutHandler(
 	log logger.Logger,
 	metricsClient decorator.MetricsClient,
 ) LogoutHandler {
-	return decorator.ApplyCommandDecorators[LogoutCommand](
+	return decorator.ApplyCommandDecorators(
 		logoutHandler{sessionRepo: sessionRepo},
 		log,
 		metricsClient,
@@ -56,7 +56,7 @@ func NewLogoutAllHandler(
 	log logger.Logger,
 	metricsClient decorator.MetricsClient,
 ) LogoutAllHandler {
-	return decorator.ApplyCommandDecorators[LogoutAllCommand](
+	return decorator.ApplyCommandDecorators(
 		logoutAllHandler{sessionRepo: sessionRepo},
 		log,
 		metricsClient,

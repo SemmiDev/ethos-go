@@ -23,7 +23,7 @@ func NewGetGoogleAuthURLHandler(
 	log logger.Logger,
 	metricsClient decorator.MetricsClient,
 ) GetGoogleAuthURLHandler {
-	return decorator.ApplyQueryDecorators[GetGoogleAuthURLQuery, string](
+	return decorator.ApplyQueryDecorators(
 		getGoogleAuthURLHandler{googleService: googleService},
 		log,
 		metricsClient,

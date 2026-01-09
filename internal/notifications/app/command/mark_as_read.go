@@ -25,7 +25,7 @@ func NewMarkAsReadHandler(
 	log logger.Logger,
 	metricsClient decorator.MetricsClient,
 ) MarkAsReadHandler {
-	return decorator.ApplyCommandDecorators[MarkAsRead](
+	return decorator.ApplyCommandDecorators(
 		markAsReadHandler{repo: repo},
 		log,
 		metricsClient,

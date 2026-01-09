@@ -25,7 +25,7 @@ func NewDeleteNotificationHandler(
 	log logger.Logger,
 	metricsClient decorator.MetricsClient,
 ) DeleteNotificationHandler {
-	return decorator.ApplyCommandDecorators[DeleteNotification](
+	return decorator.ApplyCommandDecorators(
 		deleteNotificationHandler{repo: repo},
 		log,
 		metricsClient,

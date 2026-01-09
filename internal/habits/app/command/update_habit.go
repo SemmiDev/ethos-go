@@ -42,7 +42,7 @@ func NewUpdateHabitHandler(
 		panic("nil habit repository")
 	}
 
-	return decorator.ApplyCommandDecorators[UpdateHabit](
+	return decorator.ApplyCommandDecorators(
 		updateHabitHandler{
 			repo:      repo,
 			validator: validator,

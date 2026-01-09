@@ -34,7 +34,7 @@ func NewGetDashboardHandler(
 		panic("nil read model")
 	}
 
-	return decorator.ApplyQueryDecorators[GetDashboard, *DashboardSummary](
+	return decorator.ApplyQueryDecorators(
 		getDashboardHandler{readModel: readModel},
 		log,
 		metricsClient,

@@ -48,7 +48,7 @@ func NewUpdateProfileHandler(
 		panic("nil repo")
 	}
 
-	return decorator.ApplyCommandResultDecorators[UpdateProfileCommand, UpdateProfileResult](
+	return decorator.ApplyCommandResultDecorators(
 		updateProfileHandler{repo: repo},
 		log,
 		metricsClient,
@@ -117,7 +117,7 @@ func NewChangePasswordHandler(
 		panic("nil repo")
 	}
 
-	return decorator.ApplyCommandDecorators[ChangePasswordCommand](
+	return decorator.ApplyCommandDecorators(
 		changePasswordHandler{
 			repo:      repo,
 			publisher: publisher,

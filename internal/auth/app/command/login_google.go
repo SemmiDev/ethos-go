@@ -43,7 +43,7 @@ func NewLoginGoogleHandler(
 	log logger.Logger,
 	metricsClient decorator.MetricsClient,
 ) LoginGoogleHandler {
-	return decorator.ApplyCommandResultDecorators[LoginGoogleCommand, *LoginResult](
+	return decorator.ApplyCommandResultDecorators(
 		loginGoogleHandler{
 			googleService: googleService,
 			userRepo:      userRepo,

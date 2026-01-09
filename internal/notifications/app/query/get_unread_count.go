@@ -23,7 +23,7 @@ func NewGetUnreadCountHandler(
 	log logger.Logger,
 	metricsClient decorator.MetricsClient,
 ) GetUnreadCountHandler {
-	return decorator.ApplyQueryDecorators[GetUnreadCount, int](
+	return decorator.ApplyQueryDecorators(
 		getUnreadCountHandler{repo: repo},
 		log,
 		metricsClient,

@@ -40,7 +40,7 @@ func NewDeleteAccountHandler(
 		panic("nil session repo")
 	}
 
-	return decorator.ApplyCommandDecorators[DeleteAccountCommand](
+	return decorator.ApplyCommandDecorators(
 		deleteAccountHandler{
 			userRepo:    userRepo,
 			sessionRepo: sessionRepo,

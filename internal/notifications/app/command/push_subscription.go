@@ -32,7 +32,7 @@ func NewSubscribePushHandler(
 	log logger.Logger,
 	metricsClient decorator.MetricsClient,
 ) SubscribePushHandler {
-	return decorator.ApplyCommandDecorators[SubscribePush](
+	return decorator.ApplyCommandDecorators(
 		subscribePushHandler{repo: repo},
 		log,
 		metricsClient,
@@ -81,7 +81,7 @@ func NewUnsubscribePushHandler(
 	log logger.Logger,
 	metricsClient decorator.MetricsClient,
 ) UnsubscribePushHandler {
-	return decorator.ApplyCommandDecorators[UnsubscribePush](
+	return decorator.ApplyCommandDecorators(
 		unsubscribePushHandler{repo: repo},
 		log,
 		metricsClient,

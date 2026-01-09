@@ -30,7 +30,7 @@ func NewListNotificationsHandler(
 	log logger.Logger,
 	metricsClient decorator.MetricsClient,
 ) ListNotificationsHandler {
-	return decorator.ApplyQueryDecorators[ListNotifications, *ListNotificationsResult](
+	return decorator.ApplyQueryDecorators(
 		listNotificationsHandler{repo: repo},
 		log,
 		metricsClient,

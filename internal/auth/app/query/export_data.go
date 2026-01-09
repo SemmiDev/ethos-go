@@ -51,7 +51,7 @@ func NewExportUserDataHandler(
 	log logger.Logger,
 	metricsClient decorator.MetricsClient,
 ) ExportUserDataHandler {
-	return decorator.ApplyQueryDecorators[ExportUserDataQuery, ExportedData](
+	return decorator.ApplyQueryDecorators(
 		exportUserDataHandler{
 			userRepo:   userRepo,
 			exportRepo: exportRepo,

@@ -42,7 +42,7 @@ func NewGetProfileHandler(
 		panic("nil repo")
 	}
 
-	return decorator.ApplyQueryDecorators[GetProfileQuery, ProfileResult](
+	return decorator.ApplyQueryDecorators(
 		getProfileHandler{repo: repo},
 		log,
 		metricsClient,
