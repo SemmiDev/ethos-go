@@ -8,190 +8,54 @@ This document serves as the **primary source of truth** for AI agents working on
 
 ### Technology Stack
 
-| Layer            | Technology                     |
-| ---------------- | ------------------------------ |
-| **Backend**      | Go 1.21+, Chi Router, sqlx/pgx |
-| **Database**     | PostgreSQL                     |
-| **Cache/Queue**  | Redis + Asynq                  |
-| **API**          | OpenAPI 3.0 (Schema-First)     |
-| **Frontend**     | React 19, Vite, Pure CSS       |
-| **Architecture** | DDD, Clean Architecture, CQRS  |
+| Layer            | Technology                    |
+| ---------------- | ----------------------------- |
+| **Backend**      | Go 1.25+, Chi Router          |
+| **Database**     | PostgreSQL 17                 |
+| **Cache/Queue**  | Redis 8 + Asynq               |
+| **API**          | OpenAPI 3.0 (Schema-First)    |
+| **Frontend**     | React 19, Vite, Pure CSS      |
+| **Architecture** | DDD, Clean Architecture, CQRS |
 
 ## 2. Quick Start Commands
 
 Run `make help` to see all available commands. Here are the most common:
 
-| Task                      | Command                                   |
-| ------------------------- | ----------------------------------------- |
-| **Start dev environment** | `make dev`                                |
-| **Stop environment**      | `make stop`                               |
-| **View logs**             | `make logs`                               |
-| **Generate API code**     | `make generate`                           |
-| **Create migration**      | `make migrate-create name=add_foo_column` |
-| **Run migrations**        | `make migrate-up`                         |
-| **Rebuild backend**       | `make rebuild-app`                        |
-| **Rebuild frontend**      | `make rebuild-frontend`                   |
-| **Run tests**             | `make test`                               |
-| **Format code**           | `make fmt`                                |
-| **Build binary**          | `make build`                              |
+| Category  | Command                        | Description                            |
+| :-------- | :----------------------------- | :------------------------------------- |
+| **Dev**   | `make dev`                     | Start full dev environment (Docker)    |
+|           | `make stop`                    | Stop environment                       |
+| **Code**  | `make generate`                | Generate API code & SQLC               |
+|           | `make fmt`                     | Format code (gofmt)                    |
+|           | `make test`                    | Run all tests                          |
+| **DB**    | `make migrate-create name=foo` | Create new migration                   |
+|           | `make migrate-up`              | Apply migrations                       |
+| **Build** | `make build`                   | Build single binary (Backend+Frontend) |
 
 ## 3. Development Workflows
 
 ### Workflow A: Adding a New API Feature
 
-**Step 1: Define the API Contract (OpenAPI)**
-
-```bash
-# Edit the OpenAPI spec
-vim api/openapi/{module}.yml    # auth.yml, habits.yml, or notifications.yml
-
-# Generate Go server code
-make generate
-```
-
-The generated code goes to `internal/generated/api/{module}/`.
-
-**Step 2: Implement Domain Layer** (`internal/{module}/domain/`)
-
-```go
-// Define entity in domain/{entity}/{entity}.go
-type Habit struct {
-    ID        string
-    Name      string
-    Frequency Frequency
-    // ...
-}
-
-// Define repository interface in domain/repository.go
-type HabitRepository interface {
-    Create(ctx context.Context, habit *habit.Habit) error
-    FindByID(ctx context.Context, id string) (*habit.Habit, error)
-}
-```
-
-**Step 3: Implement Application Layer** (`internal/{module}/app/`)
-
-```go
-// Command: internal/{module}/app/command/create_habit.go
-type CreateHabitCommand struct {
-    UserID    string
-    Name      string
-    Frequency string
-}
-
-type CreateHabitHandler struct {
-    repo   domain.HabitRepository
-    logger logger.Logger
-}
-
-func (h *CreateHabitHandler) Handle(ctx context.Context, cmd CreateHabitCommand) (string, error) {
-    // Business logic here
-}
-```
-
-**Step 4: Implement Repository** (`internal/{module}/adapters/`)
-
-```go
-// internal/{module}/adapters/{entity}_repository.go
-type PostgresHabitRepository struct {
-    db *sqlx.DB
-}
-
-func (r *PostgresHabitRepository) Create(ctx context.Context, h *habit.Habit) error {
-    query := `INSERT INTO habits (id, user_id, name, frequency) VALUES ($1, $2, $3, $4)`
-    _, err := r.db.ExecContext(ctx, query, h.ID, h.UserID, h.Name, h.Frequency)
-    return err
-}
-```
-
-**Step 5: Implement HTTP Handler** (`internal/{module}/ports/`)
-
-Implement the generated OpenAPI interface in `openapi_server.go`.
-
----
+1. **Define API**: Edit `api/openapi/{module}.yml` -> `make generate`
+2. **Domain**: Create Entity & Repository Interface in `internal/{module}/domain/`
+3. **Application**: Implement Command/Query Handler in `internal/{module}/app/`
+4. **Infrastructure**: Implement Repository in `internal/{module}/adapters/`
+5. **Ports**: Wire it up in `internal/{module}/ports/openapi_server.go`
 
 ### Workflow B: Database Migration
 
-**Step 1: Create Migration Files**
+1. **Create**: `make migrate-create name=add_column_x`
+2. **Edit SQL**:
+   - Use `snake_case`
+   - Primary keys: `uuid` (`gen_random_uuid()`)
+   - Include `created_at` and `updated_at` (TIMESTAMPTZ)
+3. **Apply**: `make migrate-up`
 
-```bash
-# Creates migrations/000XXX_add_reminder_time.up.sql and .down.sql
-make migrate-create name=add_reminder_time
-```
+### Workflow C: Background Tasks
 
-**Step 2: Write SQL**
-
-```sql
--- migrations/000XXX_add_reminder_time.up.sql
-ALTER TABLE habits ADD COLUMN reminder_time TIME;
-
--- migrations/000XXX_add_reminder_time.down.sql
-ALTER TABLE habits DROP COLUMN reminder_time;
-```
-
-**Migration Standards:**
-
-- Use `uuid` for primary keys (`gen_random_uuid()`)
-- Always include `created_at TIMESTAMPTZ DEFAULT NOW()`
-- Always include `updated_at TIMESTAMPTZ DEFAULT NOW()`
-- Use `snake_case` for all identifiers
-- Use `TIMESTAMPTZ` not `TIMESTAMP`
-
-**Step 3: Apply Migration**
-
-```bash
-# In Docker environment
-make migrate-up
-
-# Or with explicit DATABASE_URL
-DATABASE_URL="postgres://user:pass@localhost:5432/ethosgo?sslmode=disable" make migrate-up
-```
-
-**Rollback if needed:**
-
-```bash
-make migrate-down      # Rollback last migration
-make migrate-force version=5  # Force to specific version (when dirty)
-```
-
----
-
-### Workflow C: Adding Background Tasks
-
-**Step 1: Define Task Type** (`internal/{module}/adapters/task/`)
-
-```go
-const TaskSendReminder = "notification:send_reminder"
-
-type SendReminderPayload struct {
-    UserID  string `json:"user_id"`
-    HabitID string `json:"habit_id"`
-}
-
-func NewSendReminderTask(userID, habitID string) (*asynq.Task, error) {
-    payload, _ := json.Marshal(SendReminderPayload{UserID: userID, HabitID: habitID})
-    return asynq.NewTask(TaskSendReminder, payload), nil
-}
-```
-
-**Step 2: Implement Processor**
-
-```go
-func (p *TaskProcessor) ProcessSendReminder(ctx context.Context, t *asynq.Task) error {
-    var payload SendReminderPayload
-    if err := json.Unmarshal(t.Payload(), &payload); err != nil {
-        return err
-    }
-    // Process the task
-    return nil
-}
-```
-
-**Step 3: Register in Worker** (`cmd/worker/main.go`)
-
-```go
-mux.HandleFunc(task.TaskSendReminder, processor.ProcessSendReminder)
-```
+1. **Define Task**: `internal/{module}/adapters/task/` (Task Type & Payload)
+2. **Implement Processor**: Logic to handle the task
+3. **Register**: Add handler in `cmd/worker/main.go`
 
 ## 4. Directory Structure
 
@@ -199,91 +63,48 @@ mux.HandleFunc(task.TaskSendReminder, processor.ProcessSendReminder)
 internal/{module}/
 ├── domain/           # Pure Go. Business rules & interfaces.
 │   ├── {entity}/     # Entity structs, value objects
-│   ├── gateway/      # Interfaces for external comms
-│   └── repository.go # Data persistence interface
-├── app/              # Application layer
-│   ├── command/      # Write operations (change state)
-│   └── query/        # Read operations (return data)
-├── adapters/         # Infrastructure implementations
-│   ├── {entity}_repository.go  # Database implementations
-│   └── task/         # Background task definitions
-└── ports/            # Entry points
-    └── openapi_server.go  # HTTP handlers
+│   └── repository.go # Persistence interface
+├── app/              # Use Cases (CQRS)
+│   ├── command/      # Write (State Change) - Returns ID/Error
+│   └── query/        # Read (Data Retrieval) - Returns DTOs
+├── adapters/         # Implementation Details
+│   ├── {entity}_repository.go  # SQL/DB implementation
+│   └── task/         # Asynq task definitions
+└── ports/            # Entry Points
+    └── openapi_server.go  # HTTP Handlers (Controller)
 ```
 
-## 5. Code Patterns
+## 5. Coding Standards
 
 ### Error Handling
 
-```go
-import "github.com/semmidev/ethos-go/internal/common/apperror"
-
-// Create domain errors
-return apperror.NewNotFound("habit", id)
-return apperror.NewValidation("name is required")
-return apperror.NewUnauthorized("invalid credentials")
-```
-
-### HTTP Responses
-
-```go
-import "github.com/semmidev/ethos-go/internal/common/httputil"
-
-httputil.Success(w, r, data, "Habit created successfully")
-httputil.Error(w, r, err)
-httputil.ValidationError(w, r, validationErrors)
-```
+- Use `apperror` package for all domain errors.
+- **NEVER** return raw database errors to the client.
+- Map errors in the HTTP handler using `httputil.Error`.
 
 ### Logging
 
-```go
-logger.Info(ctx, "habit created",
-    logger.Field{Key: "habit_id", Value: id},
-    logger.Field{Key: "user_id", Value: userID},
-)
-logger.Error(ctx, err, "failed to create habit")
-```
+- Use structural logging (`logger` package).
+- Include `ctx` in all log calls for tracing.
+- Format: `logger.Info(ctx, "event_name", logger.Field{...})`
 
 ### Context
 
-All blocking operations MUST accept `context.Context`:
+- All blocking operations (DB, HTTP, Redis) **MUST** accept `context.Context`.
 
-```go
-func (r *Repo) FindByID(ctx context.Context, id string) (*Entity, error)
-```
+## 6. Testing Strategy
 
-## 6. Testing
+- **Unit Tests**: Domain logic and small components.
+- **Integration Tests**: Repositories (with real DB).
+- **E2E Tests**: Critical flows (API endpoints).
 
-```bash
-make test           # Run all tests
-make test-short     # Run short tests only
-make test-coverage  # Generate coverage report
-```
+## 7. Agent Guidelines (Plan & Verify)
 
-## 7. Docker & Deployment
+When working on complex tasks:
 
-```bash
-make dev            # Start full development stack
-make compose-build  # Rebuild and start
-make compose-logs   # View all logs
-make logs-app       # View backend logs only
-make rebuild-app    # Rebuild backend only
-
-# Build production binary
-make build          # Includes embedded frontend
-make build-backend  # Backend only
-```
-
-## 8. Observability
-
-Services available in dev environment:
-
-- **Grafana**: http://localhost:3000 (admin/admin)
-- **Prometheus**: http://localhost:9090
-- **Jaeger**: http://localhost:16686
-
-API Documentation:
-
-- **Auth API**: http://localhost:8080/auth/doc
-- **Habits API**: http://localhost:8080/habits/doc
-- **Notifications API**: http://localhost:8080/notifications/doc
+1. **Plan First**: Create a `plan.md` or `implementation_plan.md` for user approval if the task modifies architecture or critical paths.
+2. **Atomic Changes**: Keep PRs/Commits small and focused.
+3. **Verify**:
+   - ALWAYS run `make test` after backend changes.
+   - If modifying UI, ask user to verify visual changes or check build `npm run build`.
+4. **Communication**: Be concise. Use Markdown. Don't over-explain obvious code.
