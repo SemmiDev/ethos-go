@@ -3,8 +3,6 @@ package habitlog
 import (
 	"errors"
 	"time"
-
-	"github.com/semmidev/ethos-go/internal/common/apperror"
 )
 
 // HabitLog represents a record of habit completion on a specific date
@@ -19,14 +17,15 @@ type HabitLog struct {
 	updatedAt time.Time
 }
 
+// Domain errors - pure domain errors without infrastructure dependencies
 var (
 	ErrEmptyLogID   = errors.New("empty log id")
 	ErrEmptyHabitID = errors.New("empty habit id")
 	ErrEmptyUserID  = errors.New("empty user id")
-	ErrInvalidCount = apperror.ValidationFailed("count must be positive")
-	ErrInvalidDate  = apperror.ValidationFailed("invalid log date")
-	ErrNotFound     = apperror.NotFound("habit log", "")
-	ErrUnauthorized = apperror.Unauthorized("user cannot access this log")
+	ErrInvalidCount = errors.New("count must be positive")
+	ErrInvalidDate  = errors.New("invalid log date")
+	ErrNotFound     = errors.New("habit log not found")
+	ErrUnauthorized = errors.New("user cannot access this log")
 )
 
 // NewHabitLog creates a new habit log entry with validation

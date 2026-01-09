@@ -59,11 +59,11 @@ func (h resetPasswordHandler) Handle(ctx context.Context, cmd ResetPasswordComma
 		return apperror.NotFound("User", cmd.Email)
 	}
 
-	if u.PasswordResetToken == nil || *u.PasswordResetToken != cmd.Code {
+	if u.PasswordResetToken() == nil || *u.PasswordResetToken() != cmd.Code {
 		return apperror.ValidationFailed("invalid reset token")
 	}
 
-	if u.PasswordResetExpiresAt != nil && u.PasswordResetExpiresAt.Before(time.Now()) {
+	if u.PasswordResetExpiresAt() != nil && u.PasswordResetExpiresAt().Before(time.Now()) {
 		return apperror.ValidationFailed("reset token expired")
 	}
 
@@ -73,16 +73,16 @@ func (h resetPasswordHandler) Handle(ctx context.Context, cmd ResetPasswordComma
 		return apperror.InternalError(err)
 	}
 
-	u.HashedPassword = &hashedPassword
-	u.PasswordResetToken = nil
-	u.PasswordResetExpiresAt = nil
+	// Use domain setters
+	u.SetHashedPassword(hashedPassword)
+	u.SetPasswordResetToken(nil, nil)
 
 	if err := h.userRepo.Update(ctx, u); err != nil {
 		return apperror.InternalError(err)
 	}
 
 	// Publish PasswordChanged event
-	event := authevents.NewPasswordChanged(u.UserID.String(), u.Email)
+	event := authevents.NewPasswordChanged(u.UserID().String(), u.Email())
 	_ = h.publisher.Publish(ctx, event)
 
 	return nil

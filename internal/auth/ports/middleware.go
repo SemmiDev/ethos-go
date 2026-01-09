@@ -70,13 +70,14 @@ func AuthMiddleware(tokenVerifier service.TokenVerifier, userReader user.UserRea
 
 			// Optionally, fetch full user details to ensure account is still active
 			// This adds a database call but prevents deleted/blocked users from accessing APIs
-			user, err := userReader.FindByID(r.Context(), claims.UserID)
+			foundUser, err := userReader.FindByID(r.Context(), claims.UserID)
 			if err != nil {
 				respondUnauthorized(w, r, "user not found")
 				return
 			}
 
-			if !user.IsActive {
+			// Use getters for User fields
+			if !foundUser.IsActive() {
 				respondUnauthorized(w, r, "user account is not active")
 				return
 			}
@@ -86,17 +87,17 @@ func AuthMiddleware(tokenVerifier service.TokenVerifier, userReader user.UserRea
 			ctx := r.Context()
 			ctx = context.WithValue(ctx, userIDKey, claims.UserID.String())
 			ctx = context.WithValue(ctx, sessionIDKey, claims.SessionID.String())
-			ctx = context.WithValue(ctx, emailKey, user.Email)
+			ctx = context.WithValue(ctx, emailKey, foundUser.Email())
 
 			// Also set the common auth context for other modules (like habits) that rely on it
 			ctx = authctx.ContextWithUser(ctx, authctx.User{
 				UserID: claims.UserID.String(),
-				Email:  user.Email,
+				Email:  foundUser.Email(),
 			})
 
 			// Enrich wide event with user context for Canonical Log Lines
 			// This adds user info to the single comprehensive log per request
-			logger.AddUserContext(ctx, claims.UserID.String(), user.Email)
+			logger.AddUserContext(ctx, claims.UserID.String(), foundUser.Email())
 
 			// Call the next handler with the enriched context
 			next.ServeHTTP(w, r.WithContext(ctx))
@@ -138,8 +139,8 @@ func OptionalAuthMiddleware(tokenVerifier service.TokenVerifier, userReader user
 			}
 
 			// Token is valid - enrich the context
-			user, err := userReader.FindByID(r.Context(), claims.UserID)
-			if err != nil || !user.IsActive {
+			foundUser, err := userReader.FindByID(r.Context(), claims.UserID)
+			if err != nil || !foundUser.IsActive() {
 				// User not found or inactive - continue without auth
 				next.ServeHTTP(w, r)
 				return
@@ -148,7 +149,7 @@ func OptionalAuthMiddleware(tokenVerifier service.TokenVerifier, userReader user
 			ctx := r.Context()
 			ctx = context.WithValue(ctx, userIDKey, claims.UserID.String())
 			ctx = context.WithValue(ctx, sessionIDKey, claims.SessionID.String())
-			ctx = context.WithValue(ctx, emailKey, user.Email)
+			ctx = context.WithValue(ctx, emailKey, foundUser.Email())
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})

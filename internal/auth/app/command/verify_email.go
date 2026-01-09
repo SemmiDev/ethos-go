@@ -54,28 +54,27 @@ func (h verifyEmailHandler) Handle(ctx context.Context, cmd VerifyEmailCommand) 
 		return apperror.NotFound("User", cmd.Email)
 	}
 
-	if u.IsVerified {
+	if u.IsVerified() {
 		return nil
 	}
 
-	if u.VerifyToken == nil || *u.VerifyToken != cmd.Code {
+	if u.VerifyToken() == nil || *u.VerifyToken() != cmd.Code {
 		return apperror.ValidationFailed("invalid verification code")
 	}
 
-	if u.VerifyExpiresAt != nil && u.VerifyExpiresAt.Before(time.Now()) {
+	if u.VerifyExpiresAt() != nil && u.VerifyExpiresAt().Before(time.Now()) {
 		return apperror.ValidationFailed("verification code expired")
 	}
 
-	u.IsVerified = true
-	u.VerifyToken = nil
-	u.VerifyExpiresAt = nil
+	// Use domain method to mark as verified
+	u.MarkVerified()
 
 	if err := h.userRepo.Update(ctx, u); err != nil {
 		return apperror.InternalError(err)
 	}
 
 	// Publish UserVerified event
-	event := authevents.NewUserVerified(u.UserID.String(), u.Email)
+	event := authevents.NewUserVerified(u.UserID().String(), u.Email())
 	_ = h.publisher.Publish(ctx, event)
 
 	return nil

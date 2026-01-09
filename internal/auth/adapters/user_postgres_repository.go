@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/lib/pq"
@@ -22,29 +21,35 @@ func NewUserPostgresRepository(db database.DBTX) *UserPostgresRepository {
 }
 
 func (r *UserPostgresRepository) Create(ctx context.Context, u *user.User) error {
+	// Convert domain entity to database model
+	model := UserModelFromUser(u)
+
 	query := `
 		INSERT INTO users (
-			user_id, email, name, hashed_password, is_active,
-			is_verified, verify_token, verify_expires_at,
+			user_id, email, name, hashed_password, auth_provider, auth_provider_id,
+			timezone, is_active, is_verified, verify_token, verify_expires_at,
 			password_reset_token, password_reset_expires_at,
 			created_at, updated_at
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
 	`
 
 	_, err := r.db.ExecContext(ctx, query,
-		u.UserID,
-		u.Email,
-		u.Name,
-		u.HashedPassword,
-		u.IsActive,
-		u.IsVerified,
-		u.VerifyToken,
-		u.VerifyExpiresAt,
-		u.PasswordResetToken,
-		u.PasswordResetExpiresAt,
-		u.CreatedAt,
-		u.UpdatedAt,
+		model.UserID,
+		model.Email,
+		model.Name,
+		model.HashedPassword,
+		model.AuthProvider,
+		model.AuthProviderID,
+		model.Timezone,
+		model.IsActive,
+		model.IsVerified,
+		model.VerifyToken,
+		model.VerifyExpiresAt,
+		model.PasswordResetToken,
+		model.PasswordResetExpiresAt,
+		model.CreatedAt,
+		model.UpdatedAt,
 	)
 
 	if err != nil {
@@ -61,16 +66,16 @@ func (r *UserPostgresRepository) Create(ctx context.Context, u *user.User) error
 func (r *UserPostgresRepository) FindByEmail(ctx context.Context, email string) (*user.User, error) {
 	query := `
 		SELECT
-			user_id, email, name, hashed_password, is_active,
-			is_verified, verify_token, verify_expires_at,
+			user_id, email, name, hashed_password, auth_provider, auth_provider_id,
+			timezone, is_active, is_verified, verify_token, verify_expires_at,
 			password_reset_token, password_reset_expires_at,
 			created_at, updated_at
 		FROM users
 		WHERE email = $1
 	`
 
-	var u user.User
-	err := r.db.QueryRowxContext(ctx, query, email).StructScan(&u)
+	var model UserModel
+	err := r.db.QueryRowxContext(ctx, query, email).StructScan(&model)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, user.ErrNotFound
@@ -78,22 +83,22 @@ func (r *UserPostgresRepository) FindByEmail(ctx context.Context, email string) 
 		return nil, fmt.Errorf("find user by email: %w", err)
 	}
 
-	return &u, nil
+	return model.ToUser(), nil
 }
 
 func (r *UserPostgresRepository) FindByID(ctx context.Context, userID uuid.UUID) (*user.User, error) {
 	query := `
 		SELECT
-			user_id, email, name, hashed_password, is_active,
-			is_verified, verify_token, verify_expires_at,
+			user_id, email, name, hashed_password, auth_provider, auth_provider_id,
+			timezone, is_active, is_verified, verify_token, verify_expires_at,
 			password_reset_token, password_reset_expires_at,
 			created_at, updated_at
 		FROM users
 		WHERE user_id = $1
 	`
 
-	var u user.User
-	err := r.db.QueryRowxContext(ctx, query, userID).StructScan(&u)
+	var model UserModel
+	err := r.db.QueryRowxContext(ctx, query, userID).StructScan(&model)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, user.ErrNotFound
@@ -101,11 +106,35 @@ func (r *UserPostgresRepository) FindByID(ctx context.Context, userID uuid.UUID)
 		return nil, fmt.Errorf("find user by id: %w", err)
 	}
 
-	return &u, nil
+	return model.ToUser(), nil
+}
+
+func (r *UserPostgresRepository) FindByAuthProvider(ctx context.Context, provider, providerID string) (*user.User, error) {
+	query := `
+		SELECT
+			user_id, email, name, hashed_password, auth_provider, auth_provider_id,
+			timezone, is_active, is_verified, verify_token, verify_expires_at,
+			password_reset_token, password_reset_expires_at,
+			created_at, updated_at
+		FROM users
+		WHERE auth_provider = $1 AND auth_provider_id = $2
+	`
+
+	var model UserModel
+	err := r.db.QueryRowxContext(ctx, query, provider, providerID).StructScan(&model)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, user.ErrNotFound
+		}
+		return nil, fmt.Errorf("find user by auth provider: %w", err)
+	}
+
+	return model.ToUser(), nil
 }
 
 func (r *UserPostgresRepository) Update(ctx context.Context, u *user.User) error {
-	u.UpdatedAt = time.Now()
+	// Convert domain entity to database model
+	model := UserModelFromUser(u)
 
 	query := `
 		UPDATE users
@@ -113,28 +142,34 @@ func (r *UserPostgresRepository) Update(ctx context.Context, u *user.User) error
 			email = $1,
 			name = $2,
 			hashed_password = $3,
-			is_active = $4,
-			is_verified = $5,
-			verify_token = $6,
-			verify_expires_at = $7,
-			password_reset_token = $8,
-			password_reset_expires_at = $9,
-			updated_at = $10
-		WHERE user_id = $11
+			auth_provider = $4,
+			auth_provider_id = $5,
+			timezone = $6,
+			is_active = $7,
+			is_verified = $8,
+			verify_token = $9,
+			verify_expires_at = $10,
+			password_reset_token = $11,
+			password_reset_expires_at = $12,
+			updated_at = $13
+		WHERE user_id = $14
 	`
 
 	res, err := r.db.ExecContext(ctx, query,
-		u.Email,
-		u.Name,
-		u.HashedPassword,
-		u.IsActive,
-		u.IsVerified,
-		u.VerifyToken,
-		u.VerifyExpiresAt,
-		u.PasswordResetToken,
-		u.PasswordResetExpiresAt,
-		u.UpdatedAt, // $10
-		u.UserID,    // $11
+		model.Email,
+		model.Name,
+		model.HashedPassword,
+		model.AuthProvider,
+		model.AuthProviderID,
+		model.Timezone,
+		model.IsActive,
+		model.IsVerified,
+		model.VerifyToken,
+		model.VerifyExpiresAt,
+		model.PasswordResetToken,
+		model.PasswordResetExpiresAt,
+		model.UpdatedAt,
+		model.UserID,
 	)
 
 	if err != nil {

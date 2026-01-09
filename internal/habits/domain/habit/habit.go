@@ -1,10 +1,7 @@
 package habit
 
 import (
-	"errors"
 	"time"
-
-	"github.com/semmidev/ethos-go/internal/common/apperror"
 )
 
 type Habit struct {
@@ -21,16 +18,6 @@ type Habit struct {
 	updatedAt    time.Time
 }
 
-var (
-	ErrAlreadyActive      = errors.New("habit is already active")
-	ErrAlreadyInactive    = errors.New("habit is already inactive")
-	ErrEmptyName          = apperror.ValidationFailed("habit name cannot be empty")
-	ErrInvalidTargetCount = apperror.ValidationFailed("target count must be positive")
-	ErrInvalidReminder    = apperror.ValidationFailed("invalid reminder time format (HH:MM)")
-	ErrNotFound           = apperror.NotFound("habit", "")
-	ErrUnauthorized       = apperror.Unauthorized("user cannot access this habit")
-)
-
 func NewHabit(
 	habitID, userID, name string,
 	description *string,
@@ -40,10 +27,10 @@ func NewHabit(
 	reminderTime *string,
 ) (*Habit, error) {
 	if habitID == "" {
-		return nil, errors.New("empty habit id")
+		return nil, ErrEmptyHabitID
 	}
 	if userID == "" {
-		return nil, errors.New("empty user id")
+		return nil, ErrEmptyUserID
 	}
 	if name == "" {
 		return nil, ErrEmptyName

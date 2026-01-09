@@ -60,11 +60,12 @@ func (h getProfileHandler) Handle(ctx context.Context, q GetProfileQuery) (Profi
 		return ProfileResult{}, apperror.NotFound("user", q.UserID)
 	}
 
+	// Use getter methods instead of direct field access
 	return ProfileResult{
-		UserID:    existingUser.UserID.String(),
-		Name:      existingUser.Name,
-		Email:     existingUser.Email,
-		Timezone:  existingUser.Timezone,
-		CreatedAt: existingUser.CreatedAt,
+		UserID:    existingUser.UserID().String(),
+		Name:      existingUser.Name(),
+		Email:     existingUser.Email(),
+		Timezone:  existingUser.Timezone(),
+		CreatedAt: existingUser.CreatedAt(),
 	}, nil
 }

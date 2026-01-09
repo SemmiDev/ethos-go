@@ -54,7 +54,7 @@ func (h resendVerificationHandler) Handle(ctx context.Context, cmd ResendVerific
 		return apperror.NotFound("User", cmd.Email)
 	}
 
-	if u.IsVerified {
+	if u.IsVerified() {
 		return apperror.ValidationFailed("user already verified")
 	}
 
@@ -65,8 +65,8 @@ func (h resendVerificationHandler) Handle(ctx context.Context, cmd ResendVerific
 	}
 	expiresAt := time.Now().Add(15 * time.Minute)
 
-	u.VerifyToken = &code
-	u.VerifyExpiresAt = &expiresAt
+	// Use domain setter
+	u.SetVerifyToken(&code, &expiresAt)
 
 	if err := h.userRepo.Update(ctx, u); err != nil {
 		return apperror.InternalError(err)
@@ -74,9 +74,9 @@ func (h resendVerificationHandler) Handle(ctx context.Context, cmd ResendVerific
 
 	// Enqueue task
 	payload := &gateway.PayloadSendVerifyEmail{
-		UserID:                     u.UserID,
-		Name:                       u.Name,
-		Email:                      u.Email,
+		UserID:                     u.UserID(),
+		Name:                       u.Name(),
+		Email:                      u.Email(),
 		VerificationCode:           code,
 		VerificationCodeExpiration: 15,
 	}

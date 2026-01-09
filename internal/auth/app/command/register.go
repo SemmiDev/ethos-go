@@ -99,15 +99,15 @@ func (h registerHandler) Handle(ctx context.Context, cmd RegisterCommand) (*Regi
 	userID := random.NewUUID()
 	newUser := user.NewUser(userID, cmd.Email, cmd.Name, hashedPassword)
 
-	// Generate Verification OTP
+	// Generate Verification OTP and set via domain setter
 	otp, err := random.GenerateNumericOTP(6)
 	if err != nil {
 		return nil, apperror.InternalError(fmt.Errorf("failed to generate otp: %w", err))
 	}
 	expiresAt := time.Now().Add(15 * time.Minute)
 
-	newUser.VerifyToken = &otp
-	newUser.VerifyExpiresAt = &expiresAt
+	// Use domain setter instead of direct field assignment
+	newUser.SetVerifyToken(&otp, &expiresAt)
 
 	// Save user
 	if err := h.userRepo.Create(ctx, newUser); err != nil {
@@ -116,9 +116,9 @@ func (h registerHandler) Handle(ctx context.Context, cmd RegisterCommand) (*Regi
 
 	// Enqueue verification email
 	payload := &gateway.PayloadSendVerifyEmail{
-		UserID:                     newUser.UserID,
-		Name:                       newUser.Name,
-		Email:                      newUser.Email,
+		UserID:                     newUser.UserID(),
+		Name:                       newUser.Name(),
+		Email:                      newUser.Email(),
 		VerificationCode:           otp,
 		VerificationCodeExpiration: 15,
 	}

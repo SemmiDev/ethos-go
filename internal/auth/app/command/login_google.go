@@ -68,15 +68,6 @@ func (h loginGoogleHandler) Handle(ctx context.Context, cmd LoginGoogleCommand) 
 	foundUser, err := h.userRepo.FindByEmail(ctx, userInfo.Email)
 	if err != nil {
 		// If not found, create new user
-		// We assume any error here means user not found or DB error.
-		// Ideally we should check if it's NotFound error.
-		// Since FindByEmail returns NotFound app error, we can check for that or just try to create.
-		// But if it's a DB connection error, we shouldn't create.
-
-		// For simplicity, let's assume we proceed to create if error.
-		// (In production, check specific error type)
-
-		// Create new user
 		userID := random.NewUUID()
 		newUser := user.NewGoogleUser(userID, userInfo.Email, userInfo.Name, userInfo.ID)
 
@@ -85,24 +76,21 @@ func (h loginGoogleHandler) Handle(ctx context.Context, cmd LoginGoogleCommand) 
 		}
 		foundUser = newUser
 	} else {
-		// User exists.
-		// Optional: Update OAuth ID if not present
-		if foundUser.AuthProviderID == nil || *foundUser.AuthProviderID == "" {
-			foundUser.AuthProvider = "google"
-			id := userInfo.ID
-			foundUser.AuthProviderID = &id
+		// User exists. Update OAuth ID if not present - use getters
+		if foundUser.AuthProviderID() == nil || *foundUser.AuthProviderID() == "" {
+			foundUser.SetAuthProvider("google", &userInfo.ID)
 			if err := h.userRepo.Update(ctx, foundUser); err != nil {
 				// Non-critical
 			}
 		}
 	}
 
-	// 3. Create Session (Logic duplicated from LoginHandler)
+	// 3. Create Session - use getters
 	now := time.Now()
 	accessTokenExpiry := now.Add(h.authService.AccessTokenTTL())
 	refreshTokenExpiry := now.Add(h.authService.RefreshTokenTTL())
 
-	accessToken, err := h.tokenIssuer.IssueAccessToken(ctx, foundUser.UserID, accessTokenExpiry)
+	accessToken, err := h.tokenIssuer.IssueAccessToken(ctx, foundUser.UserID(), accessTokenExpiry)
 	if err != nil {
 		return nil, apperror.InternalError(err)
 	}
@@ -115,7 +103,7 @@ func (h loginGoogleHandler) Handle(ctx context.Context, cmd LoginGoogleCommand) 
 
 	newSession := session.NewSession(
 		sessionID,
-		foundUser.UserID,
+		foundUser.UserID(),
 		refreshToken,
 		cmd.UserAgent,
 		cmd.ClientIP,
@@ -126,10 +114,10 @@ func (h loginGoogleHandler) Handle(ctx context.Context, cmd LoginGoogleCommand) 
 		return nil, apperror.DatabaseError("create session", err)
 	}
 
-	// Publish UserLoggedIn event
+	// Publish UserLoggedIn event - use getters
 	event := authevents.NewUserLoggedIn(
-		foundUser.UserID.String(),
-		foundUser.Email,
+		foundUser.UserID().String(),
+		foundUser.Email(),
 		cmd.UserAgent,
 		cmd.ClientIP,
 	)
@@ -139,7 +127,7 @@ func (h loginGoogleHandler) Handle(ctx context.Context, cmd LoginGoogleCommand) 
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		SessionID:    sessionID.String(),
-		UserID:       foundUser.UserID.String(),
+		UserID:       foundUser.UserID().String(),
 		ExpiresAt:    accessTokenExpiry.Unix(),
 	}, nil
 }

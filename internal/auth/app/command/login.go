@@ -97,11 +97,11 @@ func (h loginHandler) Handle(ctx context.Context, cmd LoginCommand) (*LoginResul
 		return nil, apperror.InvalidCredentials(nil)
 	}
 
-	// Verify password
-	if foundUser.HashedPassword == nil {
+	// Verify password - use getter methods
+	if foundUser.HashedPassword() == nil {
 		return nil, apperror.InvalidCredentials(nil)
 	}
-	passwordMatches, err := h.passwordHasher.Compare(ctx, *foundUser.HashedPassword, cmd.Password)
+	passwordMatches, err := h.passwordHasher.Compare(ctx, *foundUser.HashedPassword(), cmd.Password)
 	if err != nil {
 		return nil, apperror.InternalError(err)
 	}
@@ -110,7 +110,7 @@ func (h loginHandler) Handle(ctx context.Context, cmd LoginCommand) (*LoginResul
 		return nil, apperror.InvalidCredentials(nil)
 	}
 
-	if !foundUser.IsVerified {
+	if !foundUser.IsVerified() {
 		return nil, apperror.Unauthorized("Please verify your email address")
 	}
 
@@ -119,8 +119,8 @@ func (h loginHandler) Handle(ctx context.Context, cmd LoginCommand) (*LoginResul
 	accessTokenExpiry := now.Add(h.authService.AccessTokenTTL())
 	refreshTokenExpiry := now.Add(h.authService.RefreshTokenTTL())
 
-	// Issue access token
-	accessToken, err := h.tokenIssuer.IssueAccessToken(ctx, foundUser.UserID, accessTokenExpiry)
+	// Issue access token - use getter
+	accessToken, err := h.tokenIssuer.IssueAccessToken(ctx, foundUser.UserID(), accessTokenExpiry)
 	if err != nil {
 		return nil, apperror.InternalError(err)
 	}
@@ -132,10 +132,10 @@ func (h loginHandler) Handle(ctx context.Context, cmd LoginCommand) (*LoginResul
 		return nil, apperror.InternalError(err)
 	}
 
-	// Create session
+	// Create session - use getter
 	newSession := session.NewSession(
 		sessionID,
-		foundUser.UserID,
+		foundUser.UserID(),
 		refreshToken,
 		cmd.UserAgent,
 		cmd.ClientIP,
@@ -147,10 +147,10 @@ func (h loginHandler) Handle(ctx context.Context, cmd LoginCommand) (*LoginResul
 		return nil, apperror.DatabaseError("create session", err)
 	}
 
-	// Publish UserLoggedIn event
+	// Publish UserLoggedIn event - use getters
 	event := authevents.NewUserLoggedIn(
-		foundUser.UserID.String(),
-		foundUser.Email,
+		foundUser.UserID().String(),
+		foundUser.Email(),
 		cmd.UserAgent,
 		cmd.ClientIP,
 	)
@@ -160,7 +160,7 @@ func (h loginHandler) Handle(ctx context.Context, cmd LoginCommand) (*LoginResul
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		SessionID:    sessionID.String(),
-		UserID:       foundUser.UserID.String(),
+		UserID:       foundUser.UserID().String(),
 		ExpiresAt:    accessTokenExpiry.Unix(),
 	}, nil
 }

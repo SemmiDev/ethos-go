@@ -62,8 +62,8 @@ func (h forgotPasswordHandler) Handle(ctx context.Context, cmd ForgotPasswordCom
 	}
 	expiresAt := time.Now().Add(15 * time.Minute)
 
-	u.PasswordResetToken = &code
-	u.PasswordResetExpiresAt = &expiresAt
+	// Use domain setter
+	u.SetPasswordResetToken(&code, &expiresAt)
 
 	if err := h.userRepo.Update(ctx, u); err != nil {
 		return apperror.InternalError(err)
@@ -71,9 +71,9 @@ func (h forgotPasswordHandler) Handle(ctx context.Context, cmd ForgotPasswordCom
 
 	// Enqueue task
 	payload := &gateway.PayloadSendForgotPasswordEmail{
-		UserID:                     u.UserID,
-		Name:                       u.Name,
-		Email:                      u.Email,
+		UserID:                     u.UserID(),
+		Name:                       u.Name(),
+		Email:                      u.Email(),
 		VerificationCode:           code,
 		VerificationCodeExpiration: 15,
 	}

@@ -73,14 +73,15 @@ func (h exportUserDataHandler) Handle(ctx context.Context, q ExportUserDataQuery
 		return ExportedData{}, apperror.NotFound("user", q.UserID)
 	}
 
+	// Use getter methods for domain entity
 	exportedUser := ExportedUser{
-		ID:           u.UserID.String(),
-		Email:        u.Email,
-		Name:         u.Name,
-		Timezone:     u.Timezone,
-		AuthProvider: u.AuthProvider,
-		IsVerified:   u.IsVerified,
-		CreatedAt:    u.CreatedAt,
+		ID:           u.UserID().String(),
+		Email:        u.Email(),
+		Name:         u.Name(),
+		Timezone:     u.Timezone(),
+		AuthProvider: u.AuthProvider(),
+		IsVerified:   u.IsVerified(),
+		CreatedAt:    u.CreatedAt(),
 	}
 
 	// Fetch habits via repository

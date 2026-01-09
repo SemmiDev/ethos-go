@@ -66,28 +66,28 @@ func (h updateProfileHandler) Handle(ctx context.Context, cmd UpdateProfileComma
 		return UpdateProfileResult{}, apperror.NotFound("user", cmd.UserID)
 	}
 
-	// Update fields if provided
+	// Update fields if provided - use setters
 	if cmd.Name != nil && *cmd.Name != "" {
-		existingUser.Name = *cmd.Name
+		existingUser.SetName(*cmd.Name)
 	}
 	if cmd.Email != nil && *cmd.Email != "" {
-		existingUser.Email = *cmd.Email
+		existingUser.SetEmail(*cmd.Email)
 	}
 	if cmd.Timezone != nil && *cmd.Timezone != "" {
-		existingUser.Timezone = *cmd.Timezone
+		existingUser.SetTimezone(*cmd.Timezone)
 	}
-	existingUser.UpdatedAt = time.Now()
 
 	if err := h.repo.Update(ctx, existingUser); err != nil {
 		return UpdateProfileResult{}, apperror.InternalError(err)
 	}
 
+	// Use getters for returning data
 	return UpdateProfileResult{
-		UserID:    existingUser.UserID.String(),
-		Name:      existingUser.Name,
-		Email:     existingUser.Email,
-		Timezone:  existingUser.Timezone,
-		CreatedAt: existingUser.CreatedAt,
+		UserID:    existingUser.UserID().String(),
+		Name:      existingUser.Name(),
+		Email:     existingUser.Email(),
+		Timezone:  existingUser.Timezone(),
+		CreatedAt: existingUser.CreatedAt(),
 	}, nil
 }
 
@@ -138,11 +138,11 @@ func (h changePasswordHandler) Handle(ctx context.Context, cmd ChangePasswordCom
 		return apperror.NotFound("user", cmd.UserID)
 	}
 
-	// Verify current password
-	if existingUser.HashedPassword == nil {
+	// Verify current password - use getters
+	if existingUser.HashedPassword() == nil {
 		return apperror.Unauthorized("user has no password set")
 	}
-	if err := bcrypt.CompareHashAndPassword([]byte(*existingUser.HashedPassword), []byte(cmd.CurrentPassword)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(*existingUser.HashedPassword()), []byte(cmd.CurrentPassword)); err != nil {
 		return apperror.Unauthorized("current password is incorrect")
 	}
 
@@ -152,16 +152,15 @@ func (h changePasswordHandler) Handle(ctx context.Context, cmd ChangePasswordCom
 		return apperror.InternalError(err)
 	}
 
-	hashedStr := string(hashedPassword)
-	existingUser.HashedPassword = &hashedStr
-	existingUser.UpdatedAt = time.Now()
+	// Use setter
+	existingUser.SetHashedPassword(string(hashedPassword))
 
 	if err := h.repo.Update(ctx, existingUser); err != nil {
 		return apperror.InternalError(err)
 	}
 
-	// Publish PasswordChanged event
-	event := authevents.NewPasswordChanged(existingUser.UserID.String(), existingUser.Email)
+	// Publish PasswordChanged event - use getters
+	event := authevents.NewPasswordChanged(existingUser.UserID().String(), existingUser.Email())
 	_ = h.publisher.Publish(ctx, event)
 
 	return nil

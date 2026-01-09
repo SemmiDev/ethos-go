@@ -19,35 +19,35 @@ func TestNewUser(t *testing.T) {
 			u := user.NewUser(userID, "test@example.com", "Test User", "hashedpassword123")
 
 			Convey("Then it should have correct UserID", func() {
-				So(u.UserID, ShouldEqual, userID)
+				So(u.UserID(), ShouldEqual, userID)
 			})
 
 			Convey("Then it should have correct Email", func() {
-				So(u.Email, ShouldEqual, "test@example.com")
+				So(u.Email(), ShouldEqual, "test@example.com")
 			})
 
 			Convey("Then it should have correct Name", func() {
-				So(u.Name, ShouldEqual, "Test User")
+				So(u.Name(), ShouldEqual, "Test User")
 			})
 
 			Convey("Then it should have hashed password", func() {
-				So(*u.HashedPassword, ShouldEqual, "hashedpassword123")
+				So(*u.HashedPassword(), ShouldEqual, "hashedpassword123")
 			})
 
 			Convey("Then auth provider should be 'email'", func() {
-				So(u.AuthProvider, ShouldEqual, "email")
+				So(u.AuthProvider(), ShouldEqual, "email")
 			})
 
 			Convey("Then it should be active", func() {
-				So(u.IsActive, ShouldBeTrue)
+				So(u.IsActive(), ShouldBeTrue)
 			})
 
 			Convey("Then it should NOT be verified", func() {
-				So(u.IsVerified, ShouldBeFalse)
+				So(u.IsVerified(), ShouldBeFalse)
 			})
 
 			Convey("Then it should have default timezone", func() {
-				So(u.Timezone, ShouldEqual, "Asia/Jakarta")
+				So(u.Timezone(), ShouldEqual, "Asia/Jakarta")
 			})
 		})
 	})
@@ -63,35 +63,35 @@ func TestNewGoogleUser(t *testing.T) {
 			u := user.NewGoogleUser(userID, "google@example.com", "Google User", "google-id-12345")
 
 			Convey("Then it should have correct UserID", func() {
-				So(u.UserID, ShouldEqual, userID)
+				So(u.UserID(), ShouldEqual, userID)
 			})
 
 			Convey("Then it should have correct Email", func() {
-				So(u.Email, ShouldEqual, "google@example.com")
+				So(u.Email(), ShouldEqual, "google@example.com")
 			})
 
 			Convey("Then it should have correct Name", func() {
-				So(u.Name, ShouldEqual, "Google User")
+				So(u.Name(), ShouldEqual, "Google User")
 			})
 
 			Convey("Then hashed password should be nil", func() {
-				So(u.HashedPassword, ShouldBeNil)
+				So(u.HashedPassword(), ShouldBeNil)
 			})
 
 			Convey("Then auth provider should be 'google'", func() {
-				So(u.AuthProvider, ShouldEqual, "google")
+				So(u.AuthProvider(), ShouldEqual, "google")
 			})
 
 			Convey("Then auth provider ID should be set", func() {
-				So(*u.AuthProviderID, ShouldEqual, "google-id-12345")
+				So(*u.AuthProviderID(), ShouldEqual, "google-id-12345")
 			})
 
 			Convey("Then it should be verified (implicit for Google)", func() {
-				So(u.IsVerified, ShouldBeTrue)
+				So(u.IsVerified(), ShouldBeTrue)
 			})
 
 			Convey("Then it should be active", func() {
-				So(u.IsActive, ShouldBeTrue)
+				So(u.IsActive(), ShouldBeTrue)
 			})
 		})
 	})
