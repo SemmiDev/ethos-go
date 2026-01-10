@@ -33,15 +33,13 @@ export const authAPI = {
 
   // Change password
   changePassword: async (data) => {
-    const response = await apiClient.put('/auth/password', data);
+    const response = await apiClient.post('/auth/change-password', data);
     return response.data;
   },
 
   // Delete account
   deleteAccount: async (password) => {
-    // Usually delete account requires password for confirmation in body or header
-    // The previous analysis showed authStore sending { password }
-    const response = await apiClient.post('/auth/delete-account', { password });
+    const response = await apiClient.delete('/auth/account', { data: { password } });
     return response.data;
   },
 
@@ -65,6 +63,23 @@ export const authAPI = {
 
   googleCallback: async (code) => {
     const response = await apiClient.post('/auth/google/callback', { code });
+    return response.data;
+  },
+
+  // Session Management
+  getSessions: async () => {
+    const response = await apiClient.get('/auth/sessions');
+    return response.data;
+  },
+
+  revokeSession: async (sessionId) => {
+    // Using logout endpoint to revoke a specific session
+    const response = await apiClient.post('/auth/logout', { session_id: sessionId });
+    return response.data;
+  },
+
+  revokeOtherSessions: async () => {
+    const response = await apiClient.delete('/auth/sessions/other');
     return response.data;
   },
 };

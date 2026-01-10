@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Modal, KeyboardAvoidingView, Platform, FlatList } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Modal, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useHabitsStore } from '../stores/habitsStore';
 import { useThemeStore } from '../stores/themeStore';
 import { Card, Button, ProgressBar, Badge, Input } from '../components';
-import { X, Calendar, ClipboardList, CheckCircle2, Edit2, Pause, Play } from 'lucide-react-native';
+import { X, CheckCircle2, Edit2, Pause, Play } from 'lucide-react-native';
 
 const LogHabitModal = ({ visible, onClose, habit, onSubmit, isLoading }) => {
   const { theme } = useThemeStore();
@@ -59,23 +59,35 @@ const EditHabitModal = ({ visible, onClose, habit, onSubmit, isLoading }) => {
   const { theme } = useThemeStore();
   const [name, setName] = useState(habit?.name || '');
   const [description, setDescription] = useState(habit?.description || '');
+  const [frequency, setFrequency] = useState(habit?.frequency || 'daily');
   const [targetCount, setTargetCount] = useState(habit?.target_count?.toString() || '1');
+  const [reminderTime, setReminderTime] = useState(habit?.reminder_time || '');
 
   // Update state when habit prop changes
   useEffect(() => {
     if (habit) {
       setName(habit.name);
       setDescription(habit.description || '');
+      setFrequency(habit.frequency || 'daily');
       setTargetCount(habit.target_count?.toString() || '1');
+      setReminderTime(habit.reminder_time || '');
     }
   }, [habit]);
 
   const handleSubmit = () => {
+    console.log('[EditHabit] Submitting update:', { name, description, frequency, targetCount, reminderTime });
+
+    if (reminderTime && !/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(reminderTime)) {
+      Alert.alert('Invalid time format', 'Please use HH:MM (e.g. 08:30)');
+      return;
+    }
+
     onSubmit({
       name,
       description,
+      frequency,
       target_count: parseInt(targetCount) || 1,
-      // Frequency editing might require backend support or complexity not needed right now
+      reminder_time: reminderTime || null,
     });
   };
 
@@ -91,13 +103,47 @@ const EditHabitModal = ({ visible, onClose, habit, onSubmit, isLoading }) => {
               </TouchableOpacity>
             </View>
 
-            <Input label="Name" value={name} onChangeText={setName} style={styles.modalInput} />
-            <Input label="Description" value={description} onChangeText={setDescription} style={styles.modalInput} />
-            <Input label="Target Count" value={targetCount} onChangeText={setTargetCount} keyboardType="numeric" style={styles.modalInput} />
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <Input label="Name" value={name} onChangeText={setName} style={styles.modalInput} />
+              <Input label="Description" value={description} onChangeText={setDescription} style={styles.modalInput} />
 
-            <View style={{ marginTop: 8 }}>
-              <Button title="Save Changes" onPress={handleSubmit} loading={isLoading} variant="primary" style={styles.modalButton} />
-            </View>
+              <View style={{ marginBottom: 20 }}>
+                <Text style={[styles.label, { color: theme.colors.text, fontFamily: 'Inter_500Medium' }]}>Frequency</Text>
+                <View style={styles.frequencyContainer}>
+                  {['daily', 'weekly', 'monthly'].map((f) => (
+                    <TouchableOpacity
+                      key={f}
+                      style={[
+                        styles.freqChip,
+                        {
+                          backgroundColor: frequency === f ? theme.colors.primary : theme.colors.surface,
+                          borderColor: frequency === f ? theme.colors.primary : theme.colors.border,
+                        },
+                      ]}
+                      onPress={() => setFrequency(f)}
+                    >
+                      <Text
+                        style={{
+                          color: frequency === f ? theme.colors.primaryContent : theme.colors.text,
+                          fontWeight: frequency === f ? '600' : '400',
+                          textTransform: 'capitalize',
+                          fontSize: 14,
+                        }}
+                      >
+                        {f}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              <Input label="Target Count" value={targetCount} onChangeText={setTargetCount} keyboardType="numeric" style={styles.modalInput} />
+              <Input label="Reminder (HH:MM)" value={reminderTime} onChangeText={setReminderTime} style={styles.modalInput} placeholder="e.g. 09:00" />
+
+              <View style={{ marginTop: 8 }}>
+                <Button title="Save Changes" onPress={handleSubmit} loading={isLoading} variant="primary" style={styles.modalButton} />
+              </View>
+            </ScrollView>
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -118,7 +164,7 @@ export default function HabitDetailScreen({ route, navigation }) {
   const [toggleLoading, setToggleLoading] = useState(false);
 
   useEffect(() => {
-    fetchHabitLogs(habitId);
+    if (habitId) fetchHabitLogs(habitId);
   }, [habitId]);
 
   if (!habit) {
@@ -206,7 +252,7 @@ export default function HabitDetailScreen({ route, navigation }) {
           {item.note && <Text style={[styles.logNote, { color: theme.colors.textMuted }]}>{item.note}</Text>}
         </View>
       </View>
-      <Text style={[styles.logDate, { color: theme.colors.textMuted }]}>{new Date(item.log_date || item.completed_at).toLocaleDateString()}</Text>
+      <Text style={[styles.logDate, { color: theme.colors.textMuted }]}>{new Date(item.log_date || item.completed_at || new Date()).toLocaleDateString()}</Text>
     </View>
   );
 
@@ -396,6 +442,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 20,
+    maxHeight: '90%',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -412,5 +459,22 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     marginBottom: 12,
+  },
+  label: {
+    fontSize: 14,
+    marginBottom: 10,
+    marginLeft: 4,
+  },
+  frequencyContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 0,
+  },
+  freqChip: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: 'center',
   },
 });

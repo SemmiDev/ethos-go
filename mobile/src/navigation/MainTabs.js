@@ -36,6 +36,26 @@ function HabitsStackNavigator() {
   );
 }
 
+// ... imports
+import SessionsScreen from '../screens/SessionsScreen';
+
+const SettingsStack = createNativeStackNavigator();
+
+function SettingsStackNavigator() {
+  return (
+    <SettingsStack.Navigator
+      screenOptions={{
+        header: ({ navigation, route, options }) => {
+          return <Header title={options.title || route.name} onBack={navigation.canGoBack() ? navigation.goBack : undefined} />;
+        },
+      }}
+    >
+      <SettingsStack.Screen name="SettingsList" component={SettingsScreen} options={{ title: 'Settings' }} />
+      <SettingsStack.Screen name="Sessions" component={SessionsScreen} options={{ title: 'Active Sessions' }} />
+    </SettingsStack.Navigator>
+  );
+}
+
 export default function MainTabs() {
   return (
     <Tab.Navigator
@@ -64,7 +84,7 @@ export default function MainTabs() {
           title: 'Notifications',
         }}
       />
-      <Tab.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
+      <Tab.Screen name="Settings" component={SettingsStackNavigator} options={{ headerShown: false }} />
     </Tab.Navigator>
   );
 }

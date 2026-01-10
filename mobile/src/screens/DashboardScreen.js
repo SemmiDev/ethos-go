@@ -45,6 +45,13 @@ export default function DashboardScreen({ navigation }) {
 
   const todayHabits = dashboard?.today_habits || [];
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning,';
+    if (hour < 18) return 'Good Afternoon,';
+    return 'Good Evening,';
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }} edges={['top']}>
       <ScrollView
@@ -55,7 +62,7 @@ export default function DashboardScreen({ navigation }) {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={[styles.greeting, { color: theme.colors.textMuted }]}>Good Morning,</Text>
+            <Text style={[styles.greeting, { color: theme.colors.textMuted }]}>{getGreeting()}</Text>
             <Text style={[styles.userName, { color: theme.colors.text }]}>{user?.name}</Text>
           </View>
           <TouchableOpacity onPress={() => navigation.navigate('Settings')}>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import { View, Text, StyleSheet, Switch, TouchableOpacity, ScrollView, Modal, KeyboardAvoidingView, Platform, Alert, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '../stores/authStore';
@@ -130,11 +131,13 @@ const SettingItem = ({ icon: Icon, label, value, onPress, isSwitch, onSwitch, de
 
 export default function SettingsScreen() {
   const { theme } = useThemeStore();
+  const navigation = useNavigation();
   const { isDark, toggleTheme } = useThemeStore();
-  const { user, logout, updateProfile, changePassword, deleteAccount, isLoading } = useAuthStore();
+  const { user, logout, updateProfile, changePassword, deleteAccount, isLoading, sessions, fetchSessions } = useAuthStore();
 
   const [editProfileVisible, setEditProfileVisible] = useState(false);
   const [changePasswordVisible, setChangePasswordVisible] = useState(false);
+
   const [helpVisible, setHelpVisible] = useState(false);
   const [privacyVisible, setPrivacyVisible] = useState(false);
   const [aboutVisible, setAboutVisible] = useState(false);
@@ -158,6 +161,10 @@ export default function SettingsScreen() {
     } else {
       Alert.alert('Error', result.error);
     }
+  };
+
+  const handleOpenSessions = () => {
+    navigation.navigate('Sessions');
   };
 
   const handleDeleteAccount = () => {
@@ -220,6 +227,7 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>Security</Text>
           <Card style={styles.sectionCard} padding={false} noShadow>
+            <SettingItem icon={ExternalLink} label="Active Sessions" onPress={handleOpenSessions} />
             <SettingItem icon={Key} label="Change Password" onPress={() => setChangePasswordVisible(true)} />
           </Card>
         </View>
@@ -516,5 +524,26 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: 'center',
     marginTop: 24,
+  },
+  sessionItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+  },
+  sessionDevice: {
+    fontSize: 16,
+    fontFamily: 'Inter_500Medium',
+    marginBottom: 4,
+  },
+  sessionInfo: {
+    fontSize: 12,
+    fontFamily: 'Inter_400Regular',
+  },
+  currentBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
   },
 });

@@ -5,6 +5,7 @@ import { authAPI } from '../api/auth';
 export const useAuthStore = create((set, get) => ({
   // State
   user: null,
+  sessions: [],
   accessToken: null,
   sessionId: null,
   isAuthenticated: false,
@@ -168,6 +169,53 @@ export const useAuthStore = create((set, get) => ({
       return { success: true };
     } catch (error) {
       const message = error.response?.data?.message || 'Failed to delete account';
+      set({ error: message, isLoading: false });
+      return { success: false, error: message };
+    }
+  },
+
+  // Session Management
+  fetchSessions: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await authAPI.getSessions();
+      console.log('[authStore] fetchSessions raw response:', JSON.stringify(response, null, 2));
+
+      // response is the response body object { data: [...], meta: ... }
+      // So response.data is the sessions array
+      const sessionsList = response.data;
+      const safeSessions = Array.isArray(sessionsList) ? sessionsList : [];
+      console.log('[authStore] Sessions set to store:', safeSessions.length);
+      set({ sessions: safeSessions, isLoading: false });
+    } catch (error) {
+      console.error('Fetch sessions error:', error);
+      const message = error.response?.data?.message || 'Failed to fetch sessions';
+      set({ error: message, isLoading: false });
+    }
+  },
+
+  revokeSession: async (sessionId) => {
+    set({ isLoading: true, error: null });
+    try {
+      await authAPI.revokeSession(sessionId);
+      // Refresh user sessions
+      await get().fetchSessions();
+      return { success: true };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to revoke session';
+      set({ error: message, isLoading: false });
+      return { success: false, error: message };
+    }
+  },
+
+  revokeOtherSessions: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await authAPI.revokeOtherSessions();
+      await get().fetchSessions();
+      return { success: true, count: response.data?.count };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to revoke other sessions';
       set({ error: message, isLoading: false });
       return { success: false, error: message };
     }

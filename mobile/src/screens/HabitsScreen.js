@@ -9,19 +9,39 @@ import { Plus, X, Calendar, Hash, Target, CheckCircle2, Circle, ListTodo, Search
 const CreateHabitModal = ({ visible, onClose, onSubmit }) => {
   const { theme } = useThemeStore();
   const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
   const [frequency, setFrequency] = useState('daily');
   const [target, setTarget] = useState('1');
+  const [reminderTime, setReminderTime] = useState(''); // Format: "HH:MM"
 
   const handleSubmit = () => {
     if (!name) return;
-    onSubmit({
+
+    // Simple time validation (HH:MM)
+    if (reminderTime && !/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(reminderTime)) {
+      alert('Invalid time format. Please use HH:MM (e.g. 08:30)');
+      return;
+    }
+
+    const payload = {
       name,
+      description,
       frequency,
       target_count: parseInt(target) || 1,
-    });
+    };
+
+    if (reminderTime) {
+      payload.reminder_time = reminderTime;
+    }
+
+    onSubmit(payload);
+
+    // Reset form
     setName('');
+    setDescription('');
     setFrequency('daily');
     setTarget('1');
+    setReminderTime('');
     onClose();
   };
 
@@ -37,50 +57,68 @@ const CreateHabitModal = ({ visible, onClose, onSubmit }) => {
               </TouchableOpacity>
             </View>
 
-            <Input
-              label="Habit Name"
-              placeholder="e.g., Read 30 mins"
-              value={name}
-              onChangeText={setName}
-              style={styles.modalInput}
-              autoCapitalize="sentences"
-            />
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <Input
+                label="Habit Name"
+                placeholder="e.g., Read 30 mins"
+                value={name}
+                onChangeText={setName}
+                style={styles.modalInput}
+                autoCapitalize="sentences"
+              />
 
-            <View style={{ marginBottom: 24 }}>
-              <Text style={[styles.label, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.medium }]}>Frequency</Text>
-              <View style={styles.frequencyContainer}>
-                {['daily', 'weekly', 'monthly'].map((f) => (
-                  <TouchableOpacity
-                    key={f}
-                    style={[
-                      styles.freqChip,
-                      {
-                        backgroundColor: frequency === f ? theme.colors.primary : theme.colors.surface,
-                        borderColor: frequency === f ? theme.colors.primary : theme.colors.border,
-                      },
-                    ]}
-                    onPress={() => setFrequency(f)}
-                  >
-                    <Text
-                      style={{
-                        color: frequency === f ? theme.colors.primaryContent : theme.colors.text,
-                        fontWeight: frequency === f ? '600' : '400',
-                        textTransform: 'capitalize',
-                        fontSize: 14,
-                      }}
+              <Input
+                label="Description (Optional)"
+                placeholder="What is this habit about?"
+                value={description}
+                onChangeText={setDescription}
+                style={styles.modalInput}
+                autoCapitalize="sentences"
+              />
+
+              <View style={{ marginBottom: 24 }}>
+                <Text style={[styles.label, { color: theme.colors.text, fontFamily: theme.typography.fontFamily.medium }]}>Frequency</Text>
+                <View style={styles.frequencyContainer}>
+                  {['daily', 'weekly', 'monthly'].map((f) => (
+                    <TouchableOpacity
+                      key={f}
+                      style={[
+                        styles.freqChip,
+                        {
+                          backgroundColor: frequency === f ? theme.colors.primary : theme.colors.surface,
+                          borderColor: frequency === f ? theme.colors.primary : theme.colors.border,
+                        },
+                      ]}
+                      onPress={() => setFrequency(f)}
                     >
-                      {f}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                      <Text
+                        style={{
+                          color: frequency === f ? theme.colors.primaryContent : theme.colors.text,
+                          fontWeight: frequency === f ? '600' : '400',
+                          textTransform: 'capitalize',
+                          fontSize: 14,
+                        }}
+                      >
+                        {f}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
-            </View>
 
-            <Input label="Daily Target" placeholder="1" value={target} onChangeText={setTarget} style={styles.modalInput} keyboardType="numeric" />
+              <View style={{ flexDirection: 'row', gap: 16 }}>
+                <View style={{ flex: 1 }}>
+                  <Input label="Daily Target" placeholder="1" value={target} onChangeText={setTarget} style={styles.modalInput} keyboardType="numeric" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Input label="Reminder (HH:MM)" placeholder="08:00" value={reminderTime} onChangeText={setReminderTime} style={styles.modalInput} />
+                </View>
+              </View>
 
-            <View style={{ marginTop: 8 }}>
-              <Button title="Create Habit" onPress={handleSubmit} style={styles.modalButton} />
-            </View>
+              <View style={{ marginTop: 8, marginBottom: 24 }}>
+                <Button title="Create Habit" onPress={handleSubmit} style={styles.modalButton} />
+              </View>
+            </ScrollView>
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -114,34 +152,33 @@ const FilterChip = ({ label, active, onPress, theme }) => (
 
 export default function HabitsScreen({ navigation }) {
   const { theme } = useThemeStore();
-  const { habits, fetchHabits, createHabit, isLoading } = useHabitsStore();
+  const { habits, fetchHabits, createHabit, isLoading, isLoadingMore, pagination } = useHabitsStore();
   const [modalVisible, setModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState('all'); // 'all', 'active', 'inactive'
 
+  // Debounced fetch
   useEffect(() => {
-    fetchHabits();
-  }, []);
+    const timer = setTimeout(() => {
+      loadHabits(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [filter, searchQuery]);
 
-  // Filter and search habits
-  const filteredHabits = useMemo(() => {
-    let result = habits || [];
+  const loadHabits = (page) => {
+    const params = {};
+    if (filter === 'active') params.active = true;
+    if (filter === 'inactive') params.inactive = true;
+    if (searchQuery) params.keyword = searchQuery;
 
-    // Apply filter
-    if (filter === 'active') {
-      result = result.filter((h) => h.is_active);
-    } else if (filter === 'inactive') {
-      result = result.filter((h) => !h.is_active);
+    fetchHabits(page, params);
+  };
+
+  const handleLoadMore = () => {
+    if (pagination.has_next_page && !isLoading && !isLoadingMore) {
+      loadHabits(pagination.page + 1);
     }
-
-    // Apply search
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter((h) => h.name.toLowerCase().includes(query));
-    }
-
-    return result;
-  }, [habits, filter, searchQuery]);
+  };
 
   const handleCreateHabit = async (data) => {
     await createHabit(data);
@@ -216,12 +253,21 @@ export default function HabitsScreen({ navigation }) {
       </View>
 
       <FlatList
-        data={filteredHabits}
+        data={habits}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
-        refreshControl={<RefreshControl refreshing={isLoading} onRefresh={fetchHabits} />}
+        refreshControl={<RefreshControl refreshing={isLoading} onRefresh={() => loadHabits(1)} />}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.5}
         showsVerticalScrollIndicator={false}
+        ListFooterComponent={
+          isLoadingMore ? (
+            <View style={{ padding: 20, alignItems: 'center' }}>
+              <Text style={{ color: theme.colors.textMuted }}>Loading more...</Text>
+            </View>
+          ) : null
+        }
         ListEmptyComponent={
           !isLoading && (
             <View style={styles.emptyContainer}>

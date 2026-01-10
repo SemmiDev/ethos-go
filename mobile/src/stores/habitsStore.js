@@ -8,21 +8,45 @@ export const useHabitsStore = create((set, get) => ({
   analytics: null,
   habitLogs: [],
   isLoading: false,
+  isLoadingMore: false,
   error: null,
+  pagination: {
+    page: 1,
+    per_page: 20,
+    has_next_page: false,
+  },
 
   // Fetch all habits
-  fetchHabits: async () => {
-    set({ isLoading: true, error: null });
+  fetchHabits: async (page = 1, filters = {}) => {
+    if (page === 1) {
+      set({ isLoading: true, error: null });
+    } else {
+      set({ isLoadingMore: true, error: null });
+    }
+
     try {
-      const response = await habitsAPI.list();
-      // API returns wrapped response: { data: { data: [], meta: {} } }
-      // We need the inner data array
+      // Pass pagination params and filters
+      const response = await habitsAPI.list({ page, per_page: 20, ...filters });
+
       const habitsData = response.data?.data || response.data || [];
-      set({ habits: habitsData, isLoading: false });
+      const meta = response.data?.meta || {};
+      const pagination = meta.pagination || {};
+
+      set((state) => ({
+        // If first page, replace habits. Else append.
+        habits: page === 1 ? habitsData : [...state.habits, ...habitsData],
+        pagination: {
+          page: pagination.current_page || page,
+          per_page: pagination.per_page || 20,
+          has_next_page: pagination.has_next_page || false,
+        },
+        isLoading: false,
+        isLoadingMore: false,
+      }));
     } catch (error) {
       console.error('Fetch habits error:', error);
       const message = error.response?.data?.message || 'Failed to fetch habits';
-      set({ error: message, isLoading: false });
+      set({ error: message, isLoading: false, isLoadingMore: false });
     }
   },
 
@@ -81,10 +105,12 @@ export const useHabitsStore = create((set, get) => ({
   updateHabit: async (habitId, data) => {
     set({ isLoading: true, error: null });
     try {
+      console.log(`[habitsStore] updateHabit: Updating ${habitId}`, data);
       await habitsAPI.update(habitId, data);
       await get().fetchHabits();
       return { success: true };
     } catch (error) {
+      console.error('[habitsStore] updateHabit error:', error);
       const message = error.response?.data?.message || 'Failed to update habit';
       set({ error: message, isLoading: false });
       return { success: false, error: message };
