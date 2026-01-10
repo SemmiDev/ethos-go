@@ -9,31 +9,20 @@ import (
 	"github.com/semmidev/ethos-go/internal/notifications/app"
 	"github.com/semmidev/ethos-go/internal/notifications/app/command"
 	"github.com/semmidev/ethos-go/internal/notifications/app/query"
-	"github.com/semmidev/ethos-go/internal/notifications/service/webpush"
 )
 
 func NewApplication(
 	db *sqlx.DB,
 	log logger.Logger,
 	metricsClient decorator.MetricsClient,
-	cfg *config.Config,
+	_ *config.Config, // config parameter kept for API compatibility but no longer used for VAPID
 ) app.Application {
 	repo := adapters.NewNotificationPostgresRepository(db)
-	pushRepo := adapters.NewPushSubscriptionRepository(db)
-
-	pushService := webpush.NewService(
-		pushRepo,
-		cfg.VapidPublicKey,
-		cfg.VapidPrivateKey,
-		cfg.VapidSubject,
-		log,
-	)
 
 	return app.Application{
 		Commands: app.Commands{
 			CreateNotification: command.NewCreateNotificationHandler(
 				repo,
-				pushService,
 				log,
 				metricsClient,
 			),
@@ -49,16 +38,6 @@ func NewApplication(
 			),
 			DeleteNotification: command.NewDeleteNotificationHandler(
 				repo,
-				log,
-				metricsClient,
-			),
-			SubscribePush: command.NewSubscribePushHandler(
-				pushRepo,
-				log,
-				metricsClient,
-			),
-			UnsubscribePush: command.NewUnsubscribePushHandler(
-				pushRepo,
 				log,
 				metricsClient,
 			),

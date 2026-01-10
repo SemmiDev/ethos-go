@@ -91,19 +91,6 @@ type Pagination struct {
 	TotalDataInCurrentPage *int  `json:"total_data_in_current_page,omitempty"`
 }
 
-// PushSubscriptionRequest defines model for PushSubscriptionRequest.
-type PushSubscriptionRequest struct {
-	// Endpoint The push subscription endpoint URL from the browser
-	Endpoint string `json:"endpoint"`
-	Keys     struct {
-		// Auth Authentication secret
-		Auth string `json:"auth"`
-
-		// P256dh Client public key for message encryption
-		P256dh string `json:"p256dh"`
-	} `json:"keys"`
-}
-
 // SuccessResponse defines model for SuccessResponse.
 type SuccessResponse struct {
 	Message *string `json:"message,omitempty"`
@@ -114,16 +101,6 @@ type SuccessResponse struct {
 type UnreadCountResponse struct {
 	Data *struct {
 		Count *int `json:"count,omitempty"`
-	} `json:"data,omitempty"`
-	Message *string `json:"message,omitempty"`
-	Success *bool   `json:"success,omitempty"`
-}
-
-// VapidPublicKeyResponse defines model for VapidPublicKeyResponse.
-type VapidPublicKeyResponse struct {
-	Data *struct {
-		// VapidPublicKey VAPID public key for Web Push subscription
-		VapidPublicKey *string `json:"vapid_public_key,omitempty"`
 	} `json:"data,omitempty"`
 	Message *string `json:"message,omitempty"`
 	Success *bool   `json:"success,omitempty"`
@@ -152,20 +129,8 @@ type CreateNotificationJSONBody struct {
 // CreateNotificationJSONBodyType defines parameters for CreateNotification.
 type CreateNotificationJSONBodyType string
 
-// UnsubscribePushJSONBody defines parameters for UnsubscribePush.
-type UnsubscribePushJSONBody struct {
-	// Endpoint The push subscription endpoint URL
-	Endpoint string `json:"endpoint"`
-}
-
 // CreateNotificationJSONRequestBody defines body for CreateNotification for application/json ContentType.
 type CreateNotificationJSONRequestBody CreateNotificationJSONBody
-
-// SubscribePushJSONRequestBody defines body for SubscribePush for application/json ContentType.
-type SubscribePushJSONRequestBody = PushSubscriptionRequest
-
-// UnsubscribePushJSONRequestBody defines body for UnsubscribePush for application/json ContentType.
-type UnsubscribePushJSONRequestBody UnsubscribePushJSONBody
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -187,15 +152,6 @@ type ServerInterface interface {
 	// Mark notification as read
 	// (POST /notifications/{notificationId}/read)
 	MarkAsRead(w http.ResponseWriter, r *http.Request, notificationId openapi_types.UUID)
-	// Subscribe to push notifications
-	// (POST /push/subscribe)
-	SubscribePush(w http.ResponseWriter, r *http.Request)
-	// Unsubscribe from push notifications
-	// (POST /push/unsubscribe)
-	UnsubscribePush(w http.ResponseWriter, r *http.Request)
-	// Get VAPID public key
-	// (GET /push/vapid-public-key)
-	GetVapidPublicKey(w http.ResponseWriter, r *http.Request)
 }
 
 // Unimplemented server implementation that returns http.StatusNotImplemented for each endpoint.
@@ -235,24 +191,6 @@ func (_ Unimplemented) DeleteNotification(w http.ResponseWriter, r *http.Request
 // Mark notification as read
 // (POST /notifications/{notificationId}/read)
 func (_ Unimplemented) MarkAsRead(w http.ResponseWriter, r *http.Request, notificationId openapi_types.UUID) {
-	w.WriteHeader(http.StatusNotImplemented)
-}
-
-// Subscribe to push notifications
-// (POST /push/subscribe)
-func (_ Unimplemented) SubscribePush(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusNotImplemented)
-}
-
-// Unsubscribe from push notifications
-// (POST /push/unsubscribe)
-func (_ Unimplemented) UnsubscribePush(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusNotImplemented)
-}
-
-// Get VAPID public key
-// (GET /push/vapid-public-key)
-func (_ Unimplemented) GetVapidPublicKey(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -436,60 +374,6 @@ func (siw *ServerInterfaceWrapper) MarkAsRead(w http.ResponseWriter, r *http.Req
 	handler.ServeHTTP(w, r)
 }
 
-// SubscribePush operation middleware
-func (siw *ServerInterfaceWrapper) SubscribePush(w http.ResponseWriter, r *http.Request) {
-
-	ctx := r.Context()
-
-	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
-
-	r = r.WithContext(ctx)
-
-	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.SubscribePush(w, r)
-	}))
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r)
-}
-
-// UnsubscribePush operation middleware
-func (siw *ServerInterfaceWrapper) UnsubscribePush(w http.ResponseWriter, r *http.Request) {
-
-	ctx := r.Context()
-
-	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
-
-	r = r.WithContext(ctx)
-
-	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.UnsubscribePush(w, r)
-	}))
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r)
-}
-
-// GetVapidPublicKey operation middleware
-func (siw *ServerInterfaceWrapper) GetVapidPublicKey(w http.ResponseWriter, r *http.Request) {
-
-	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.GetVapidPublicKey(w, r)
-	}))
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r)
-}
-
 type UnescapedCookieParamError struct {
 	ParamName string
 	Err       error
@@ -621,15 +505,6 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/notifications/{notificationId}/read", wrapper.MarkAsRead)
 	})
-	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/push/subscribe", wrapper.SubscribePush)
-	})
-	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/push/unsubscribe", wrapper.UnsubscribePush)
-	})
-	r.Group(func(r chi.Router) {
-		r.Get(options.BaseURL+"/push/vapid-public-key", wrapper.GetVapidPublicKey)
-	})
 
 	return r
 }
@@ -637,31 +512,25 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

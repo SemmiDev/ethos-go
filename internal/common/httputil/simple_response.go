@@ -3,6 +3,7 @@ package httputil
 import (
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/render"
 	"github.com/semmidev/ethos-go/internal/common/apperror"
@@ -99,12 +100,59 @@ func Error(w http.ResponseWriter, r *http.Request, err error) {
 
 		resp.Error = errData
 	} else {
-		// Generic error
-		resp.Error = map[string]interface{}{
-			"message": resp.Message, // Internal Server Error
+		// Handle domain errors by inspecting error message patterns
+		errMsg := err.Error()
+		errMsgLower := strings.ToLower(errMsg)
+
+		switch {
+		case strings.Contains(errMsgLower, "not found"):
+			statusCode = http.StatusNotFound
+			resp.Message = capitalizeFirst(errMsg)
+			resp.Error = map[string]interface{}{
+				"code":    "NOT_FOUND",
+				"message": capitalizeFirst(errMsg),
+			}
+		case strings.Contains(errMsgLower, "unauthorized") ||
+			strings.Contains(errMsgLower, "cannot access"):
+			statusCode = http.StatusForbidden
+			resp.Message = capitalizeFirst(errMsg)
+			resp.Error = map[string]interface{}{
+				"code":    "FORBIDDEN",
+				"message": capitalizeFirst(errMsg),
+			}
+		case strings.Contains(errMsgLower, "already"):
+			statusCode = http.StatusConflict
+			resp.Message = capitalizeFirst(errMsg)
+			resp.Error = map[string]interface{}{
+				"code":    "CONFLICT",
+				"message": capitalizeFirst(errMsg),
+			}
+		case strings.Contains(errMsgLower, "invalid") ||
+			strings.Contains(errMsgLower, "empty") ||
+			strings.Contains(errMsgLower, "must be"):
+			statusCode = http.StatusBadRequest
+			resp.Message = capitalizeFirst(errMsg)
+			resp.Error = map[string]interface{}{
+				"code":    "VALIDATION_ERROR",
+				"message": capitalizeFirst(errMsg),
+			}
+		default:
+			// Generic internal error - don't expose internal error details
+			resp.Error = map[string]interface{}{
+				"code":    "INTERNAL_ERROR",
+				"message": "An unexpected error occurred",
+			}
 		}
 	}
 
 	render.Status(r, statusCode)
 	render.JSON(w, r, resp)
+}
+
+// capitalizeFirst capitalizes the first letter of a string
+func capitalizeFirst(s string) string {
+	if len(s) == 0 {
+		return s
+	}
+	return strings.ToUpper(s[:1]) + s[1:]
 }

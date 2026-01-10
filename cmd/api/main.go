@@ -159,7 +159,7 @@ func run(ctx context.Context, _, _ io.Writer) error {
 
 	// Initialize Notifications module
 	notificationsApp := notificationsvc.NewApplication(db, appLogger, metricsClient, cfg)
-	notificationsServer := notificationports.NewNotificationOpenAPIServer(notificationsApp, cfg.VapidPublicKey)
+	notificationsServer := notificationports.NewNotificationOpenAPIServer(notificationsApp)
 
 	// Setup router
 	router := NewRouter(RouterConfig{

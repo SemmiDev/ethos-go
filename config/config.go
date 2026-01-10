@@ -58,11 +58,6 @@ type Config struct {
 	OTLPEnableMetrics bool    `mapstructure:"OTEL_ENABLE_METRICS" env:"OTEL_ENABLE_METRICS"`
 	OTLPSampleRate    float64 `mapstructure:"OTEL_SAMPLE_RATE" env:"OTEL_SAMPLE_RATE"`
 
-	// Web Push VAPID configuration
-	VapidPublicKey  string `mapstructure:"VAPID_PUBLIC_KEY" env:"VAPID_PUBLIC_KEY"`
-	VapidPrivateKey string `mapstructure:"VAPID_PRIVATE_KEY" env:"VAPID_PRIVATE_KEY"`
-	VapidSubject    string `mapstructure:"VAPID_SUBJECT" env:"VAPID_SUBJECT"`
-
 	// Google OAuth configuration
 	GoogleClientID     string `mapstructure:"GOOGLE_CLIENT_ID" env:"GOOGLE_CLIENT_ID"`
 	GoogleClientSecret string `mapstructure:"GOOGLE_CLIENT_SECRET" env:"GOOGLE_CLIENT_SECRET"`
@@ -130,17 +125,6 @@ func (c *Config) Validate() error {
 	// Validate server config
 	if c.ServerPort == "" {
 		errors = append(errors, "SERVER_PORT is required")
-	}
-
-	// Validate VAPID config
-	if c.VapidPublicKey == "" {
-		errors = append(errors, "VAPID_PUBLIC_KEY is required")
-	}
-	if c.VapidPrivateKey == "" {
-		errors = append(errors, "VAPID_PRIVATE_KEY is required")
-	}
-	if c.VapidSubject == "" {
-		errors = append(errors, "VAPID_SUBJECT is required")
 	}
 
 	if len(errors) > 0 {

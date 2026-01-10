@@ -20,14 +20,12 @@ import (
 )
 
 type NotificationOpenAPIServer struct {
-	app            app.Application
-	vapidPublicKey string
+	app app.Application
 }
 
-func NewNotificationOpenAPIServer(app app.Application, vapidPublicKey string) *NotificationOpenAPIServer {
+func NewNotificationOpenAPIServer(app app.Application) *NotificationOpenAPIServer {
 	return &NotificationOpenAPIServer{
-		app:            app,
-		vapidPublicKey: vapidPublicKey,
+		app: app,
 	}
 }
 
@@ -198,81 +196,6 @@ func (s *NotificationOpenAPIServer) DeleteNotification(w http.ResponseWriter, r 
 	}
 
 	httputil.Success(w, r, nil, "Notification deleted")
-}
-
-// GetVapidPublicKey implements notifications.ServerInterface
-func (s *NotificationOpenAPIServer) GetVapidPublicKey(w http.ResponseWriter, r *http.Request) {
-	response := notifications.VapidPublicKeyResponse{
-		Success: toBoolPtr(true),
-		Message: toStringPtr("VAPID public key retrieved"),
-		Data: &struct {
-			VapidPublicKey *string `json:"vapid_public_key,omitempty"`
-		}{
-			VapidPublicKey: &s.vapidPublicKey,
-		},
-	}
-
-	render.JSON(w, r, response)
-}
-
-// SubscribePush implements notifications.ServerInterface
-func (s *NotificationOpenAPIServer) SubscribePush(w http.ResponseWriter, r *http.Request) {
-	user, err := authctx.UserFromCtx(r.Context())
-	if err != nil {
-		httputil.Error(w, r, apperror.Unauthorized("unauthorized"))
-		return
-	}
-
-	var body notifications.SubscribePushJSONRequestBody
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		httputil.Error(w, r, apperror.ValidationFailed("invalid request body"))
-		return
-	}
-
-	// Extract keys from the request
-	p256dh := body.Keys.P256dh
-	authKey := body.Keys.Auth
-
-	err = s.app.Commands.SubscribePush.Handle(r.Context(), command.SubscribePush{
-		UserID:    user.UserID,
-		Endpoint:  body.Endpoint,
-		P256dh:    p256dh,
-		Auth:      authKey,
-		UserAgent: r.UserAgent(),
-	})
-	if err != nil {
-		httputil.Error(w, r, err)
-		return
-	}
-
-	httputil.Success(w, r, nil, "Push subscription saved")
-}
-
-// UnsubscribePush implements notifications.ServerInterface
-func (s *NotificationOpenAPIServer) UnsubscribePush(w http.ResponseWriter, r *http.Request) {
-	_, err := authctx.UserFromCtx(r.Context())
-	if err != nil {
-		httputil.Error(w, r, apperror.Unauthorized("unauthorized"))
-		return
-	}
-
-	var body struct {
-		Endpoint string `json:"endpoint"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		httputil.Error(w, r, apperror.ValidationFailed("invalid request body"))
-		return
-	}
-
-	err = s.app.Commands.UnsubscribePush.Handle(r.Context(), command.UnsubscribePush{
-		Endpoint: body.Endpoint,
-	})
-	if err != nil {
-		httputil.Error(w, r, err)
-		return
-	}
-
-	httputil.Success(w, r, nil, "Push subscription removed")
 }
 
 // Helper functions

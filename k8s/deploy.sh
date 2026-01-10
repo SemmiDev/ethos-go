@@ -77,7 +77,6 @@ create_secrets() {
     echo "  --from-literal=REDIS_PASSWORD=YOUR_REDIS_PASSWORD \\"
     echo "  --from-literal=AUTH_JWT_SECRET=\$(openssl rand -base64 32) \\"
     echo "  --from-literal=SMTP_PASSWORD=YOUR_SMTP_PASSWORD \\"
-    echo "  --from-literal=VAPID_PRIVATE_KEY=YOUR_VAPID_KEY \\"
     echo "  --namespace=$NAMESPACE"
     echo ""
     read -p "Press enter when secrets are created..."

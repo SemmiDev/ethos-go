@@ -7,7 +7,6 @@ import { useFonts, Inter_300Light, Inter_400Regular, Inter_500Medium, Inter_600S
 import AppNavigator from './src/navigation/AppNavigator';
 import { useAuthStore } from './src/stores/authStore';
 import { useThemeStore } from './src/stores/themeStore';
-import { usePushNotifications } from './src/hooks/usePushNotifications';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -15,7 +14,6 @@ SplashScreen.preventAutoHideAsync();
 export default function App() {
   const initAuth = useAuthStore((state) => state.initialize);
   const initTheme = useThemeStore((state) => state.initialize);
-  usePushNotifications(); // Initialize push notifications mechanism
 
   let [fontsLoaded] = useFonts({
     Inter_300Light,

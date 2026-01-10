@@ -30,10 +30,6 @@ data:
   SMTP_PORT: "587"
   SMTP_USER: "sammidev4@gmail.com"
 
-  # Web Push Config
-  VAPID_PUBLIC_KEY: "BOZJvE5-wi5VQsDjANHuH73plcQaK6pnxJmJOJNG0M_ZUfHMnWku086gQarw7UxcqbYtvzwSH6n2lL9fOPTl94A"
-  VAPID_SUBJECT: "mailto:admin@example.com"
-
   # Observability (Disabled for basic deployment)
   OTEL_ENABLE_TRACING: "false"
   OTEL_ENABLE_METRICS: "false"

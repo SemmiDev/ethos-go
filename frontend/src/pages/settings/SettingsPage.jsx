@@ -31,7 +31,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { useUIStore } from '../../stores/uiStore';
 import { useThemeStore, THEMES } from '../../stores/themeStore';
 import { useLanguageStore } from '../../stores/languageStore';
-import { usePushNotifications } from '../../hooks/usePushNotifications';
+
 import { languages } from '../../i18n';
 import { format } from 'date-fns';
 
@@ -108,7 +108,6 @@ export function SettingsPage() {
   const { addToast } = useUIStore();
   const { theme, isSystemPreference, setSystemPreference } = useThemeStore();
   const { language, setLanguage } = useLanguageStore();
-  const { isSupported, isSubscribed, loading: pushLoading, subscribe, unsubscribe, permission } = usePushNotifications();
 
   const [profileData, setProfileData] = useState({
     name: '',

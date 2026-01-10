@@ -15,8 +15,6 @@ type Commands struct {
 	MarkAsRead         command.MarkAsReadHandler
 	MarkAllRead        command.MarkAllReadHandler
 	DeleteNotification command.DeleteNotificationHandler
-	SubscribePush      command.SubscribePushHandler
-	UnsubscribePush    command.UnsubscribePushHandler
 }
 
 type Queries struct {

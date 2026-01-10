@@ -4,7 +4,6 @@ go 1.25.0
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.2
-	github.com/SherClockHolmes/webpush-go v1.4.0
 	github.com/getkin/kin-openapi v0.133.0
 	github.com/go-chi/render v1.0.3
 	github.com/golang-migrate/migrate/v4 v4.19.1
