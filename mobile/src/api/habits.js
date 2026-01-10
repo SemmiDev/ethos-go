@@ -49,6 +49,22 @@ export const habitsAPI = {
     return response.data;
   },
 
+  // Start Vacation Mode
+  startVacation: async (habitId, reason) => {
+    const response = await apiClient.post('/habit-vacations', {
+      habit_id: habitId,
+      reason,
+      start_date: new Date().toISOString(),
+    });
+    return response.data;
+  },
+
+  // End Vacation Mode
+  endVacation: async (vacationId) => {
+    const response = await apiClient.put(`/habit-vacations/${vacationId}/end`);
+    return response.data;
+  },
+
   // Log a habit
   log: async (habitId, data) => {
     const response = await apiClient.post(`/habits/${habitId}/logs`, data);

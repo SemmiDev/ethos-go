@@ -12,6 +12,7 @@ import DashboardScreen from '../screens/DashboardScreen';
 import HabitsScreen from '../screens/HabitsScreen';
 import HabitDetailScreen from '../screens/HabitDetailScreen';
 import AnalyticsScreen from '../screens/AnalyticsScreen';
+import NotificationsScreen from '../screens/NotificationsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 
 const Tab = createBottomTabNavigator();
@@ -55,6 +56,14 @@ export default function MainTabs() {
       />
       <Tab.Screen name="Habits" component={HabitsStackNavigator} options={{ headerShown: false }} />
       <Tab.Screen name="Analytics" component={AnalyticsScreen} options={{ title: 'Analytics' }} />
+      <Tab.Screen
+        name="Notifications"
+        component={NotificationsScreen}
+        options={{
+          headerShown: false, // NotificationsScreen has its own header
+          title: 'Notifications',
+        }}
+      />
       <Tab.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
     </Tab.Navigator>
   );

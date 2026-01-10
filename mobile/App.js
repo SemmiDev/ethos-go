@@ -7,13 +7,16 @@ import { useFonts, Inter_300Light, Inter_400Regular, Inter_500Medium, Inter_600S
 import AppNavigator from './src/navigation/AppNavigator';
 import { useAuthStore } from './src/stores/authStore';
 import { useThemeStore } from './src/stores/themeStore';
+import { useNotificationsStore } from './src/stores/notificationsStore';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
 
 export default function App() {
   const initAuth = useAuthStore((state) => state.initialize);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const initTheme = useThemeStore((state) => state.initialize);
+  const fetchUnreadCount = useNotificationsStore((state) => state.fetchUnreadCount);
 
   let [fontsLoaded] = useFonts({
     Inter_300Light,
@@ -34,6 +37,13 @@ export default function App() {
     }
     prepare();
   }, []);
+
+  // Fetch notification count when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchUnreadCount();
+    }
+  }, [isAuthenticated]);
 
   const onLayoutRootView = useCallback(async () => {
     if (fontsLoaded) {

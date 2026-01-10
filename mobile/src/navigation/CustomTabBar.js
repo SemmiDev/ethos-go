@@ -1,8 +1,9 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LayoutDashboard, CheckSquare, BarChart2, Settings } from 'lucide-react-native';
+import { LayoutDashboard, CheckSquare, BarChart2, Bell, Settings } from 'lucide-react-native';
 import { useThemeStore } from '../stores/themeStore';
+import { useNotificationsStore } from '../stores/notificationsStore';
 
 const TabIcon = ({ name, color, size }) => {
   switch (name) {
@@ -12,6 +13,8 @@ const TabIcon = ({ name, color, size }) => {
       return <CheckSquare color={color} size={size} />;
     case 'Analytics':
       return <BarChart2 color={color} size={size} />;
+    case 'Notifications':
+      return <Bell color={color} size={size} />;
     case 'Settings':
       return <Settings color={color} size={size} />;
     default:
@@ -21,6 +24,7 @@ const TabIcon = ({ name, color, size }) => {
 
 export default function CustomTabBar({ state, descriptors, navigation }) {
   const { theme } = useThemeStore();
+  const { unreadCount } = useNotificationsStore();
   const insets = useSafeAreaInsets();
 
   return (
@@ -53,6 +57,7 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
         };
 
         const color = isFocused ? theme.colors.primary : theme.colors.textMuted;
+        const showBadge = route.name === 'Notifications' && unreadCount > 0;
 
         return (
           <TouchableOpacity
@@ -66,6 +71,11 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
           >
             <View style={[styles.iconContainer, isFocused && { backgroundColor: theme.colors.primary + '15' }]}>
               <TabIcon name={route.name} color={color} size={24} />
+              {showBadge && (
+                <View style={[styles.badge, { backgroundColor: theme.colors.error }]}>
+                  <Text style={styles.badgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
+                </View>
+              )}
             </View>
             <Text style={[styles.label, { color }]}>{label}</Text>
           </TouchableOpacity>
@@ -98,9 +108,26 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 12,
     marginBottom: 4,
+    position: 'relative',
   },
   label: {
     fontSize: 11,
     fontWeight: '500',
+  },
+  badge: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  badgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '700',
   },
 });
