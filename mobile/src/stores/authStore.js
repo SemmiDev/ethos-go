@@ -10,6 +10,7 @@ export const useAuthStore = create((set, get) => ({
   sessionId: null,
   isAuthenticated: false,
   isLoading: true,
+  isSessionsLoading: false,
   error: null,
 
   // Initialize auth state from secure storage
@@ -175,8 +176,9 @@ export const useAuthStore = create((set, get) => ({
   },
 
   // Session Management
+  // Session Management
   fetchSessions: async () => {
-    set({ isLoading: true, error: null });
+    set({ isSessionsLoading: true, error: null });
     try {
       const response = await authAPI.getSessions();
       console.log('[authStore] fetchSessions raw response:', JSON.stringify(response, null, 2));
@@ -186,16 +188,16 @@ export const useAuthStore = create((set, get) => ({
       const sessionsList = response.data;
       const safeSessions = Array.isArray(sessionsList) ? sessionsList : [];
       console.log('[authStore] Sessions set to store:', safeSessions.length);
-      set({ sessions: safeSessions, isLoading: false });
+      set({ sessions: safeSessions, isSessionsLoading: false });
     } catch (error) {
       console.error('Fetch sessions error:', error);
       const message = error.response?.data?.message || 'Failed to fetch sessions';
-      set({ error: message, isLoading: false });
+      set({ error: message, isSessionsLoading: false });
     }
   },
 
   revokeSession: async (sessionId) => {
-    set({ isLoading: true, error: null });
+    set({ isSessionsLoading: true, error: null });
     try {
       await authAPI.revokeSession(sessionId);
       // Refresh user sessions
@@ -203,20 +205,20 @@ export const useAuthStore = create((set, get) => ({
       return { success: true };
     } catch (error) {
       const message = error.response?.data?.message || 'Failed to revoke session';
-      set({ error: message, isLoading: false });
+      set({ error: message, isSessionsLoading: false });
       return { success: false, error: message };
     }
   },
 
   revokeOtherSessions: async () => {
-    set({ isLoading: true, error: null });
+    set({ isSessionsLoading: true, error: null });
     try {
       const response = await authAPI.revokeOtherSessions();
       await get().fetchSessions();
       return { success: true, count: response.data?.count };
     } catch (error) {
       const message = error.response?.data?.message || 'Failed to revoke other sessions';
-      set({ error: message, isLoading: false });
+      set({ error: message, isSessionsLoading: false });
       return { success: false, error: message };
     }
   },

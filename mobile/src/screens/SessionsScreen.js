@@ -3,16 +3,14 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, RefreshContr
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '../stores/authStore';
 import { useThemeStore } from '../stores/themeStore';
-import { Card } from '../components';
-import { Trash2, Smartphone, Globe } from 'lucide-react-native';
+import { Card, Button } from '../components';
+import { Trash2, Smartphone, Globe, Monitor, Laptop, LogOut } from 'lucide-react-native';
 
 export default function SessionsScreen() {
   const { theme } = useThemeStore();
-  const { sessions, fetchSessions, revokeSession, revokeOtherSessions, isLoading } = useAuthStore();
-  console.log('[SessionsScreen] Rendering');
+  const { sessions, fetchSessions, revokeSession, revokeOtherSessions, isSessionsLoading } = useAuthStore();
 
   useEffect(() => {
-    console.log('[SessionsScreen] Mounting, fetching sessions...');
     fetchSessions();
   }, []);
 
@@ -53,26 +51,46 @@ export default function SessionsScreen() {
   const getDeviceIcon = (userAgent) => {
     if (!userAgent) return <Globe size={24} color={theme.colors.textMuted} />;
     const ua = userAgent.toLowerCase();
-    if (ua.includes('mobile') || ua.includes('fban') || ua.includes('fbav') || ua.includes('okhttp')) {
-      // okhttp is common in android apps
+    if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) {
       return <Smartphone size={24} color={theme.colors.textMuted} />;
+    }
+    if (ua.includes('macintosh') || ua.includes('windows') || ua.includes('linux')) {
+      return <Laptop size={24} color={theme.colors.textMuted} />;
     }
     return <Globe size={24} color={theme.colors.textMuted} />;
   };
 
   const renderItem = ({ item }) => {
-    try {
-      return (
-        <View style={{ padding: 16, borderBottomWidth: 1, borderColor: theme.colors.border }}>
-          <Text style={{ color: theme.colors.text }}>{item.user_agent || 'Unknown'}</Text>
-          <Text style={{ color: theme.colors.textMuted }}>{item.client_ip}</Text>
+    const isCurrent = item.is_current;
+
+    return (
+      <View style={[styles.sessionItem, { borderColor: theme.colors.border, backgroundColor: theme.colors.surface }]}>
+        <View style={styles.itemLeft}>
+          <View style={[styles.iconContainer, { backgroundColor: theme.colors.surfaceVariant }]}>{getDeviceIcon(item.user_agent)}</View>
+          <View style={styles.sessionInfo}>
+            <Text style={[styles.deviceName, { color: theme.colors.text }]} numberOfLines={1}>
+              {item.user_agent || 'Unknown Device'}
+            </Text>
+            <Text style={[styles.deviceMeta, { color: theme.colors.textMuted }]}>{item.client_ip}</Text>
+          </View>
         </View>
-      );
-    } catch (e) {
-      console.error('Render Item Error', e);
-      return null;
-    }
+
+        <View style={styles.itemRight}>
+          <View style={[styles.badge, { backgroundColor: isCurrent ? theme.colors.primary + '20' : '#22c55e20' }]}>
+            <Text style={[styles.badgeText, { color: isCurrent ? theme.colors.primary : '#22c55e' }]}>{isCurrent ? 'Current' : 'Active'}</Text>
+          </View>
+
+          {!isCurrent && (
+            <TouchableOpacity onPress={() => handleRevoke(item.session_id)} style={[styles.revokeButton, { backgroundColor: theme.colors.error + '20' }]}>
+              <Trash2 size={16} color={theme.colors.error} />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+    );
   };
+
+  const hasOtherSessions = sessions && sessions.length > 1;
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -81,24 +99,27 @@ export default function SessionsScreen() {
         renderItem={renderItem}
         keyExtractor={(item) => item.session_id || Math.random().toString()}
         contentContainerStyle={styles.listContent}
-        refreshControl={<RefreshControl refreshing={isLoading} onRefresh={fetchSessions} />}
-        ListHeaderComponent={
-          sessions && sessions.length > 1 ? (
-            <View style={{ marginBottom: 16, alignItems: 'flex-end' }}>
-              <TouchableOpacity onPress={handleRevokeOthers} style={{ padding: 8 }}>
-                <Text style={{ color: theme.colors.error, fontWeight: '600' }}>Sign Out All Other Devices</Text>
-              </TouchableOpacity>
-            </View>
-          ) : null
-        }
+        refreshControl={<RefreshControl refreshing={isSessionsLoading} onRefresh={fetchSessions} />}
         ListEmptyComponent={
-          !isLoading && (
+          !isSessionsLoading && (
             <View style={styles.emptyContainer}>
               <Text style={{ color: theme.colors.textMuted }}>No active sessions found.</Text>
             </View>
           )
         }
       />
+
+      {hasOtherSessions && (
+        <View style={[styles.footer, { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.border }]}>
+          <Button
+            title="Sign Out All Other Devices"
+            onPress={handleRevokeOthers}
+            variant="destructive"
+            style={styles.signOutButton}
+            icon={<LogOut size={18} color="#FFF" />}
+          />
+        </View>
+      )}
     </View>
   );
 }
@@ -110,15 +131,27 @@ const styles = StyleSheet.create({
   listContent: {
     padding: 16,
     paddingBottom: 32,
+    gap: 12,
   },
-  card: {
-    marginBottom: 12,
+  sessionItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    gap: 12,
   },
-  cardContent: {
+  itemLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    flex: 1,
+  },
+  itemRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   iconContainer: {
     width: 40,
@@ -127,33 +160,43 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  infoContainer: {
+  sessionInfo: {
     flex: 1,
   },
-  deviceText: {
-    fontSize: 16,
+  deviceName: {
+    fontSize: 14,
     fontWeight: '600',
     marginBottom: 2,
   },
-  metaText: {
+  deviceMeta: {
     fontSize: 12,
   },
   badge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
-    marginTop: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
   badgeText: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '600',
   },
   revokeButton: {
-    padding: 8,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   emptyContainer: {
     padding: 40,
     alignItems: 'center',
+  },
+  footer: {
+    padding: 16,
+    borderTopWidth: 1,
+    paddingBottom: 32, // Extra padding for safe area
+  },
+  signOutButton: {
+    width: '100%',
   },
 });
