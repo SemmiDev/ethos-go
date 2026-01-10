@@ -105,6 +105,30 @@ export const useHabitsStore = create((set, get) => ({
     }
   },
 
+  // Activate habit
+  activateHabit: async (habitId) => {
+    try {
+      await habitsAPI.activate(habitId);
+      await get().fetchHabits();
+      return { success: true };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to activate habit';
+      return { success: false, error: message };
+    }
+  },
+
+  // Deactivate habit
+  deactivateHabit: async (habitId) => {
+    try {
+      await habitsAPI.deactivate(habitId);
+      await get().fetchHabits();
+      return { success: true };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to deactivate habit';
+      return { success: false, error: message };
+    }
+  },
+
   // Log habit
   logHabit: async (habitId, { count = 1, note = '', log_date } = {}) => {
     try {

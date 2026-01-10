@@ -238,6 +238,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderStyle: 'dashed',
     borderWidth: 1,
+    borderColor: '#E0E0E0',
     backgroundColor: 'transparent',
+    shadowOpacity: 0,
+    elevation: 0,
   },
 });

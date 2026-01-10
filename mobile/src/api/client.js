@@ -2,7 +2,7 @@ import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
 // API base URL - change this to your backend URL
-const API_BASE_URL = 'https://1a1e6ff05e3e.ngrok-free.app/api'; // Update with your server IP
+const API_BASE_URL = 'https://6c9c54338c7c.ngrok-free.app/api'; // Update with your server IP
 
 // Create axios instance with base configuration
 const apiClient = axios.create({

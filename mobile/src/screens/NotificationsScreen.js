@@ -258,8 +258,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
   },
   notificationCard: {
-    marginBottom: 12,
-    borderWidth: 1,
+    marginBottom: 10,
   },
   notificationInner: {
     flexDirection: 'row',

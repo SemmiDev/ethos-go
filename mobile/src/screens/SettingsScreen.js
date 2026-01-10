@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Switch, TouchableOpacity, ScrollView, Modal, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { View, Text, StyleSheet, Switch, TouchableOpacity, ScrollView, Modal, KeyboardAvoidingView, Platform, Alert, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '../stores/authStore';
 import { useThemeStore } from '../stores/themeStore';
 import { Card, Button, Input } from '../components';
-import { User, Moon, Bell, LogOut, ChevronRight, Shield, HelpCircle, Info, X, Key, Trash2 } from 'lucide-react-native';
+import { User, Moon, Bell, LogOut, ChevronRight, Shield, HelpCircle, Info, X, Key, Trash2, ExternalLink, Mail, MessageCircle } from 'lucide-react-native';
 
 // --- Modals ---
 
@@ -12,7 +12,6 @@ const EditProfileModal = ({ visible, onClose, initialData, onSubmit, isLoading }
   const { theme } = useThemeStore();
   const [name, setName] = useState(initialData?.name || '');
   const [email, setEmail] = useState(initialData?.email || '');
-  // Timezone could be a picker in a full implementation
 
   const handleSubmit = () => {
     onSubmit({ name, email });
@@ -75,6 +74,26 @@ const ChangePasswordModal = ({ visible, onClose, onSubmit, isLoading }) => {
   );
 };
 
+const InfoModal = ({ visible, onClose, title, children }) => {
+  const { theme } = useThemeStore();
+
+  return (
+    <Modal visible={visible} animationType="slide" transparent>
+      <View style={styles.modalOverlay}>
+        <View style={[styles.modalContent, { backgroundColor: theme.colors.surface, maxHeight: '80%' }]}>
+          <View style={styles.modalHeader}>
+            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>{title}</Text>
+            <TouchableOpacity onPress={onClose}>
+              <X size={24} color={theme.colors.textMuted} />
+            </TouchableOpacity>
+          </View>
+          <ScrollView showsVerticalScrollIndicator={false}>{children}</ScrollView>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
 // --- Settings Screen ---
 
 const SettingItem = ({ icon: Icon, label, value, onPress, isSwitch, onSwitch, destructive }) => {
@@ -110,11 +129,15 @@ const SettingItem = ({ icon: Icon, label, value, onPress, isSwitch, onSwitch, de
 };
 
 export default function SettingsScreen() {
-  const { theme, isDark, toggleTheme } = useThemeStore();
+  const { theme } = useThemeStore();
+  const { isDark, toggleTheme } = useThemeStore();
   const { user, logout, updateProfile, changePassword, deleteAccount, isLoading } = useAuthStore();
 
   const [editProfileVisible, setEditProfileVisible] = useState(false);
   const [changePasswordVisible, setChangePasswordVisible] = useState(false);
+  const [helpVisible, setHelpVisible] = useState(false);
+  const [privacyVisible, setPrivacyVisible] = useState(false);
+  const [aboutVisible, setAboutVisible] = useState(false);
 
   // Handlers
   const handleUpdateProfile = async (data) => {
@@ -138,25 +161,31 @@ export default function SettingsScreen() {
   };
 
   const handleDeleteAccount = () => {
-    Alert.prompt(
-      'Delete Account',
-      'This action is irreversible. Please enter your password to confirm.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async (password) => {
-            if (!password) return;
-            const result = await deleteAccount(password);
-            if (!result.success) {
-              Alert.alert('Error', result.error);
-            }
-          },
+    Alert.alert('Delete Account', 'This action is irreversible. Are you sure you want to delete your account?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => {
+          Alert.prompt(
+            'Confirm Deletion',
+            'Please enter your password to confirm.',
+            async (password) => {
+              if (!password) return;
+              const result = await deleteAccount(password);
+              if (!result.success) {
+                Alert.alert('Error', result.error);
+              }
+            },
+            'secure-text'
+          );
         },
-      ],
-      'secure-text'
-    );
+      },
+    ]);
+  };
+
+  const openEmail = () => {
+    Linking.openURL('mailto:support@ethos-app.com?subject=Help%20Request');
   };
 
   return (
@@ -182,16 +211,15 @@ export default function SettingsScreen() {
         {/* Preferences */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>Preferences</Text>
-          <Card style={styles.sectionCard} padding={false}>
+          <Card style={styles.sectionCard} padding={false} noShadow>
             <SettingItem icon={Moon} label="Dark Mode" isSwitch value={isDark} onSwitch={toggleTheme} />
-            <SettingItem icon={Bell} label="Notifications" isSwitch value={true} onSwitch={() => {}} />
           </Card>
         </View>
 
         {/* Security */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>Security</Text>
-          <Card style={styles.sectionCard} padding={false}>
+          <Card style={styles.sectionCard} padding={false} noShadow>
             <SettingItem icon={Key} label="Change Password" onPress={() => setChangePasswordVisible(true)} />
           </Card>
         </View>
@@ -199,16 +227,16 @@ export default function SettingsScreen() {
         {/* Support */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>Support</Text>
-          <Card style={styles.sectionCard} padding={false}>
-            <SettingItem icon={HelpCircle} label="Help Center" onPress={() => {}} />
-            <SettingItem icon={Shield} label="Privacy Policy" onPress={() => {}} />
-            <SettingItem icon={Info} label="About Ethos" onPress={() => {}} />
+          <Card style={styles.sectionCard} padding={false} noShadow>
+            <SettingItem icon={HelpCircle} label="Help Center" onPress={() => setHelpVisible(true)} />
+            <SettingItem icon={Shield} label="Privacy Policy" onPress={() => setPrivacyVisible(true)} />
+            <SettingItem icon={Info} label="About Ethos" onPress={() => setAboutVisible(true)} />
           </Card>
         </View>
 
         {/* Account */}
         <View style={styles.section}>
-          <Card style={styles.sectionCard} padding={false}>
+          <Card style={styles.sectionCard} padding={false} noShadow>
             <SettingItem icon={LogOut} label="Log Out" onPress={logout} destructive />
             <SettingItem icon={Trash2} label="Delete Account" onPress={handleDeleteAccount} destructive />
           </Card>
@@ -232,6 +260,83 @@ export default function SettingsScreen() {
         onSubmit={handleChangePassword}
         isLoading={isLoading}
       />
+
+      {/* Help Center Modal */}
+      <InfoModal visible={helpVisible} onClose={() => setHelpVisible(false)} title="Help Center">
+        <View style={styles.infoContent}>
+          <Text style={[styles.infoHeading, { color: theme.colors.text }]}>Frequently Asked Questions</Text>
+
+          <Text style={[styles.faqQuestion, { color: theme.colors.text }]}>How do I create a new habit?</Text>
+          <Text style={[styles.faqAnswer, { color: theme.colors.textMuted }]}>
+            Go to the Habits tab and tap the "+" button. Fill in the habit details like name, frequency, and target count.
+          </Text>
+
+          <Text style={[styles.faqQuestion, { color: theme.colors.text }]}>How do I track my progress?</Text>
+          <Text style={[styles.faqAnswer, { color: theme.colors.textMuted }]}>
+            Tap on any habit to view your progress, streaks, and completion history. The Analytics tab shows your overall stats.
+          </Text>
+
+          <Text style={[styles.faqQuestion, { color: theme.colors.text }]}>What is vacation mode?</Text>
+          <Text style={[styles.faqAnswer, { color: theme.colors.textMuted }]}>
+            Vacation mode pauses your streak tracking while you're away. Your streak won't break during this period.
+          </Text>
+
+          <Text style={[styles.infoHeading, { color: theme.colors.text, marginTop: 24 }]}>Contact Support</Text>
+          <TouchableOpacity style={[styles.contactButton, { backgroundColor: theme.colors.primary }]} onPress={openEmail}>
+            <Mail size={18} color="#FFF" />
+            <Text style={styles.contactButtonText}>Email Support</Text>
+          </TouchableOpacity>
+        </View>
+      </InfoModal>
+
+      {/* Privacy Policy Modal */}
+      <InfoModal visible={privacyVisible} onClose={() => setPrivacyVisible(false)} title="Privacy Policy">
+        <View style={styles.infoContent}>
+          <Text style={[styles.infoHeading, { color: theme.colors.text }]}>Data Collection</Text>
+          <Text style={[styles.infoText, { color: theme.colors.textMuted }]}>
+            We collect only the information necessary to provide our habit tracking service. This includes your account information, habit data, and app usage
+            statistics.
+          </Text>
+
+          <Text style={[styles.infoHeading, { color: theme.colors.text }]}>Data Security</Text>
+          <Text style={[styles.infoText, { color: theme.colors.textMuted }]}>
+            Your data is encrypted in transit and at rest. We use industry-standard security measures to protect your information.
+          </Text>
+
+          <Text style={[styles.infoHeading, { color: theme.colors.text }]}>Your Rights</Text>
+          <Text style={[styles.infoText, { color: theme.colors.textMuted }]}>
+            You can export or delete your data at any time from the settings. We do not sell your personal information to third parties.
+          </Text>
+
+          <Text style={[styles.infoHeading, { color: theme.colors.text }]}>Contact</Text>
+          <Text style={[styles.infoText, { color: theme.colors.textMuted }]}>For privacy-related inquiries, please contact privacy@ethos-app.com</Text>
+        </View>
+      </InfoModal>
+
+      {/* About Modal */}
+      <InfoModal visible={aboutVisible} onClose={() => setAboutVisible(false)} title="About Ethos">
+        <View style={styles.infoContent}>
+          <View style={[styles.aboutLogo, { backgroundColor: theme.colors.primary }]}>
+            <Text style={styles.aboutLogoText}>E</Text>
+          </View>
+
+          <Text style={[styles.aboutTitle, { color: theme.colors.text }]}>Ethos</Text>
+          <Text style={[styles.aboutVersion, { color: theme.colors.textMuted }]}>Version 1.0.0</Text>
+
+          <Text style={[styles.aboutDescription, { color: theme.colors.textMuted }]}>
+            Ethos is a habit tracking app designed to help you build positive habits and achieve your goals. Track your daily progress, maintain streaks, and
+            visualize your journey to self-improvement.
+          </Text>
+
+          <Text style={[styles.infoHeading, { color: theme.colors.text }]}>Features</Text>
+          <Text style={[styles.infoText, { color: theme.colors.textMuted }]}>
+            • Daily, weekly, and monthly habit tracking{'\n'}• Streak tracking and analytics{'\n'}• Vacation mode to pause tracking{'\n'}• Dark mode support
+            {'\n'}• In-app notifications
+          </Text>
+
+          <Text style={[styles.aboutCopyright, { color: theme.colors.textMuted }]}>© 2026 Ethos. All rights reserved.</Text>
+        </View>
+      </InfoModal>
     </SafeAreaView>
   );
 }
@@ -252,11 +357,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
   },
   avatarText: {
     color: 'white',
@@ -340,5 +440,81 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     marginTop: 8,
+  },
+  // Info Modal Styles
+  infoContent: {
+    paddingBottom: 24,
+  },
+  infoHeading: {
+    fontSize: 16,
+    fontFamily: 'Inter_600SemiBold',
+    marginBottom: 8,
+    marginTop: 16,
+  },
+  infoText: {
+    fontSize: 14,
+    fontFamily: 'Inter_400Regular',
+    lineHeight: 22,
+  },
+  faqQuestion: {
+    fontSize: 15,
+    fontFamily: 'Inter_600SemiBold',
+    marginTop: 16,
+    marginBottom: 4,
+  },
+  faqAnswer: {
+    fontSize: 14,
+    fontFamily: 'Inter_400Regular',
+    lineHeight: 20,
+  },
+  contactButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 14,
+    borderRadius: 12,
+    marginTop: 12,
+    gap: 8,
+  },
+  contactButtonText: {
+    color: '#FFF',
+    fontSize: 15,
+    fontFamily: 'Inter_600SemiBold',
+  },
+  aboutLogo: {
+    width: 80,
+    height: 80,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  aboutLogoText: {
+    color: '#FFF',
+    fontSize: 36,
+    fontFamily: 'Inter_700Bold',
+  },
+  aboutTitle: {
+    fontSize: 24,
+    fontFamily: 'Inter_700Bold',
+    textAlign: 'center',
+  },
+  aboutVersion: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  aboutDescription: {
+    fontSize: 14,
+    fontFamily: 'Inter_400Regular',
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 24,
+  },
+  aboutCopyright: {
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 24,
   },
 });

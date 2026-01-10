@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useHabitsStore } from '../stores/habitsStore';
 import { useThemeStore } from '../stores/themeStore';
 import { Card, Button, ProgressBar, Badge, Input } from '../components';
-import { X, Calendar, ClipboardList, CheckCircle2, Edit2 } from 'lucide-react-native';
+import { X, Calendar, ClipboardList, CheckCircle2, Edit2, Pause, Play } from 'lucide-react-native';
 
 const LogHabitModal = ({ visible, onClose, habit, onSubmit, isLoading }) => {
   const { theme } = useThemeStore();
@@ -108,13 +108,14 @@ const EditHabitModal = ({ visible, onClose, habit, onSubmit, isLoading }) => {
 export default function HabitDetailScreen({ route, navigation }) {
   const { habitId } = route.params;
   const { theme } = useThemeStore();
-  const { habits, logHabit, updateHabit, deleteHabit, fetchHabits, fetchHabitLogs, habitLogs } = useHabitsStore();
+  const { habits, logHabit, updateHabit, deleteHabit, activateHabit, deactivateHabit, fetchHabits, fetchHabitLogs, habitLogs } = useHabitsStore();
 
   const habit = habits.find((h) => h.id === habitId);
   const [logModalVisible, setLogModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [logLoading, setLogLoading] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
+  const [toggleLoading, setToggleLoading] = useState(false);
 
   useEffect(() => {
     fetchHabitLogs(habitId);
@@ -170,6 +171,26 @@ export default function HabitDetailScreen({ route, navigation }) {
         },
       },
     ]);
+  };
+
+  const handleToggleActive = async () => {
+    setToggleLoading(true);
+    if (habit.active) {
+      const result = await deactivateHabit(habitId);
+      if (result.success) {
+        Alert.alert('Success', 'Habit paused. Your streak will not be affected.');
+      } else {
+        Alert.alert('Error', result.error);
+      }
+    } else {
+      const result = await activateHabit(habitId);
+      if (result.success) {
+        Alert.alert('Success', 'Habit activated!');
+      } else {
+        Alert.alert('Error', result.error);
+      }
+    }
+    setToggleLoading(false);
   };
 
   const progress = (habit.current_count / habit.target_count) * 100;
@@ -251,8 +272,16 @@ export default function HabitDetailScreen({ route, navigation }) {
           </Card>
         </View>
 
-        {/* Danger Zone */}
+        {/* Actions */}
         <View style={styles.section}>
+          <Button
+            title={habit.active ? 'Pause Habit' : 'Resume Habit'}
+            onPress={handleToggleActive}
+            loading={toggleLoading}
+            variant="secondary"
+            icon={habit.active ? <Pause size={18} color={theme.colors.text} /> : <Play size={18} color={theme.colors.text} />}
+            style={{ marginBottom: 12 }}
+          />
           <Button title="Delete Habit" onPress={handleDelete} variant="ghost" style={{ borderColor: theme.colors.error, borderWidth: 1 }} />
         </View>
       </ScrollView>

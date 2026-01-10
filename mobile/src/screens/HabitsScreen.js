@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, RefreshControl, TouchableOpacity, Modal, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useEffect, useState, useMemo } from 'react';
+import { View, Text, StyleSheet, FlatList, RefreshControl, TouchableOpacity, Modal, ScrollView, KeyboardAvoidingView, Platform, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useHabitsStore } from '../stores/habitsStore';
 import { useThemeStore } from '../stores/themeStore';
 import { Card, Badge, Button, Input } from '../components';
-import { Plus, X, Calendar, Hash, Target, CheckCircle2, Circle, ListTodo } from 'lucide-react-native';
+import { Plus, X, Calendar, Hash, Target, CheckCircle2, Circle, ListTodo, Search, Filter, Pause, Play } from 'lucide-react-native';
 
 const CreateHabitModal = ({ visible, onClose, onSubmit }) => {
   const { theme } = useThemeStore();
@@ -88,14 +88,60 @@ const CreateHabitModal = ({ visible, onClose, onSubmit }) => {
   );
 };
 
+// Filter Chip Component
+const FilterChip = ({ label, active, onPress, theme }) => (
+  <TouchableOpacity
+    style={[
+      styles.filterChip,
+      {
+        backgroundColor: active ? theme.colors.primary : theme.colors.surface,
+        borderColor: active ? theme.colors.primary : theme.colors.border,
+      },
+    ]}
+    onPress={onPress}
+  >
+    <Text
+      style={{
+        color: active ? theme.colors.primaryContent : theme.colors.text,
+        fontWeight: active ? '600' : '400',
+        fontSize: 13,
+      }}
+    >
+      {label}
+    </Text>
+  </TouchableOpacity>
+);
+
 export default function HabitsScreen({ navigation }) {
   const { theme } = useThemeStore();
   const { habits, fetchHabits, createHabit, isLoading } = useHabitsStore();
   const [modalVisible, setModalVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filter, setFilter] = useState('all'); // 'all', 'active', 'inactive'
 
   useEffect(() => {
     fetchHabits();
   }, []);
+
+  // Filter and search habits
+  const filteredHabits = useMemo(() => {
+    let result = habits || [];
+
+    // Apply filter
+    if (filter === 'active') {
+      result = result.filter((h) => h.active);
+    } else if (filter === 'inactive') {
+      result = result.filter((h) => !h.active);
+    }
+
+    // Apply search
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter((h) => h.name.toLowerCase().includes(query));
+    }
+
+    return result;
+  }, [habits, filter, searchQuery]);
 
   const handleCreateHabit = async (data) => {
     await createHabit(data);
@@ -103,10 +149,18 @@ export default function HabitsScreen({ navigation }) {
 
   const renderItem = ({ item }) => (
     <TouchableOpacity onPress={() => navigation.navigate('HabitDetail', { habitId: item.id })} activeOpacity={0.7}>
-      <Card style={[styles.habitCard, { backgroundColor: theme.colors.surface }]}>
+      <Card style={[styles.habitCard, { backgroundColor: theme.colors.surface }]} noShadow>
         <View style={styles.habitContent}>
           <View style={styles.habitInfo}>
-            <Text style={[styles.habitName, { color: theme.colors.text }]}>{item.name}</Text>
+            <View style={styles.habitNameRow}>
+              <Text style={[styles.habitName, { color: theme.colors.text }]}>{item.name}</Text>
+              {!item.active && (
+                <View style={[styles.statusBadge, { backgroundColor: theme.colors.warningBackground }]}>
+                  <Pause size={10} color={theme.colors.warning} />
+                  <Text style={[styles.statusText, { color: theme.colors.warning }]}>Inactive</Text>
+                </View>
+              )}
+            </View>
             <View style={styles.habitMeta}>
               <View style={styles.metaItem}>
                 <Calendar size={12} color={theme.colors.textMuted} />
@@ -136,10 +190,33 @@ export default function HabitsScreen({ navigation }) {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }} edges={['top']}>
-      {/* Header handled by Stack Navigator now, but we can add secondary header/actions here or rely on the main header */}
+      {/* Search and Filter */}
+      <View style={styles.searchFilterContainer}>
+        <View style={[styles.searchContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
+          <Search size={18} color={theme.colors.textMuted} />
+          <TextInput
+            style={[styles.searchInput, { color: theme.colors.text }]}
+            placeholder="Search habits..."
+            placeholderTextColor={theme.colors.textMuted}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <X size={18} color={theme.colors.textMuted} />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        <View style={styles.filterContainer}>
+          <FilterChip label="All" active={filter === 'all'} onPress={() => setFilter('all')} theme={theme} />
+          <FilterChip label="Active" active={filter === 'active'} onPress={() => setFilter('active')} theme={theme} />
+          <FilterChip label="Inactive" active={filter === 'inactive'} onPress={() => setFilter('inactive')} theme={theme} />
+        </View>
+      </View>
 
       <FlatList
-        data={habits}
+        data={filteredHabits}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
@@ -151,16 +228,20 @@ export default function HabitsScreen({ navigation }) {
               <View style={[styles.emptyIcon, { backgroundColor: theme.colors.surfaceVariant }]}>
                 <ListTodo size={48} color={theme.colors.textMuted} />
               </View>
-              <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: '600', marginBottom: 8 }}>No habits yet</Text>
-              <Text style={{ color: theme.colors.textMuted, textAlign: 'center', maxWidth: '70%' }}>
-                Start building your routine by creating your first habit.
+              <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: '600', marginBottom: 8 }}>
+                {searchQuery || filter !== 'all' ? 'No habits found' : 'No habits yet'}
               </Text>
-              <Button
-                title="Create Habit"
-                onPress={() => setModalVisible(true)}
-                style={{ marginTop: 24, minWidth: 200 }}
-                icon={<Plus color="#FFF" size={20} />}
-              />
+              <Text style={{ color: theme.colors.textMuted, textAlign: 'center', maxWidth: '70%' }}>
+                {searchQuery || filter !== 'all' ? 'Try adjusting your search or filter.' : 'Start building your routine by creating your first habit.'}
+              </Text>
+              {!searchQuery && filter === 'all' && (
+                <Button
+                  title="Create Habit"
+                  onPress={() => setModalVisible(true)}
+                  style={{ marginTop: 24, minWidth: 200 }}
+                  icon={<Plus color="#FFF" size={20} />}
+                />
+              )}
             </View>
           )
         }
@@ -178,15 +259,45 @@ export default function HabitsScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+  searchFilterContainer: {
+    paddingHorizontal: 24,
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    height: 46,
+    gap: 10,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    fontFamily: 'Inter_400Regular',
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 12,
+  },
+  filterChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
   listContent: {
     padding: 24,
-    paddingTop: 16,
+    paddingTop: 8,
     flexGrow: 1,
   },
   habitCard: {
-    marginBottom: 12,
+    marginBottom: 10,
     borderWidth: 1,
-    padding: 16,
+    padding: 14,
     borderRadius: 12,
   },
   habitContent: {
@@ -197,10 +308,27 @@ const styles = StyleSheet.create({
   habitInfo: {
     flex: 1,
   },
+  habitNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 6,
+  },
   habitName: {
     fontSize: 16,
     fontFamily: 'Inter_600SemiBold',
-    marginBottom: 6,
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    gap: 3,
+  },
+  statusText: {
+    fontSize: 10,
+    fontFamily: 'Inter_500Medium',
   },
   habitMeta: {
     flexDirection: 'row',
@@ -220,7 +348,7 @@ const styles = StyleSheet.create({
     padding: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 60,
+    marginTop: 40,
   },
   emptyIcon: {
     width: 80,
@@ -280,10 +408,10 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 6,
+    elevation: 4,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
   },
 });

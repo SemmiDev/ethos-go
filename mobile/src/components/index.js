@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, TextInput as RNTextInput, Animated } from 'react-native';
+import { Eye, EyeOff } from 'lucide-react-native';
 import { useThemeStore } from '../stores/themeStore';
 
 // Primary Button
@@ -63,7 +64,7 @@ export const Button = ({ title, onPress, variant = 'primary', disabled = false, 
 };
 
 // Card Component
-export const Card = ({ children, style, padding = true }) => {
+export const Card = ({ children, style, padding = true, noBorder = false, noShadow = false }) => {
   const { theme } = useThemeStore();
 
   return (
@@ -72,9 +73,16 @@ export const Card = ({ children, style, padding = true }) => {
         styles.card,
         {
           backgroundColor: theme.colors.surface,
-          borderColor: theme.colors.border,
-          shadowColor: theme.colors.text, // Use text color for shadow to adapt to dark mode
+          borderColor: noBorder ? 'transparent' : theme.colors.border,
+          borderWidth: noBorder ? 0 : 1,
           padding: padding ? 16 : 0,
+        },
+        !noShadow && {
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.04,
+          shadowRadius: 3,
+          elevation: 1,
         },
         style,
       ]}
@@ -84,7 +92,7 @@ export const Card = ({ children, style, padding = true }) => {
   );
 };
 
-// Input Component
+// Input Component with password visibility toggle
 export const Input = ({
   value,
   onChangeText,
@@ -100,6 +108,15 @@ export const Input = ({
 }) => {
   const { theme } = useThemeStore();
   const [isFocused, setIsFocused] = useState(false);
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+
+  // Determine if this is a password field
+  const isPasswordField = secureTextEntry;
+  const shouldHideText = isPasswordField && !isPasswordVisible;
+
+  const togglePasswordVisibility = () => {
+    setIsPasswordVisible(!isPasswordVisible);
+  };
 
   return (
     <View style={[styles.inputContainer, style]}>
@@ -119,7 +136,7 @@ export const Input = ({
           onChangeText={onChangeText}
           placeholder={placeholder}
           placeholderTextColor={theme.colors.textMuted}
-          secureTextEntry={secureTextEntry}
+          secureTextEntry={shouldHideText}
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
           onFocus={() => setIsFocused(true)}
@@ -132,7 +149,14 @@ export const Input = ({
             },
           ]}
         />
-        {rightIcon && <View style={styles.rightIcon}>{rightIcon}</View>}
+        {/* Password visibility toggle */}
+        {isPasswordField && (
+          <TouchableOpacity onPress={togglePasswordVisibility} style={styles.rightIcon}>
+            {isPasswordVisible ? <EyeOff size={20} color={theme.colors.textMuted} /> : <Eye size={20} color={theme.colors.textMuted} />}
+          </TouchableOpacity>
+        )}
+        {/* Custom right icon (if not password field) */}
+        {!isPasswordField && rightIcon && <View style={styles.rightIcon}>{rightIcon}</View>}
       </View>
       {error && <Text style={[styles.errorText, { color: theme.colors.error, fontFamily: theme.typography.fontFamily.regular }]}>{error}</Text>}
     </View>
@@ -223,6 +247,41 @@ export const Badge = ({ text, variant = 'neutral', style }) => {
   );
 };
 
+// Search Input
+export const SearchInput = ({ value, onChangeText, placeholder = 'Search...', style }) => {
+  const { theme } = useThemeStore();
+  const [isFocused, setIsFocused] = useState(false);
+
+  return (
+    <View
+      style={[
+        styles.searchContainer,
+        {
+          backgroundColor: theme.colors.surface,
+          borderColor: isFocused ? theme.colors.primary : theme.colors.border,
+        },
+        style,
+      ]}
+    >
+      <RNTextInput
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        placeholderTextColor={theme.colors.textMuted}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+        style={[
+          styles.searchInput,
+          {
+            color: theme.colors.text,
+            fontFamily: theme.typography.fontFamily.regular,
+          },
+        ]}
+      />
+    </View>
+  );
+};
+
 const styles = StyleSheet.create({
   button: {
     paddingVertical: 14,
@@ -246,15 +305,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   card: {
-    borderRadius: 16,
-    borderWidth: 1,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
+    borderRadius: 12,
   },
   inputContainer: {
     marginBottom: 0,
@@ -282,6 +333,7 @@ const styles = StyleSheet.create({
   },
   rightIcon: {
     marginLeft: 10,
+    padding: 4,
   },
   errorText: {
     fontSize: 12,
@@ -304,5 +356,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     textTransform: 'capitalize',
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    height: 48,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    height: '100%',
   },
 });
