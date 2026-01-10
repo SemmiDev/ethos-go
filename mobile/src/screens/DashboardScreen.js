@@ -35,11 +35,12 @@ export default function DashboardScreen({ navigation }) {
     }, [])
   );
 
-  const stats = dashboard?.stats || {
-    total_habits: 0,
-    completed_today: 0,
-    current_streak: 0,
-    completion_rate: 0,
+  // Map API response fields to UI
+  const stats = {
+    total_habits: dashboard?.active_habits_count || 0,
+    completed_today: dashboard?.total_logs_today || 0,
+    current_streak: dashboard?.current_streak || 0,
+    completion_rate: dashboard?.weekly_completion || 0,
   };
 
   const todayHabits = dashboard?.today_habits || [];
@@ -67,10 +68,15 @@ export default function DashboardScreen({ navigation }) {
         {/* Stats Grid */}
         <View style={styles.statsGrid}>
           <View style={styles.statsRow}>
-            <StatCard title="Habits" value={stats.total_habits} icon={<ListTodo size={24} color={theme.colors.primary} />} color={theme.colors.primary} />
+            <StatCard
+              title="Active Habits"
+              value={stats.total_habits}
+              icon={<ListTodo size={24} color={theme.colors.primary} />}
+              color={theme.colors.primary}
+            />
             <View style={{ width: 12 }} />
             <StatCard
-              title="Completed"
+              title="Logs Today"
               value={stats.completed_today}
               icon={<CheckCircle2 size={24} color={theme.colors.success} />}
               color={theme.colors.success}
@@ -81,7 +87,7 @@ export default function DashboardScreen({ navigation }) {
             <StatCard title="Streak" value={stats.current_streak} icon={<Flame size={24} color={theme.colors.warning} />} color={theme.colors.warning} />
             <View style={{ width: 12 }} />
             <StatCard
-              title="Rate"
+              title="Weekly Rate"
               value={`${Math.round(stats.completion_rate)}%`}
               icon={<TrendingUp size={24} color={theme.colors.info} />}
               color={theme.colors.info}

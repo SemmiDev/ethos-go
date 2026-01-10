@@ -175,7 +175,7 @@ export default function HabitDetailScreen({ route, navigation }) {
 
   const handleToggleActive = async () => {
     setToggleLoading(true);
-    if (habit.active) {
+    if (habit.is_active) {
       const result = await deactivateHabit(habitId);
       if (result.success) {
         Alert.alert('Success', 'Habit paused. Your streak will not be affected.');
@@ -275,11 +275,11 @@ export default function HabitDetailScreen({ route, navigation }) {
         {/* Actions */}
         <View style={styles.section}>
           <Button
-            title={habit.active ? 'Pause Habit' : 'Resume Habit'}
+            title={habit.is_active ? 'Pause Habit' : 'Resume Habit'}
             onPress={handleToggleActive}
             loading={toggleLoading}
             variant="secondary"
-            icon={habit.active ? <Pause size={18} color={theme.colors.text} /> : <Play size={18} color={theme.colors.text} />}
+            icon={habit.is_active ? <Pause size={18} color={theme.colors.text} /> : <Play size={18} color={theme.colors.text} />}
             style={{ marginBottom: 12 }}
           />
           <Button title="Delete Habit" onPress={handleDelete} variant="ghost" style={{ borderColor: theme.colors.error, borderWidth: 1 }} />

@@ -129,9 +129,9 @@ export default function HabitsScreen({ navigation }) {
 
     // Apply filter
     if (filter === 'active') {
-      result = result.filter((h) => h.active);
+      result = result.filter((h) => h.is_active);
     } else if (filter === 'inactive') {
-      result = result.filter((h) => !h.active);
+      result = result.filter((h) => !h.is_active);
     }
 
     // Apply search
@@ -154,10 +154,10 @@ export default function HabitsScreen({ navigation }) {
           <View style={styles.habitInfo}>
             <View style={styles.habitNameRow}>
               <Text style={[styles.habitName, { color: theme.colors.text }]}>{item.name}</Text>
-              {!item.active && (
+              {!item.is_active && (
                 <View style={[styles.statusBadge, { backgroundColor: theme.colors.warningBackground }]}>
                   <Pause size={10} color={theme.colors.warning} />
-                  <Text style={[styles.statusText, { color: theme.colors.warning }]}>Inactive</Text>
+                  <Text style={[styles.statusText, { color: theme.colors.warning }]}>Paused</Text>
                 </View>
               )}
             </View>
@@ -173,7 +173,7 @@ export default function HabitsScreen({ navigation }) {
             </View>
           </View>
           <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-            {item.active ? (
+            {item.is_active ? (
               <View style={{ backgroundColor: theme.colors.success + '15', borderRadius: 20, padding: 8 }}>
                 <CheckCircle2 color={theme.colors.success} size={20} />
               </View>

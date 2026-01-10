@@ -63,8 +63,8 @@ export const Button = ({ title, onPress, variant = 'primary', disabled = false, 
   );
 };
 
-// Card Component
-export const Card = ({ children, style, padding = true, noBorder = false, noShadow = false }) => {
+// Card Component - clean, no shadow design
+export const Card = ({ children, style, padding = true, noBorder = false }) => {
   const { theme } = useThemeStore();
 
   return (
@@ -76,13 +76,6 @@ export const Card = ({ children, style, padding = true, noBorder = false, noShad
           borderColor: noBorder ? 'transparent' : theme.colors.border,
           borderWidth: noBorder ? 0 : 1,
           padding: padding ? 16 : 0,
-        },
-        !noShadow && {
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 1 },
-          shadowOpacity: 0.04,
-          shadowRadius: 3,
-          elevation: 1,
         },
         style,
       ]}
