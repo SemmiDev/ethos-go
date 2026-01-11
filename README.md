@@ -51,6 +51,7 @@ It simplifies deployment by embedding the React frontend directly into the Go bi
 - **Why It Matters**: Build consistency with streaks and analytics.
 - **Single Binary**: Zero-config deployment (Go + React embedded).
 - **Clean Architecture**: Domain-Driven Design (DDD) & CQRS.
+- **gRPC API**: High-performance gRPC services with JSON Gateway.
 - **Observability**: LGTM Stack (Loki, Grafana, Tempo, Mimir).
 - **Security**: JWT Auth, Rate Limiting, Secure Headers.
 
@@ -90,7 +91,7 @@ ethos-go/
 │   │   ├── domain/     # Business Logic (Pure Go)
 │   │   ├── app/        # Use Cases (CQRS)
 │   │   ├── adapters/   # DB Implementation
-│   │   └── ports/      # HTTP Handlers
+│   │   └── ports/      # gRPC Servers & Handlers
 ```
 
 See **[CLAUDE.md](CLAUDE.md)** for detailed development guidelines.
@@ -101,6 +102,7 @@ See **[CLAUDE.md](CLAUDE.md)** for detailed development guidelines.
 | :-------- | :----------------------- |
 | **Lang**  | Go 1.25+                 |
 | **Web**   | React 19, Vite, Tailwind |
+| **API**   | gRPC + Buf               |
 | **Data**  | PostgreSQL 17, Redis 8   |
 | **Ops**   | Docker, K8s, Grafana     |
 

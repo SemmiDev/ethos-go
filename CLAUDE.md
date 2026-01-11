@@ -8,14 +8,14 @@ This document serves as the **primary source of truth** for AI agents working on
 
 ### Technology Stack
 
-| Layer            | Technology                    |
-| ---------------- | ----------------------------- |
-| **Backend**      | Go 1.25+, Chi Router          |
-| **Database**     | PostgreSQL 17                 |
-| **Cache/Queue**  | Redis 8 + Asynq               |
-| **API**          | OpenAPI 3.0 (Schema-First)    |
-| **Frontend**     | React 19, Vite, Pure CSS      |
-| **Architecture** | DDD, Clean Architecture, CQRS |
+| Layer            | Technology                             |
+| ---------------- | -------------------------------------- |
+| **Backend**      | Go 1.25+, Chi Router                   |
+| **Database**     | PostgreSQL 17                          |
+| **Cache/Queue**  | Redis 8 + Asynq                        |
+| **API**          | gRPC + gRPC-Gateway (Schema-First)     |
+| **Frontend**     | React 19, Vite, Pure CSS               |
+| **Architecture** | DDD, Clean Architecture, Single Binary |
 
 ## 2. Quick Start Commands
 
@@ -25,22 +25,26 @@ Run `make help` to see all available commands. Here are the most common:
 | :-------- | :----------------------------- | :------------------------------------- |
 | **Dev**   | `make dev`                     | Start full dev environment (Docker)    |
 |           | `make stop`                    | Stop environment                       |
-| **Code**  | `make generate`                | Generate API code & SQLC               |
+| **Code**  | `make generate-grpc`           | Generate gRPC & Gateway code           |
 |           | `make fmt`                     | Format code (gofmt)                    |
 |           | `make test`                    | Run all tests                          |
+| **Buf**   | `make buf-lint`                | Lint Protobuf files                    |
+|           | `make buf-generate`            | Generate Go code from Proto            |
 | **DB**    | `make migrate-create name=foo` | Create new migration                   |
 |           | `make migrate-up`              | Apply migrations                       |
 | **Build** | `make build`                   | Build single binary (Backend+Frontend) |
 
 ## 3. Development Workflows
 
-### Workflow A: Adding a New API Feature
+### Workflow A: Adding a New API Feature (gRPC)
 
-1. **Define API**: Edit `api/openapi/{module}.yml` -> `make generate`
-2. **Domain**: Create Entity & Repository Interface in `internal/{module}/domain/`
-3. **Application**: Implement Command/Query Handler in `internal/{module}/app/`
-4. **Infrastructure**: Implement Repository in `internal/{module}/adapters/`
-5. **Ports**: Wire it up in `internal/{module}/ports/openapi_server.go`
+1. **Define API**: Edit `api/proto/ethos/{module}/v1/{service}.proto`
+2. **Lint**: Run `make buf-lint` to ensure style compliance.
+3. **Generate**: Run `make generate-grpc` to regenerate Go stubs.
+4. **Domain**: Create Entity & Repository Interface in `internal/{module}/domain/`
+5. **Application**: Implement Command/Query Handler in `internal/{module}/app/`
+6. **Infrastructure**: Implement Repository in `internal/{module}/adapters/`
+7. **Ports**: Implement gRPC Server in `internal/{module}/ports/grpc_server.go`
 
 ### Workflow B: Database Migration
 
@@ -71,7 +75,7 @@ internal/{module}/
 │   ├── {entity}_repository.go  # SQL/DB implementation
 │   └── task/         # Asynq task definitions
 └── ports/            # Entry Points
-    └── openapi_server.go  # HTTP Handlers (Controller)
+    └── grpc_server.go  # gRPC Handlers (Controller)
 ```
 
 ## 5. Coding Standards
@@ -80,7 +84,7 @@ internal/{module}/
 
 - Use `apperror` package for all domain errors.
 - **NEVER** return raw database errors to the client.
-- Map errors in the HTTP handler using `httputil.Error`.
+- Map errors in the gRPC handler using `grpcutil.ToGRPCError`.
 
 ### Logging
 
