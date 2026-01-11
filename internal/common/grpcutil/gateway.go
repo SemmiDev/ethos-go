@@ -41,7 +41,15 @@ func CustomHTTPError(ctx context.Context, mux *runtime.ServeMux, marshaler runti
 	if details := st.Details(); len(details) > 0 {
 		// We expect the first detail to be our structpb.Struct map
 		if s, ok := details[0].(*structpb.Struct); ok {
-			errorResponse["details"] = s.AsMap()
+			detailsMap := s.AsMap()
+			// Check for injected app error code
+			if appCode, ok := detailsMap["_code"]; ok {
+				if codeStr, ok := appCode.(string); ok {
+					errorResponse["code"] = codeStr
+				}
+				delete(detailsMap, "_code")
+			}
+			errorResponse["details"] = detailsMap
 		}
 	}
 

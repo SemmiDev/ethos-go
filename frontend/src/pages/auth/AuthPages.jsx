@@ -103,7 +103,8 @@ export function LoginPage() {
       navigate('/dashboard');
     } else {
       // Check if the error is due to email not being verified
-      const isEmailNotVerified = result.errorCode === 'AUTH_UNAUTHORIZED' && result.error?.toLowerCase().includes('verify');
+      const isEmailNotVerified =
+        result.errorCode === 'AUTH_EMAIL_NOT_VERIFIED' || (result.errorCode === 'AUTH_UNAUTHORIZED' && result.error?.toLowerCase().includes('verify'));
 
       if (isEmailNotVerified) {
         addToast({

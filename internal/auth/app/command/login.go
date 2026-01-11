@@ -111,7 +111,7 @@ func (h loginHandler) Handle(ctx context.Context, cmd LoginCommand) (*LoginResul
 	}
 
 	if !foundUser.IsVerified() {
-		return nil, apperror.Unauthorized("Please verify your email address")
+		return nil, apperror.EmailNotVerified()
 	}
 
 	// Calculate token expiration times

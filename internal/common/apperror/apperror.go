@@ -98,6 +98,7 @@ func GetAppError(err error) *AppError {
 // Common error codes - define these as constants for consistency
 const (
 	ErrCodeInvalidCredentials     = "AUTH_INVALID_CREDENTIALS"
+	ErrCodeEmailNotVerified       = "AUTH_EMAIL_NOT_VERIFIED"
 	ErrCodeSessionExpired         = "AUTH_SESSION_EXPIRED"
 	ErrCodeSessionBlocked         = "AUTH_SESSION_BLOCKED"
 	ErrCodeInvalidToken           = "AUTH_INVALID_TOKEN"
@@ -130,6 +131,15 @@ func InvalidCredentials(err error) *AppError {
 		"Invalid email or password",
 		http.StatusUnauthorized,
 		err,
+	)
+}
+
+func EmailNotVerified() *AppError {
+	return New(
+		ErrCodeEmailNotVerified,
+		"Please verify your email address",
+		http.StatusForbidden,
+		nil,
 	)
 }
 

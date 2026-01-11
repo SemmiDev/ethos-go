@@ -24,9 +24,23 @@ func ToGRPCError(err error) error {
 	code := toGRPCCode(appErr.StatusCode)
 	st := status.New(code, appErr.Message)
 
-	if len(appErr.Details) > 0 {
+	details := appErr.Details
+	if appErr.Code != "" {
+		if details == nil {
+			details = make(map[string]interface{})
+		}
+		// Create a copy to avoid mutating the original error's details if referenced elsewhere
+		newDetails := make(map[string]interface{}, len(details)+1)
+		for k, v := range details {
+			newDetails[k] = v
+		}
+		newDetails["_code"] = appErr.Code
+		details = newDetails
+	}
+
+	if len(details) > 0 {
 		// Convert details map to structpb.Struct
-		detailsStruct, err := structpb.NewStruct(appErr.Details)
+		detailsStruct, err := structpb.NewStruct(details)
 		if err == nil {
 			// Attach the details struct to the status
 			st, _ = st.WithDetails(detailsStruct)
