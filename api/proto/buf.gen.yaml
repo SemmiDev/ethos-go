@@ -1,0 +1,35 @@
+version: v2
+managed:
+  enabled: true
+  override:
+    - file_option: go_package_prefix
+      value: github.com/semmidev/ethos-go/internal/generated/grpc
+plugins:
+  # Generate Go protobuf types
+  - remote: buf.build/protocolbuffers/go
+    out: ../../internal/generated/grpc
+    opt:
+      - paths=source_relative
+      - Mgoogle/api/annotations.proto=google.golang.org/genproto/googleapis/api/annotations
+      - Mgoogle/api/http.proto=google.golang.org/genproto/googleapis/api/annotations
+  # Generate Go gRPC service stubs
+  - remote: buf.build/grpc/go
+    out: ../../internal/generated/grpc
+    opt:
+      - paths=source_relative
+      - Mgoogle/api/annotations.proto=google.golang.org/genproto/googleapis/api/annotations
+      - Mgoogle/api/http.proto=google.golang.org/genproto/googleapis/api/annotations
+  # Generate gRPC-Gateway HTTP handlers
+  - remote: buf.build/grpc-ecosystem/gateway
+    out: ../../internal/generated/grpc
+    opt:
+      - paths=source_relative
+      - generate_unbound_methods=true
+      - Mgoogle/api/annotations.proto=google.golang.org/genproto/googleapis/api/annotations
+      - Mgoogle/api/http.proto=google.golang.org/genproto/googleapis/api/annotations
+  # Generate OpenAPI v2 documentation
+  - remote: buf.build/grpc-ecosystem/openapiv2
+    out: ../../docs/openapi
+    opt:
+      - allow_merge=true
+      - merge_file_name=api

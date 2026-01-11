@@ -28,8 +28,9 @@ func NewJWTTokenIssuer(cfg *config.Config) *JWTTokenIssuer {
 
 type accessTokenClaims struct {
 	jwt.RegisteredClaims
-	UserID string `json:"user_id"`
-	Type   string `json:"type"`
+	UserID    string `json:"user_id"`
+	SessionID string `json:"session_id"`
+	Type      string `json:"type"`
 }
 
 type refreshTokenClaims struct {
@@ -38,7 +39,7 @@ type refreshTokenClaims struct {
 	Type      string `json:"type"`
 }
 
-func (j *JWTTokenIssuer) IssueAccessToken(ctx context.Context, userID uuid.UUID, expiresAt time.Time) (string, error) {
+func (j *JWTTokenIssuer) IssueAccessToken(ctx context.Context, userID uuid.UUID, sessionID uuid.UUID, expiresAt time.Time) (string, error) {
 	_ = ctx
 	now := time.Now()
 
@@ -49,8 +50,9 @@ func (j *JWTTokenIssuer) IssueAccessToken(ctx context.Context, userID uuid.UUID,
 			IssuedAt:  jwt.NewNumericDate(now),
 			ExpiresAt: jwt.NewNumericDate(expiresAt),
 		},
-		UserID: userID.String(),
-		Type:   "access",
+		UserID:    userID.String(),
+		SessionID: sessionID.String(),
+		Type:      "access",
 	}
 
 	tok := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -98,8 +100,14 @@ func (j *JWTTokenIssuer) VerifyAccessToken(ctx context.Context, tokenString stri
 			return nil, err
 		}
 
+		sessionID, err := uuid.Parse(claims.SessionID)
+		if err != nil {
+			return nil, err
+		}
+
 		return &service.TokenClaims{
 			UserID:    userID,
+			SessionID: sessionID,
 			IssuedAt:  claims.IssuedAt.Time.Unix(),
 			ExpiresAt: claims.ExpiresAt.Time.Unix(),
 		}, nil

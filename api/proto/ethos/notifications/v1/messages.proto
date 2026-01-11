@@ -1,0 +1,113 @@
+syntax = "proto3";
+
+package ethos.notifications.v1;
+
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+import "ethos/common/v1/pagination.proto";
+
+option go_package = "github.com/semmidev/ethos-go/internal/generated/grpc/ethos/notifications/v1;notificationsv1";
+
+// NotificationType represents the type of notification.
+enum NotificationType {
+  // Unspecified notification type.
+  NOTIFICATION_TYPE_UNSPECIFIED = 0;
+  // Streak milestone notification.
+  NOTIFICATION_TYPE_STREAK_MILESTONE = 1;
+  // Habit reminder notification.
+  NOTIFICATION_TYPE_HABIT_REMINDER = 2;
+  // Achievement notification.
+  NOTIFICATION_TYPE_ACHIEVEMENT = 3;
+  // System notification.
+  NOTIFICATION_TYPE_SYSTEM = 4;
+  // Welcome notification.
+  NOTIFICATION_TYPE_WELCOME = 5;
+}
+
+// Notification represents a user notification.
+message Notification {
+  // Unique notification identifier.
+  string id = 1;
+  // Notification type.
+  NotificationType type = 2;
+  // Notification title.
+  string title = 3;
+  // Notification message.
+  string message = 4;
+  // Additional notification data.
+  google.protobuf.Struct data = 5;
+  // Whether the notification has been read.
+  bool is_read = 6;
+  // Creation time.
+  google.protobuf.Timestamp created_at = 7;
+  // Time when notification was read.
+  optional google.protobuf.Timestamp read_at = 8;
+}
+
+// CreateNotificationRequest contains data for creating a notification.
+message CreateNotificationRequest {
+  // Notification title.
+  string title = 1;
+  // Notification message.
+  string message = 2;
+  // Notification type as string (streak_milestone, habit_reminder, etc.).
+  string type = 3;
+  // Additional data.
+  optional google.protobuf.Struct data = 4;
+}
+
+// ListNotificationsRequest contains filters for listing notifications.
+message ListNotificationsRequest {
+  // Page number (1-indexed).
+  int32 page = 1;
+  // Number of items per page.
+  int32 per_page = 2;
+  // Only return unread notifications.
+  bool unread_only = 3;
+}
+
+// ListNotificationsResponse contains paginated notifications.
+message ListNotificationsResponse {
+  // Whether the request was successful.
+  bool success = 1;
+  // Human-readable message.
+  string message = 2;
+  // List of notifications.
+  repeated Notification data = 3;
+  // Pagination metadata.
+  ethos.common.v1.Meta meta = 4;
+}
+
+// GetUnreadCountRequest is empty - uses auth context.
+message GetUnreadCountRequest {}
+
+// UnreadCountResponse contains the unread notification count.
+message UnreadCountResponse {
+  // Whether the request was successful.
+  bool success = 1;
+  // Human-readable message.
+  string message = 2;
+  // Unread count data.
+  UnreadCountData data = 3;
+}
+
+// UnreadCountData contains the unread count.
+message UnreadCountData {
+  // Number of unread notifications.
+  int32 count = 1;
+}
+
+// MarkAsReadRequest identifies a notification to mark as read.
+message MarkAsReadRequest {
+  // Notification identifier.
+  string notification_id = 1;
+}
+
+// MarkAllAsReadRequest is empty - uses auth context.
+message MarkAllAsReadRequest {}
+
+// DeleteNotificationRequest identifies a notification to delete.
+message DeleteNotificationRequest {
+  // Notification identifier.
+  string notification_id = 1;
+}

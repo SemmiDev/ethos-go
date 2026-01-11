@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package ethos.common.v1;
+
+option go_package = "github.com/semmidev/ethos-go/internal/generated/grpc/ethos/common/v1;commonv1";
+
+// Meta contains metadata for the response.
+message Meta {
+  // Pagination metadata.
+  PaginationResponse pagination = 1;
+}
+
+// PaginationRequest contains parameters for paginated requests.
+message PaginationRequest {
+  // Page number (1-indexed). Defaults to 1.
+  int32 page = 1;
+  // Number of items per page. Defaults to 20, max 100.
+  int32 per_page = 2;
+}
+
+// PaginationResponse contains pagination metadata for list responses.
+message PaginationResponse {
+  // Whether there is a previous page.
+  bool has_previous_page = 1;
+  // Whether there is a next page.
+  bool has_next_page = 2;
+  // Current page number (1-indexed).
+  int32 current_page = 3;
+  // Number of items per page.
+  int32 per_page = 4;
+  // Total number of items across all pages.
+  int32 total_data = 5;
+  // Number of items in the current page.
+  int32 total_data_in_current_page = 6;
+  // Last page number.
+  int32 last_page = 7;
+  // Index of the first item in the current page (1-indexed).
+  int32 from = 8;
+  // Index of the last item in the current page.
+  int32 to = 9;
+}

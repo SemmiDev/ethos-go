@@ -2,7 +2,7 @@
 bin/
 dist/
 build/
-ethos
+
 server
 main
 *.exe

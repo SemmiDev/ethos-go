@@ -34,7 +34,7 @@ export const useHabitsStore = create((set, get) => ({
       if (response.success) {
         set({
           habits: response.data || [],
-          paging: response.meta?.pagination || paging,
+          paging: response.pagination || response.meta?.pagination || paging,
           isLoading: false,
         });
         return { success: true };
@@ -240,7 +240,7 @@ export const useHabitsStore = create((set, get) => ({
       if (response.success) {
         set({
           habitLogs: response.data || [],
-          logsPaging: response.meta?.pagination || logsPaging,
+          logsPaging: response.pagination || response.meta?.pagination || logsPaging,
           isLoading: false,
         });
         return { success: true, data: response.data };

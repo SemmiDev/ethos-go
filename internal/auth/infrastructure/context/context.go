@@ -12,8 +12,9 @@ const (
 )
 
 type User struct {
-	UserID string
-	Email  string
+	UserID    string
+	SessionID string
+	Email     string
 }
 
 func UserFromCtx(ctx context.Context) (User, error) {

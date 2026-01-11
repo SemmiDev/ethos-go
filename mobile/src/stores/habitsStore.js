@@ -29,7 +29,8 @@ export const useHabitsStore = create((set, get) => ({
       const response = await habitsAPI.list({ page, per_page: 20, ...filters });
 
       const habitsData = response.data?.data || response.data || [];
-      const meta = response.data?.meta || {};
+      const meta = response.data?.meta || response.meta || {}; // Use response.meta if response.data.meta is not present
+      const logsPaging = response.meta?.pagination || {}; // Assuming logsPaging is a local variable being defined here
       const pagination = meta.pagination || {};
 
       set((state) => ({

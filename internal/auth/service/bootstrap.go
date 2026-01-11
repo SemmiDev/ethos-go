@@ -48,9 +48,13 @@ func NewApplication(
 		time.Duration(cfg.AuthRefreshTokenExpiry)*time.Minute,
 	)
 
+	// Create gRPC auth service
+	grpcAuthService := adapters.NewAuthService(tokenIssuer, userRepo)
+
 	// Create command and query handlers
 	return app.Application{
 		AuthMiddleware: ports.AuthMiddleware(tokenIssuer, userRepo),
+		AuthService:    grpcAuthService,
 		Commands: app.Commands{
 			Register: command.NewRegisterHandler(
 				userRepo,

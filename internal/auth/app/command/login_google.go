@@ -90,12 +90,13 @@ func (h loginGoogleHandler) Handle(ctx context.Context, cmd LoginGoogleCommand) 
 	accessTokenExpiry := now.Add(h.authService.AccessTokenTTL())
 	refreshTokenExpiry := now.Add(h.authService.RefreshTokenTTL())
 
-	accessToken, err := h.tokenIssuer.IssueAccessToken(ctx, foundUser.UserID(), accessTokenExpiry)
+	sessionID := random.NewUUID()
+
+	accessToken, err := h.tokenIssuer.IssueAccessToken(ctx, foundUser.UserID(), sessionID, accessTokenExpiry)
 	if err != nil {
 		return nil, apperror.InternalError(err)
 	}
 
-	sessionID := random.NewUUID()
 	refreshToken, err := h.tokenIssuer.IssueRefreshToken(ctx, sessionID, refreshTokenExpiry)
 	if err != nil {
 		return nil, apperror.InternalError(err)

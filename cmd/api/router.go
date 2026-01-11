@@ -2,35 +2,27 @@ package main
 
 import (
 	"net/http"
-	"runtime"
+	goruntime "runtime"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/semmidev/ethos-go/config"
-	authports "github.com/semmidev/ethos-go/internal/auth/ports"
-	"github.com/semmidev/ethos-go/internal/common/docs"
 	"github.com/semmidev/ethos-go/internal/common/httputil"
 	"github.com/semmidev/ethos-go/internal/common/logger"
 	"github.com/semmidev/ethos-go/internal/common/observability"
-	genauth "github.com/semmidev/ethos-go/internal/generated/api/auth"
-	genhabits "github.com/semmidev/ethos-go/internal/generated/api/habits"
-	gennotifications "github.com/semmidev/ethos-go/internal/generated/api/notifications"
-	habitports "github.com/semmidev/ethos-go/internal/habits/ports"
-	notificationports "github.com/semmidev/ethos-go/internal/notifications/ports"
 	"github.com/semmidev/ethos-go/internal/web"
 )
 
 // RouterConfig contains all dependencies needed for router setup
 type RouterConfig struct {
-	Config              *config.Config
-	AuthServer          *authports.AuthOpenAPIServer
-	HabitsServer        *habitports.OpenAPIServer
-	NotificationsServer *notificationports.NotificationOpenAPIServer
-	AuthMiddleware      func(http.Handler) http.Handler
-	OTELProvider        *observability.Provider
-	Logger              logger.Logger
+	Config         *config.Config
+	GatewayMux     *runtime.ServeMux
+	OTELProvider   *observability.Provider
+	Logger         logger.Logger
+	AuthMiddleware func(http.Handler) http.Handler
 }
 
 // NewRouter creates and configures the main chi router with all routes and middleware
@@ -43,11 +35,8 @@ func NewRouter(rc RouterConfig) chi.Router {
 	// Mount utility endpoints
 	mountUtilityEndpoints(r, rc.Config, rc.OTELProvider)
 
-	// Mount API documentation
-	mountAPIDocs(r)
-
-	// Mount API routes
-	mountAPIRoutes(r, rc)
+	// Mount gRPC-Gateway API routes
+	mountGatewayRoutes(r, rc)
 
 	// Mount SPA frontend (must be last)
 	mountSPAHandler(r)
@@ -65,8 +54,6 @@ func applyGlobalMiddleware(r chi.Router, rc RouterConfig) {
 	r.Use(observability.HTTPMiddleware(rc.Config.AppName))
 
 	// Event middleware (Canonical Log Lines)
-	// This replaces chi's Logger middleware with a more powerful approach:
-	// one comprehensive log per request instead of many scattered logs
 	if rc.Logger != nil {
 		sampler := logger.NewSampler(logger.SamplerConfig{
 			Enabled:        true,
@@ -81,7 +68,6 @@ func applyGlobalMiddleware(r chi.Router, rc RouterConfig) {
 			Sampler:     sampler,
 		}))
 	} else {
-		// Fall back to chi's default logger if events are disabled
 		r.Use(middleware.Logger)
 	}
 }
@@ -102,9 +88,9 @@ func mountUtilityEndpoints(r chi.Router, cfg *config.Config, otelProvider *obser
 			"version":    version,
 			"commit":     commit,
 			"build_time": buildTime,
-			"go_version": runtime.Version(),
-			"os":         runtime.GOOS,
-			"arch":       runtime.GOARCH,
+			"go_version": goruntime.Version(),
+			"os":         goruntime.GOOS,
+			"arch":       goruntime.GOARCH,
 			"env":        cfg.AppEnv,
 		}, "Version information")
 	})
@@ -122,37 +108,18 @@ func mountUtilityEndpoints(r chi.Router, cfg *config.Config, otelProvider *obser
 	})
 }
 
-// mountAPIDocs sets up API documentation endpoints
-func mountAPIDocs(r chi.Router) {
-	docsServer := docs.New(
-		docs.Spec{Name: "Auth", Path: "/auth", GetSwagger: genauth.GetSwagger},
-		docs.Spec{Name: "Habits", Path: "/habits", GetSwagger: genhabits.GetSwagger},
-		docs.Spec{Name: "Notifications", Path: "/notifications", GetSwagger: gennotifications.GetSwagger},
-	)
-	docsServer.Mount(r)
-}
+// mountGatewayRoutes mounts the gRPC-Gateway handler for API routes
+func mountGatewayRoutes(r chi.Router, rc RouterConfig) {
+	// Mount gRPC-Gateway under /v1 (the paths defined in proto files)
+	r.Mount("/v1", rc.GatewayMux)
 
-// mountAPIRoutes mounts all API endpoints under /api prefix
-func mountAPIRoutes(r chi.Router, rc RouterConfig) {
-	r.Route("/api", func(api chi.Router) {
-		// Auth routes with scope-aware authentication
-		genauth.HandlerWithOptions(rc.AuthServer, genauth.ChiServerOptions{
-			BaseURL:     "",
-			BaseRouter:  api,
-			Middlewares: []genauth.MiddlewareFunc{scopeAwareAuthMiddleware(rc.AuthMiddleware)},
-		})
-
-		// Protected routes (habits and notifications require auth)
-		api.Group(func(protected chi.Router) {
-			protected.Use(rc.AuthMiddleware)
-
-			// Habits routes
-			genhabits.HandlerFromMuxWithBaseURL(rc.HabitsServer, protected, "")
-
-			// Notifications routes
-			gennotifications.HandlerFromMuxWithBaseURL(rc.NotificationsServer, protected, "")
-		})
-	})
+	// Also mount under /api for backward compatibility during transition
+	// This allows existing clients to continue using /api/* paths
+	r.Mount("/api", http.StripPrefix("/api", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		// Rewrite /api/auth/* to /v1/auth/*, /api/habits/* to /v1/habits/*, etc.
+		req.URL.Path = "/v1" + req.URL.Path
+		rc.GatewayMux.ServeHTTP(w, req)
+	})))
 }
 
 // mountSPAHandler serves the embedded frontend for SPA routing

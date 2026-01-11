@@ -1,17 +1,27 @@
 package app
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/semmidev/ethos-go/internal/auth/app/command"
 	"github.com/semmidev/ethos-go/internal/auth/app/query"
+	authctx "github.com/semmidev/ethos-go/internal/auth/infrastructure/context"
+	"github.com/semmidev/ethos-go/internal/auth/infrastructure/token"
 )
+
+// AuthServiceInterface defines the interface for authentication used by gRPC interceptor
+type AuthServiceInterface interface {
+	ValidateToken(ctx context.Context, tokenString string) (*token.Payload, error)
+	GetUserByID(ctx context.Context, userID string) (authctx.User, error)
+}
 
 // Application is the main application service facade for the auth module
 type Application struct {
 	Commands       Commands
 	Queries        Queries
 	AuthMiddleware func(http.Handler) http.Handler
+	AuthService    AuthServiceInterface
 }
 
 // Commands groups all command handlers (write operations)

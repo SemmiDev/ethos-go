@@ -1,0 +1,121 @@
+syntax = "proto3";
+
+package ethos.habits.v1;
+
+import "google/api/annotations.proto";
+import "ethos/habits/v1/messages.proto";
+
+option go_package = "github.com/semmidev/ethos-go/internal/generated/grpc/ethos/habits/v1;habitsv1";
+
+// HabitsService provides habit tracking functionality.
+service HabitsService {
+  // ListHabits returns all habits for the authenticated user.
+  rpc ListHabits(ListHabitsRequest) returns (ListHabitsResponse) {
+    option (google.api.http) = {
+      get: "/v1/habits"
+    };
+  }
+
+  // CreateHabit creates a new habit.
+  rpc CreateHabit(CreateHabitRequest) returns (HabitResponse) {
+    option (google.api.http) = {
+      post: "/v1/habits"
+      body: "*"
+    };
+  }
+
+  // GetHabit retrieves a habit by ID.
+  rpc GetHabit(GetHabitRequest) returns (HabitResponse) {
+    option (google.api.http) = {
+      get: "/v1/habits/{habit_id}"
+    };
+  }
+
+  // UpdateHabit updates a habit.
+  rpc UpdateHabit(UpdateHabitRequest) returns (HabitResponse) {
+    option (google.api.http) = {
+      put: "/v1/habits/{habit_id}"
+      body: "*"
+    };
+  }
+
+  // DeleteHabit deletes a habit.
+  rpc DeleteHabit(DeleteHabitRequest) returns (SuccessResponse) {
+    option (google.api.http) = {
+      delete: "/v1/habits/{habit_id}"
+    };
+  }
+
+  // ActivateHabit activates a habit.
+  rpc ActivateHabit(ActivateHabitRequest) returns (SuccessResponse) {
+    option (google.api.http) = {
+      post: "/v1/habits/{habit_id}/activate"
+    };
+  }
+
+  // DeactivateHabit deactivates a habit.
+  rpc DeactivateHabit(DeactivateHabitRequest) returns (SuccessResponse) {
+    option (google.api.http) = {
+      post: "/v1/habits/{habit_id}/deactivate"
+    };
+  }
+
+  // GetHabitStats retrieves habit statistics.
+  rpc GetHabitStats(GetHabitStatsRequest) returns (HabitStatsResponse) {
+    option (google.api.http) = {
+      get: "/v1/habits/{habit_id}/stats"
+    };
+  }
+
+  // LogHabit logs a habit completion.
+  rpc LogHabit(LogHabitRequest) returns (LogHabitResponse) {
+    option (google.api.http) = {
+      post: "/v1/habits/{habit_id}/logs"
+      body: "*"
+    };
+  }
+
+  // GetHabitLogs retrieves logs for a habit.
+  rpc GetHabitLogs(GetHabitLogsRequest) returns (GetHabitLogsResponse) {
+    option (google.api.http) = {
+      get: "/v1/habits/{habit_id}/logs"
+    };
+  }
+
+  // UpdateHabitLog updates a habit log.
+  rpc UpdateHabitLog(UpdateHabitLogRequest) returns (SuccessResponse) {
+    option (google.api.http) = {
+      put: "/v1/habit-logs/{log_id}"
+      body: "*"
+    };
+  }
+
+  // DeleteHabitLog deletes a habit log.
+  rpc DeleteHabitLog(DeleteHabitLogRequest) returns (SuccessResponse) {
+    option (google.api.http) = {
+      delete: "/v1/habit-logs/{log_id}"
+    };
+  }
+
+  // GetDashboard retrieves the user's dashboard data.
+  rpc GetDashboard(GetDashboardRequest) returns (DashboardResponse) {
+    option (google.api.http) = {
+      get: "/v1/dashboard"
+    };
+  }
+
+  // GetWeeklyAnalytics retrieves weekly analytics data.
+  rpc GetWeeklyAnalytics(GetWeeklyAnalyticsRequest) returns (WeeklyAnalyticsResponse) {
+    option (google.api.http) = {
+      get: "/v1/analytics/weekly"
+    };
+  }
+}
+
+// SuccessResponse for simple success/failure responses.
+message SuccessResponse {
+  // Whether the operation was successful.
+  bool success = 1;
+  // Human-readable message describing the result.
+  string message = 2;
+}

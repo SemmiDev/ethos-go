@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package ethos.notifications.v1;
+
+import "google/api/annotations.proto";
+import "ethos/notifications/v1/messages.proto";
+
+option go_package = "github.com/semmidev/ethos-go/internal/generated/grpc/ethos/notifications/v1;notificationsv1";
+
+// NotificationsService provides notification management functionality.
+service NotificationsService {
+  // CreateNotification creates a new notification (admin/testing).
+  rpc CreateNotification(CreateNotificationRequest) returns (SuccessResponse) {
+    option (google.api.http) = {
+      post: "/v1/notifications"
+      body: "*"
+    };
+  }
+
+  // ListNotifications returns notifications for the authenticated user.
+  rpc ListNotifications(ListNotificationsRequest) returns (ListNotificationsResponse) {
+    option (google.api.http) = {
+      get: "/v1/notifications"
+    };
+  }
+
+  // GetUnreadCount returns the count of unread notifications.
+  rpc GetUnreadCount(GetUnreadCountRequest) returns (UnreadCountResponse) {
+    option (google.api.http) = {
+      get: "/v1/notifications/unread-count"
+    };
+  }
+
+  // MarkAsRead marks a notification as read.
+  rpc MarkAsRead(MarkAsReadRequest) returns (SuccessResponse) {
+    option (google.api.http) = {
+      post: "/v1/notifications/{notification_id}/read"
+    };
+  }
+
+  // MarkAllAsRead marks all notifications as read.
+  rpc MarkAllAsRead(MarkAllAsReadRequest) returns (SuccessResponse) {
+    option (google.api.http) = {
+      post: "/v1/notifications/read-all"
+    };
+  }
+
+  // DeleteNotification deletes a notification.
+  rpc DeleteNotification(DeleteNotificationRequest) returns (SuccessResponse) {
+    option (google.api.http) = {
+      delete: "/v1/notifications/{notification_id}"
+    };
+  }
+}
+
+// SuccessResponse for simple success/failure responses.
+message SuccessResponse {
+  // Whether the operation was successful.
+  bool success = 1;
+  // Human-readable message describing the result.
+  string message = 2;
+}

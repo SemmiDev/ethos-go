@@ -71,7 +71,7 @@ func (h refreshTokenHandler) Handle(ctx context.Context, cmd RefreshTokenCommand
 	refreshTokenExpiry := now.Add(h.authService.RefreshTokenTTL())
 
 	// Issue new access token
-	accessToken, err := h.tokenIssuer.IssueAccessToken(ctx, sess.UserID(), accessTokenExpiry)
+	accessToken, err := h.tokenIssuer.IssueAccessToken(ctx, sess.UserID(), sess.SessionID(), accessTokenExpiry)
 	if err != nil {
 		return nil, apperror.InternalError(err)
 	}

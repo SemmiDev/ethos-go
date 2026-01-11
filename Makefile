@@ -169,6 +169,48 @@ generate-mocks: ## Generate mocks for testing
 	@echo "✅ Mocks generated"
 
 # ============================================================================
+# Buf / Protobuf Commands
+# ============================================================================
+
+.PHONY: buf-install
+buf-install: ## Install Buf CLI
+	@echo "📦 Installing Buf CLI..."
+	@go install github.com/bufbuild/buf/cmd/buf@latest
+	@echo "✅ Buf installed"
+
+.PHONY: buf-lint
+buf-lint: ## Lint protobuf files
+	@echo "🔍 Linting protobuf files..."
+	@cd api/proto && buf lint
+	@echo "✅ Lint passed"
+
+.PHONY: buf-breaking
+buf-breaking: ## Check for breaking changes against main branch
+	@echo "🔍 Checking for breaking changes..."
+	@cd api/proto && buf breaking --against '.git#branch=main' || echo "⚠️  Breaking changes detected or no previous version"
+	@echo "✅ Breaking change check complete"
+
+.PHONY: buf-deps
+buf-deps: ## Update Buf dependencies
+	@echo "📦 Updating Buf dependencies..."
+	@cd api/proto && buf dep update
+	@echo "✅ Dependencies updated"
+
+.PHONY: buf-generate
+buf-generate: ## Generate gRPC code from protobuf
+	@echo "🔄 Generating gRPC code from protobuf..."
+	@cd api/proto && buf generate
+	@echo "✅ gRPC code generated"
+
+.PHONY: generate-grpc
+generate-grpc: buf-lint buf-generate ## Full gRPC code generation with linting
+	@echo "✅ gRPC code generation complete"
+
+.PHONY: generate-all
+generate-all: generate generate-grpc ## Generate both OpenAPI and gRPC code
+	@echo "✅ All code generation complete"
+
+# ============================================================================
 # Database Migrations
 # ============================================================================
 

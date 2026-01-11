@@ -91,8 +91,9 @@ func AuthMiddleware(tokenVerifier service.TokenVerifier, userReader user.UserRea
 
 			// Also set the common auth context for other modules (like habits) that rely on it
 			ctx = authctx.ContextWithUser(ctx, authctx.User{
-				UserID: claims.UserID.String(),
-				Email:  foundUser.Email(),
+				UserID:    claims.UserID.String(),
+				SessionID: claims.SessionID.String(),
+				Email:     foundUser.Email(),
 			})
 
 			// Enrich wide event with user context for Canonical Log Lines

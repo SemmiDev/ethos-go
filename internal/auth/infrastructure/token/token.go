@@ -23,6 +23,7 @@ type GenerateTokenResponse struct {
 
 type Payload struct {
 	UserID    uuid.UUID `json:"user_id"`
+	SessionID uuid.UUID `json:"session_id"`
 	ExpiresAt time.Time `json:"expires_at"`
 }
 

@@ -12,8 +12,8 @@ import (
 // other token format - it just needs the ability to create tokens with certain claims.
 type TokenIssuer interface {
 	// IssueAccessToken creates a short-lived token for API access.
-	// The token contains the user ID and expires after a configured duration.
-	IssueAccessToken(ctx context.Context, userID uuid.UUID, expiresAt time.Time) (string, error)
+	// The token contains the user ID and session ID, and expires after a configured duration.
+	IssueAccessToken(ctx context.Context, userID uuid.UUID, sessionID uuid.UUID, expiresAt time.Time) (string, error)
 
 	// IssueRefreshToken creates a long-lived token for obtaining new access tokens.
 	// This token should be stored securely and used only to refresh access tokens.

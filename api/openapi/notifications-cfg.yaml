@@ -1,8 +1,0 @@
-package: notifications
-output: internal/generated/api/notifications/notifications.gen.go
-generate:
-  chi-server: true
-  models: true
-  embedded-spec: true
-output-options:
-  skip-prune: true

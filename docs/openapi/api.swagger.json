@@ -1,0 +1,2441 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "ethos/common/v1/pagination.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "AuthService"
+    },
+    {
+      "name": "HabitsService"
+    },
+    {
+      "name": "NotificationsService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/analytics/weekly": {
+      "get": {
+        "summary": "GetWeeklyAnalytics retrieves weekly analytics data.",
+        "operationId": "HabitsService_GetWeeklyAnalytics",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1WeeklyAnalyticsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "HabitsService"
+        ]
+      }
+    },
+    "/v1/auth/account/delete": {
+      "post": {
+        "summary": "DeleteAccount permanently deletes the user account.\nUses POST instead of DELETE to support request body with password confirmation.",
+        "operationId": "AuthService_DeleteAccount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ethosauthv1SuccessResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "DeleteAccountRequest requires password confirmation.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1DeleteAccountRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AuthService"
+        ]
+      }
+    },
+    "/v1/auth/change-password": {
+      "post": {
+        "summary": "ChangePassword changes the user's password.",
+        "operationId": "AuthService_ChangePassword",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ethosauthv1SuccessResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "ChangePasswordRequest contains password change data.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1ChangePasswordRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AuthService"
+        ]
+      }
+    },
+    "/v1/auth/export": {
+      "get": {
+        "summary": "ExportUserData exports all user data (GDPR compliance).",
+        "operationId": "AuthService_ExportUserData",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ExportUserDataResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "AuthService"
+        ]
+      }
+    },
+    "/v1/auth/forgot-password": {
+      "post": {
+        "summary": "ForgotPassword initiates the password reset flow.",
+        "operationId": "AuthService_ForgotPassword",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ethosauthv1SuccessResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "ForgotPasswordRequest contains the email for password reset.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1ForgotPasswordRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AuthService"
+        ]
+      }
+    },
+    "/v1/auth/google/callback": {
+      "post": {
+        "summary": "GoogleCallback handles the Google OAuth callback.",
+        "operationId": "AuthService_GoogleCallback",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1LoginResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "GoogleCallbackRequest contains the OAuth callback code.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1GoogleCallbackRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AuthService"
+        ]
+      }
+    },
+    "/v1/auth/google/login": {
+      "get": {
+        "summary": "GoogleLogin returns the Google OAuth login URL.",
+        "operationId": "AuthService_GoogleLogin",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GoogleLoginResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "AuthService"
+        ]
+      }
+    },
+    "/v1/auth/login": {
+      "post": {
+        "summary": "Login authenticates a user and returns tokens.",
+        "operationId": "AuthService_Login",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1LoginResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "LoginRequest contains user credentials.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1LoginRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AuthService"
+        ]
+      }
+    },
+    "/v1/auth/logout": {
+      "post": {
+        "summary": "Logout terminates the specified session.",
+        "operationId": "AuthService_Logout",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1LogoutResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "LogoutRequest contains the session to terminate.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1LogoutRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AuthService"
+        ]
+      }
+    },
+    "/v1/auth/logout-all": {
+      "post": {
+        "summary": "LogoutAll terminates all sessions for a user.",
+        "operationId": "AuthService_LogoutAll",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1LogoutResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "LogoutAllRequest contains the user ID for bulk logout.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1LogoutAllRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AuthService"
+        ]
+      }
+    },
+    "/v1/auth/profile": {
+      "get": {
+        "summary": "GetProfile retrieves the current user's profile.",
+        "operationId": "AuthService_GetProfile",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ProfileResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "AuthService"
+        ]
+      },
+      "put": {
+        "summary": "UpdateProfile updates the current user's profile.",
+        "operationId": "AuthService_UpdateProfile",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ProfileResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "UpdateProfileRequest contains profile update data.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1UpdateProfileRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AuthService"
+        ]
+      }
+    },
+    "/v1/auth/register": {
+      "post": {
+        "summary": "Register creates a new user account.",
+        "operationId": "AuthService_Register",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1RegisterResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "RegisterRequest contains user registration data.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1RegisterRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AuthService"
+        ]
+      }
+    },
+    "/v1/auth/resend-verification": {
+      "post": {
+        "summary": "ResendVerification resends the verification email.",
+        "operationId": "AuthService_ResendVerification",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ethosauthv1SuccessResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "ResendVerificationRequest contains the email to resend verification to.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1ResendVerificationRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AuthService"
+        ]
+      }
+    },
+    "/v1/auth/reset-password": {
+      "post": {
+        "summary": "ResetPassword completes the password reset flow.",
+        "operationId": "AuthService_ResetPassword",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ethosauthv1SuccessResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "ResetPasswordRequest contains password reset data.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1ResetPasswordRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AuthService"
+        ]
+      }
+    },
+    "/v1/auth/sessions": {
+      "get": {
+        "summary": "ListSessions returns all sessions for the authenticated user.",
+        "operationId": "AuthService_ListSessions",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListSessionsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "page",
+            "description": "Page number (1-indexed).",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "perPage",
+            "description": "Number of items per page.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "includeBlocked",
+            "description": "Include blocked sessions in results.",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "includeExpired",
+            "description": "Include expired sessions in results.",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "tags": [
+          "AuthService"
+        ]
+      }
+    },
+    "/v1/auth/sessions/other": {
+      "delete": {
+        "summary": "RevokeOtherSessions revokes all sessions except the current one.",
+        "operationId": "AuthService_RevokeOtherSessions",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1RevokeOtherSessionsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "AuthService"
+        ]
+      }
+    },
+    "/v1/auth/verify-email": {
+      "post": {
+        "summary": "VerifyEmail verifies the user's email address.",
+        "operationId": "AuthService_VerifyEmail",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ethosauthv1SuccessResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "VerifyEmailRequest contains email verification data.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1VerifyEmailRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AuthService"
+        ]
+      }
+    },
+    "/v1/dashboard": {
+      "get": {
+        "summary": "GetDashboard retrieves the user's dashboard data.",
+        "operationId": "HabitsService_GetDashboard",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DashboardResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "HabitsService"
+        ]
+      }
+    },
+    "/v1/habit-logs/{logId}": {
+      "delete": {
+        "summary": "DeleteHabitLog deletes a habit log.",
+        "operationId": "HabitsService_DeleteHabitLog",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ethoshabitsv1SuccessResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "logId",
+            "description": "Log identifier.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "HabitsService"
+        ]
+      },
+      "put": {
+        "summary": "UpdateHabitLog updates a habit log.",
+        "operationId": "HabitsService_UpdateHabitLog",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ethoshabitsv1SuccessResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "logId",
+            "description": "Log identifier.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/HabitsServiceUpdateHabitLogBody"
+            }
+          }
+        ],
+        "tags": [
+          "HabitsService"
+        ]
+      }
+    },
+    "/v1/habits": {
+      "get": {
+        "summary": "ListHabits returns all habits for the authenticated user.",
+        "operationId": "HabitsService_ListHabits",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListHabitsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "page",
+            "description": "Page number (1-indexed).",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "perPage",
+            "description": "Number of items per page.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "active",
+            "description": "Filter for active habits only.",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "inactive",
+            "description": "Filter for inactive habits only.",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "keyword",
+            "description": "Search keyword.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "startDate",
+            "description": "Filter by start date.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "endDate",
+            "description": "Filter by end date.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sortBy",
+            "description": "Sort field.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sortDirection",
+            "description": "Sort direction (asc/desc).",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "HabitsService"
+        ]
+      },
+      "post": {
+        "summary": "CreateHabit creates a new habit.",
+        "operationId": "HabitsService_CreateHabit",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1HabitResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "CreateHabitRequest contains data for creating a habit.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1CreateHabitRequest"
+            }
+          }
+        ],
+        "tags": [
+          "HabitsService"
+        ]
+      }
+    },
+    "/v1/habits/{habitId}": {
+      "get": {
+        "summary": "GetHabit retrieves a habit by ID.",
+        "operationId": "HabitsService_GetHabit",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1HabitResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "habitId",
+            "description": "Habit identifier.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "HabitsService"
+        ]
+      },
+      "delete": {
+        "summary": "DeleteHabit deletes a habit.",
+        "operationId": "HabitsService_DeleteHabit",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ethoshabitsv1SuccessResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "habitId",
+            "description": "Habit identifier.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "HabitsService"
+        ]
+      },
+      "put": {
+        "summary": "UpdateHabit updates a habit.",
+        "operationId": "HabitsService_UpdateHabit",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1HabitResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "habitId",
+            "description": "Habit identifier.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/HabitsServiceUpdateHabitBody"
+            }
+          }
+        ],
+        "tags": [
+          "HabitsService"
+        ]
+      }
+    },
+    "/v1/habits/{habitId}/activate": {
+      "post": {
+        "summary": "ActivateHabit activates a habit.",
+        "operationId": "HabitsService_ActivateHabit",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ethoshabitsv1SuccessResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "habitId",
+            "description": "Habit identifier.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "HabitsService"
+        ]
+      }
+    },
+    "/v1/habits/{habitId}/deactivate": {
+      "post": {
+        "summary": "DeactivateHabit deactivates a habit.",
+        "operationId": "HabitsService_DeactivateHabit",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ethoshabitsv1SuccessResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "habitId",
+            "description": "Habit identifier.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "HabitsService"
+        ]
+      }
+    },
+    "/v1/habits/{habitId}/logs": {
+      "get": {
+        "summary": "GetHabitLogs retrieves logs for a habit.",
+        "operationId": "HabitsService_GetHabitLogs",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetHabitLogsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "habitId",
+            "description": "Habit identifier.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "description": "Page number.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "perPage",
+            "description": "Items per page.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "startDate",
+            "description": "Filter by start date.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "endDate",
+            "description": "Filter by end date.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "keyword",
+            "description": "Search keyword.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sortBy",
+            "description": "Sort field.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sortDirection",
+            "description": "Sort direction (asc/desc).",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "HabitsService"
+        ]
+      },
+      "post": {
+        "summary": "LogHabit logs a habit completion.",
+        "operationId": "HabitsService_LogHabit",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1LogHabitResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "habitId",
+            "description": "Habit identifier.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/HabitsServiceLogHabitBody"
+            }
+          }
+        ],
+        "tags": [
+          "HabitsService"
+        ]
+      }
+    },
+    "/v1/habits/{habitId}/stats": {
+      "get": {
+        "summary": "GetHabitStats retrieves habit statistics.",
+        "operationId": "HabitsService_GetHabitStats",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1HabitStatsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "habitId",
+            "description": "Habit identifier.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "HabitsService"
+        ]
+      }
+    },
+    "/v1/notifications": {
+      "get": {
+        "summary": "ListNotifications returns notifications for the authenticated user.",
+        "operationId": "NotificationsService_ListNotifications",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListNotificationsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "page",
+            "description": "Page number (1-indexed).",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "perPage",
+            "description": "Number of items per page.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "unreadOnly",
+            "description": "Only return unread notifications.",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "tags": [
+          "NotificationsService"
+        ]
+      },
+      "post": {
+        "summary": "CreateNotification creates a new notification (admin/testing).",
+        "operationId": "NotificationsService_CreateNotification",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ethosnotificationsv1SuccessResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "CreateNotificationRequest contains data for creating a notification.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1CreateNotificationRequest"
+            }
+          }
+        ],
+        "tags": [
+          "NotificationsService"
+        ]
+      }
+    },
+    "/v1/notifications/read-all": {
+      "post": {
+        "summary": "MarkAllAsRead marks all notifications as read.",
+        "operationId": "NotificationsService_MarkAllAsRead",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ethosnotificationsv1SuccessResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "NotificationsService"
+        ]
+      }
+    },
+    "/v1/notifications/unread-count": {
+      "get": {
+        "summary": "GetUnreadCount returns the count of unread notifications.",
+        "operationId": "NotificationsService_GetUnreadCount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UnreadCountResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "NotificationsService"
+        ]
+      }
+    },
+    "/v1/notifications/{notificationId}": {
+      "delete": {
+        "summary": "DeleteNotification deletes a notification.",
+        "operationId": "NotificationsService_DeleteNotification",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ethosnotificationsv1SuccessResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "notificationId",
+            "description": "Notification identifier.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "NotificationsService"
+        ]
+      }
+    },
+    "/v1/notifications/{notificationId}/read": {
+      "post": {
+        "summary": "MarkAsRead marks a notification as read.",
+        "operationId": "NotificationsService_MarkAsRead",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ethosnotificationsv1SuccessResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "notificationId",
+            "description": "Notification identifier.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "NotificationsService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "HabitsServiceLogHabitBody": {
+      "type": "object",
+      "properties": {
+        "logDate": {
+          "type": "string",
+          "description": "Log date in YYYY-MM-DD format."
+        },
+        "count": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Completion count."
+        },
+        "note": {
+          "type": "string",
+          "description": "Optional note."
+        }
+      },
+      "description": "LogHabitRequest contains data for logging habit completion."
+    },
+    "HabitsServiceUpdateHabitBody": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "New name."
+        },
+        "description": {
+          "type": "string",
+          "description": "New description."
+        },
+        "frequency": {
+          "type": "string",
+          "description": "New frequency."
+        },
+        "targetCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "New target count."
+        },
+        "reminderTime": {
+          "type": "string",
+          "description": "New reminder time."
+        }
+      },
+      "description": "UpdateHabitRequest contains data for updating a habit."
+    },
+    "HabitsServiceUpdateHabitLogBody": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "int32",
+          "description": "New count."
+        },
+        "note": {
+          "type": "string",
+          "description": "New note."
+        },
+        "logDate": {
+          "type": "string",
+          "description": "New log date."
+        }
+      },
+      "description": "UpdateHabitLogRequest contains data for updating a habit log."
+    },
+    "ethosauthv1SuccessResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "description": "Whether the operation was successful."
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable message describing the result."
+        }
+      },
+      "description": "SuccessResponse for simple success/failure responses."
+    },
+    "ethoshabitsv1SuccessResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "description": "Whether the operation was successful."
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable message describing the result."
+        }
+      },
+      "description": "SuccessResponse for simple success/failure responses."
+    },
+    "ethosnotificationsv1SuccessResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "description": "Whether the operation was successful."
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable message describing the result."
+        }
+      },
+      "description": "SuccessResponse for simple success/failure responses."
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "protobufNullValue": {
+      "type": "string",
+      "enum": [
+        "NULL_VALUE"
+      ],
+      "default": "NULL_VALUE",
+      "description": "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\nThe JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value."
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1ChangePasswordRequest": {
+      "type": "object",
+      "properties": {
+        "currentPassword": {
+          "type": "string",
+          "description": "Current password for verification."
+        },
+        "newPassword": {
+          "type": "string",
+          "description": "New password (min 8 chars)."
+        }
+      },
+      "description": "ChangePasswordRequest contains password change data."
+    },
+    "v1CreateHabitRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Habit name (required)."
+        },
+        "description": {
+          "type": "string",
+          "description": "Habit description."
+        },
+        "frequency": {
+          "type": "string",
+          "description": "Habit frequency (default: daily)."
+        },
+        "targetCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Target count (default: 1)."
+        },
+        "reminderTime": {
+          "type": "string",
+          "description": "Reminder time in HH:MM format."
+        }
+      },
+      "description": "CreateHabitRequest contains data for creating a habit."
+    },
+    "v1CreateNotificationRequest": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Notification title."
+        },
+        "message": {
+          "type": "string",
+          "description": "Notification message."
+        },
+        "type": {
+          "type": "string",
+          "description": "Notification type as string (streak_milestone, habit_reminder, etc.)."
+        },
+        "data": {
+          "type": "object",
+          "description": "Additional data."
+        }
+      },
+      "description": "CreateNotificationRequest contains data for creating a notification."
+    },
+    "v1DailyAnalytics": {
+      "type": "object",
+      "properties": {
+        "dayName": {
+          "type": "string",
+          "description": "Day of week name (Mon, Tue, etc.)."
+        },
+        "date": {
+          "type": "string",
+          "description": "Date in YYYY-MM-DD format."
+        },
+        "logsCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Number of habit logs on this day."
+        },
+        "completionPercentage": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Completion percentage for this day (0-100)."
+        }
+      },
+      "description": "DailyAnalytics contains analytics for a single day."
+    },
+    "v1Dashboard": {
+      "type": "object",
+      "properties": {
+        "activeHabitsCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Number of active habits."
+        },
+        "totalLogsToday": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Total logs created today."
+        },
+        "currentStreak": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Current streak in days."
+        },
+        "longestStreak": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Longest streak achieved."
+        },
+        "weeklyCompletion": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Weekly completion percentage (0-100)."
+        },
+        "totalLogs": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Total habit logs all time."
+        }
+      },
+      "description": "Dashboard contains user dashboard data."
+    },
+    "v1DashboardResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "description": "Whether the request was successful."
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable message."
+        },
+        "data": {
+          "$ref": "#/definitions/v1Dashboard",
+          "description": "Dashboard data."
+        }
+      },
+      "description": "DashboardResponse contains dashboard data."
+    },
+    "v1DeleteAccountRequest": {
+      "type": "object",
+      "properties": {
+        "password": {
+          "type": "string",
+          "description": "Password confirmation for account deletion."
+        }
+      },
+      "description": "DeleteAccountRequest requires password confirmation."
+    },
+    "v1ExportUserDataResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "description": "Whether the export was successful."
+        },
+        "data": {
+          "type": "string",
+          "format": "byte",
+          "description": "Exported data as JSON."
+        }
+      },
+      "description": "ExportUserDataResponse contains exported user data."
+    },
+    "v1ForgotPasswordRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "Email address for password reset."
+        }
+      },
+      "description": "ForgotPasswordRequest contains the email for password reset."
+    },
+    "v1Frequency": {
+      "type": "string",
+      "enum": [
+        "FREQUENCY_UNSPECIFIED",
+        "FREQUENCY_DAILY",
+        "FREQUENCY_WEEKLY",
+        "FREQUENCY_MONTHLY"
+      ],
+      "default": "FREQUENCY_UNSPECIFIED",
+      "description": "Frequency represents habit recurrence patterns.\n\n - FREQUENCY_UNSPECIFIED: Unspecified frequency.\n - FREQUENCY_DAILY: Daily habit.\n - FREQUENCY_WEEKLY: Weekly habit.\n - FREQUENCY_MONTHLY: Monthly habit."
+    },
+    "v1GetHabitLogsResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "description": "Whether the request was successful."
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable message."
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1HabitLog"
+          },
+          "description": "List of habit logs."
+        },
+        "meta": {
+          "$ref": "#/definitions/v1Meta",
+          "description": "Pagination metadata."
+        }
+      },
+      "description": "GetHabitLogsResponse contains paginated habit logs."
+    },
+    "v1GoogleCallbackRequest": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "The authorization code from Google OAuth callback."
+        }
+      },
+      "description": "GoogleCallbackRequest contains the OAuth callback code."
+    },
+    "v1GoogleLoginData": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "The Google OAuth authorization URL."
+        }
+      },
+      "description": "GoogleLoginData contains the Google OAuth URL."
+    },
+    "v1GoogleLoginResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "description": "Whether the request was successful."
+        },
+        "data": {
+          "$ref": "#/definitions/v1GoogleLoginData",
+          "description": "OAuth URL data."
+        }
+      },
+      "description": "GoogleLoginResponse contains the OAuth URL."
+    },
+    "v1Habit": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique habit identifier."
+        },
+        "name": {
+          "type": "string",
+          "description": "Habit name."
+        },
+        "description": {
+          "type": "string",
+          "description": "Habit description."
+        },
+        "frequency": {
+          "$ref": "#/definitions/v1Frequency",
+          "description": "Habit frequency."
+        },
+        "targetCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Target count per frequency period."
+        },
+        "reminderTime": {
+          "type": "string",
+          "description": "Daily reminder time in HH:MM format."
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "Whether the habit is active."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation time."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update time."
+        }
+      },
+      "description": "Habit represents a user's habit."
+    },
+    "v1HabitLog": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique log identifier."
+        },
+        "habitId": {
+          "type": "string",
+          "description": "Parent habit identifier."
+        },
+        "logDate": {
+          "type": "string",
+          "description": "Date of the log entry."
+        },
+        "count": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Completion count."
+        },
+        "note": {
+          "type": "string",
+          "description": "Optional note."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation time."
+        }
+      },
+      "description": "HabitLog represents a habit completion log entry."
+    },
+    "v1HabitResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "description": "Whether the request was successful."
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable message."
+        },
+        "data": {
+          "$ref": "#/definitions/v1Habit",
+          "description": "The habit data."
+        }
+      },
+      "description": "HabitResponse contains a single habit."
+    },
+    "v1HabitStats": {
+      "type": "object",
+      "properties": {
+        "totalLogs": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Total number of logs."
+        },
+        "currentStreak": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Current streak in days."
+        },
+        "longestStreak": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Longest streak achieved."
+        }
+      },
+      "description": "HabitStats contains habit statistics."
+    },
+    "v1HabitStatsResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "description": "Whether the request was successful."
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable message."
+        },
+        "data": {
+          "$ref": "#/definitions/v1HabitStats",
+          "description": "Habit statistics."
+        }
+      },
+      "description": "HabitStatsResponse contains habit statistics."
+    },
+    "v1ListHabitsResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "description": "Whether the request was successful."
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable message."
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Habit"
+          },
+          "description": "List of habits."
+        },
+        "meta": {
+          "$ref": "#/definitions/v1Meta",
+          "description": "Pagination metadata."
+        }
+      },
+      "description": "ListHabitsResponse contains paginated habits."
+    },
+    "v1ListNotificationsResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "description": "Whether the request was successful."
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable message."
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Notification"
+          },
+          "description": "List of notifications."
+        },
+        "meta": {
+          "$ref": "#/definitions/v1Meta",
+          "description": "Pagination metadata."
+        }
+      },
+      "description": "ListNotificationsResponse contains paginated notifications."
+    },
+    "v1ListSessionsResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "description": "Whether the request was successful."
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable message."
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Session"
+          },
+          "description": "List of sessions."
+        },
+        "meta": {
+          "$ref": "#/definitions/v1Meta",
+          "description": "Pagination metadata."
+        }
+      },
+      "description": "ListSessionsResponse contains paginated sessions."
+    },
+    "v1LogHabitData": {
+      "type": "object",
+      "properties": {
+        "logId": {
+          "type": "string",
+          "description": "The created log ID."
+        }
+      },
+      "description": "LogHabitData contains the created log ID."
+    },
+    "v1LogHabitResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "description": "Whether the operation was successful."
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable message."
+        },
+        "data": {
+          "$ref": "#/definitions/v1LogHabitData",
+          "description": "Created log data."
+        }
+      },
+      "description": "LogHabitResponse contains the created log ID."
+    },
+    "v1LoginData": {
+      "type": "object",
+      "properties": {
+        "accessToken": {
+          "type": "string",
+          "description": "JWT access token."
+        },
+        "refreshToken": {
+          "type": "string",
+          "description": "JWT refresh token."
+        },
+        "sessionId": {
+          "type": "string",
+          "description": "Session identifier."
+        },
+        "userId": {
+          "type": "string",
+          "description": "User identifier."
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "int64",
+          "description": "Token expiration time (Unix timestamp)."
+        }
+      },
+      "description": "LoginData contains authentication tokens and session info."
+    },
+    "v1LoginRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "User's email address."
+        },
+        "password": {
+          "type": "string",
+          "description": "User's password."
+        }
+      },
+      "description": "LoginRequest contains user credentials."
+    },
+    "v1LoginResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "description": "Whether login was successful."
+        },
+        "data": {
+          "$ref": "#/definitions/v1LoginData",
+          "description": "Authentication data."
+        }
+      },
+      "description": "LoginResponse contains authentication tokens."
+    },
+    "v1LogoutAllRequest": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "User ID whose sessions should be terminated."
+        }
+      },
+      "description": "LogoutAllRequest contains the user ID for bulk logout."
+    },
+    "v1LogoutRequest": {
+      "type": "object",
+      "properties": {
+        "sessionId": {
+          "type": "string",
+          "description": "Session ID to terminate."
+        }
+      },
+      "description": "LogoutRequest contains the session to terminate."
+    },
+    "v1LogoutResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "description": "Whether logout was successful."
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable message."
+        }
+      },
+      "description": "LogoutResponse contains the logout result."
+    },
+    "v1Meta": {
+      "type": "object",
+      "properties": {
+        "pagination": {
+          "$ref": "#/definitions/v1PaginationResponse",
+          "description": "Pagination metadata."
+        }
+      },
+      "description": "Meta contains metadata for the response."
+    },
+    "v1Notification": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique notification identifier."
+        },
+        "type": {
+          "$ref": "#/definitions/v1NotificationType",
+          "description": "Notification type."
+        },
+        "title": {
+          "type": "string",
+          "description": "Notification title."
+        },
+        "message": {
+          "type": "string",
+          "description": "Notification message."
+        },
+        "data": {
+          "type": "object",
+          "description": "Additional notification data."
+        },
+        "isRead": {
+          "type": "boolean",
+          "description": "Whether the notification has been read."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation time."
+        },
+        "readAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Time when notification was read."
+        }
+      },
+      "description": "Notification represents a user notification."
+    },
+    "v1NotificationType": {
+      "type": "string",
+      "enum": [
+        "NOTIFICATION_TYPE_UNSPECIFIED",
+        "NOTIFICATION_TYPE_STREAK_MILESTONE",
+        "NOTIFICATION_TYPE_HABIT_REMINDER",
+        "NOTIFICATION_TYPE_ACHIEVEMENT",
+        "NOTIFICATION_TYPE_SYSTEM",
+        "NOTIFICATION_TYPE_WELCOME"
+      ],
+      "default": "NOTIFICATION_TYPE_UNSPECIFIED",
+      "description": "NotificationType represents the type of notification.\n\n - NOTIFICATION_TYPE_UNSPECIFIED: Unspecified notification type.\n - NOTIFICATION_TYPE_STREAK_MILESTONE: Streak milestone notification.\n - NOTIFICATION_TYPE_HABIT_REMINDER: Habit reminder notification.\n - NOTIFICATION_TYPE_ACHIEVEMENT: Achievement notification.\n - NOTIFICATION_TYPE_SYSTEM: System notification.\n - NOTIFICATION_TYPE_WELCOME: Welcome notification."
+    },
+    "v1PaginationResponse": {
+      "type": "object",
+      "properties": {
+        "hasPreviousPage": {
+          "type": "boolean",
+          "description": "Whether there is a previous page."
+        },
+        "hasNextPage": {
+          "type": "boolean",
+          "description": "Whether there is a next page."
+        },
+        "currentPage": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Current page number (1-indexed)."
+        },
+        "perPage": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Number of items per page."
+        },
+        "totalData": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Total number of items across all pages."
+        },
+        "totalDataInCurrentPage": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Number of items in the current page."
+        },
+        "lastPage": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Last page number."
+        },
+        "from": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Index of the first item in the current page (1-indexed)."
+        },
+        "to": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Index of the last item in the current page."
+        }
+      },
+      "description": "PaginationResponse contains pagination metadata for list responses."
+    },
+    "v1ProfileData": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "User identifier."
+        },
+        "name": {
+          "type": "string",
+          "description": "User's display name."
+        },
+        "email": {
+          "type": "string",
+          "description": "User's email address."
+        },
+        "timezone": {
+          "type": "string",
+          "description": "User's timezone in IANA format (e.g., Asia/Jakarta)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Account creation time."
+        }
+      },
+      "description": "ProfileData contains user profile information."
+    },
+    "v1ProfileResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "description": "Whether the request was successful."
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable message."
+        },
+        "data": {
+          "$ref": "#/definitions/v1ProfileData",
+          "description": "User profile data."
+        }
+      },
+      "description": "ProfileResponse contains user profile data."
+    },
+    "v1RegisterData": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The created user's ID."
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address."
+        },
+        "name": {
+          "type": "string",
+          "description": "The user's display name."
+        }
+      },
+      "description": "RegisterData contains the registered user information."
+    },
+    "v1RegisterRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "User's display name (2-100 chars)."
+        },
+        "email": {
+          "type": "string",
+          "description": "User's email address."
+        },
+        "password": {
+          "type": "string",
+          "description": "User's password (min 8 chars)."
+        }
+      },
+      "description": "RegisterRequest contains user registration data."
+    },
+    "v1RegisterResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "description": "Whether registration was successful."
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable message."
+        },
+        "data": {
+          "$ref": "#/definitions/v1RegisterData",
+          "description": "Registration result data."
+        }
+      },
+      "description": "RegisterResponse contains the result of registration."
+    },
+    "v1ResendVerificationRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "Email address to resend verification to."
+        }
+      },
+      "description": "ResendVerificationRequest contains the email to resend verification to."
+    },
+    "v1ResetPasswordRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "Email address."
+        },
+        "code": {
+          "type": "string",
+          "description": "Password reset code."
+        },
+        "newPassword": {
+          "type": "string",
+          "description": "New password (min 8 chars)."
+        }
+      },
+      "description": "ResetPasswordRequest contains password reset data."
+    },
+    "v1RevokeOtherSessionsResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "description": "Whether the operation was successful."
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable message."
+        },
+        "revokedCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Number of sessions that were revoked."
+        }
+      },
+      "description": "RevokeOtherSessionsResponse contains the count of revoked sessions."
+    },
+    "v1Session": {
+      "type": "object",
+      "properties": {
+        "sessionId": {
+          "type": "string",
+          "description": "Unique session identifier."
+        },
+        "userAgent": {
+          "type": "string",
+          "description": "Browser/client user agent string."
+        },
+        "clientIp": {
+          "type": "string",
+          "description": "Client IP address."
+        },
+        "isBlocked": {
+          "type": "boolean",
+          "description": "Whether the session is blocked."
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Session expiration time."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Session creation time."
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "Whether the session is currently active."
+        },
+        "isCurrent": {
+          "type": "boolean",
+          "description": "Whether this is the current session."
+        }
+      },
+      "description": "Session represents a user session."
+    },
+    "v1UnreadCountData": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Number of unread notifications."
+        }
+      },
+      "description": "UnreadCountData contains the unread count."
+    },
+    "v1UnreadCountResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "description": "Whether the request was successful."
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable message."
+        },
+        "data": {
+          "$ref": "#/definitions/v1UnreadCountData",
+          "description": "Unread count data."
+        }
+      },
+      "description": "UnreadCountResponse contains the unread notification count."
+    },
+    "v1UpdateProfileRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "New display name (optional)."
+        },
+        "email": {
+          "type": "string",
+          "description": "New email address (optional)."
+        },
+        "timezone": {
+          "type": "string",
+          "description": "New timezone in IANA format (optional)."
+        }
+      },
+      "description": "UpdateProfileRequest contains profile update data."
+    },
+    "v1VerifyEmailRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "Email address to verify."
+        },
+        "code": {
+          "type": "string",
+          "description": "Verification code."
+        }
+      },
+      "description": "VerifyEmailRequest contains email verification data."
+    },
+    "v1WeeklyAnalytics": {
+      "type": "object",
+      "properties": {
+        "days": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1DailyAnalytics"
+          },
+          "description": "Daily analytics for each day of the week."
+        },
+        "averageCompletion": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Average completion percentage for the week."
+        }
+      },
+      "description": "WeeklyAnalytics contains weekly analytics data."
+    },
+    "v1WeeklyAnalyticsResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "description": "Whether the request was successful."
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable message."
+        },
+        "data": {
+          "$ref": "#/definitions/v1WeeklyAnalytics",
+          "description": "Weekly analytics data."
+        }
+      },
+      "description": "WeeklyAnalyticsResponse contains weekly analytics."
+    }
+  }
+}

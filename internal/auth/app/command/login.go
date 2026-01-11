@@ -119,14 +119,16 @@ func (h loginHandler) Handle(ctx context.Context, cmd LoginCommand) (*LoginResul
 	accessTokenExpiry := now.Add(h.authService.AccessTokenTTL())
 	refreshTokenExpiry := now.Add(h.authService.RefreshTokenTTL())
 
-	// Issue access token - use getter
-	accessToken, err := h.tokenIssuer.IssueAccessToken(ctx, foundUser.UserID(), accessTokenExpiry)
+	// Generate session ID first
+	sessionID := random.NewUUID()
+
+	// Issue access token - includes session ID now
+	accessToken, err := h.tokenIssuer.IssueAccessToken(ctx, foundUser.UserID(), sessionID, accessTokenExpiry)
 	if err != nil {
 		return nil, apperror.InternalError(err)
 	}
 
 	// Issue refresh token
-	sessionID := random.NewUUID()
 	refreshToken, err := h.tokenIssuer.IssueRefreshToken(ctx, sessionID, refreshTokenExpiry)
 	if err != nil {
 		return nil, apperror.InternalError(err)

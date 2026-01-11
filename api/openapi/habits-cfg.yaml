@@ -1,8 +1,0 @@
-package: habits
-output: internal/generated/api/habits/habits.gen.go
-generate:
-  chi-server: true
-  models: true
-  embedded-spec: true
-output-options:
-  skip-prune: true

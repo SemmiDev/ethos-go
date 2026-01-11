@@ -1,0 +1,322 @@
+syntax = "proto3";
+
+package ethos.habits.v1;
+
+import "google/protobuf/timestamp.proto";
+import "ethos/common/v1/pagination.proto";
+
+option go_package = "github.com/semmidev/ethos-go/internal/generated/grpc/ethos/habits/v1;habitsv1";
+
+// Frequency represents habit recurrence patterns.
+enum Frequency {
+  // Unspecified frequency.
+  FREQUENCY_UNSPECIFIED = 0;
+  // Daily habit.
+  FREQUENCY_DAILY = 1;
+  // Weekly habit.
+  FREQUENCY_WEEKLY = 2;
+  // Monthly habit.
+  FREQUENCY_MONTHLY = 3;
+}
+
+// Habit represents a user's habit.
+message Habit {
+  // Unique habit identifier.
+  string id = 1;
+  // Habit name.
+  string name = 2;
+  // Habit description.
+  optional string description = 3;
+  // Habit frequency.
+  Frequency frequency = 4;
+  // Target count per frequency period.
+  int32 target_count = 5;
+  // Daily reminder time in HH:MM format.
+  optional string reminder_time = 6;
+  // Whether the habit is active.
+  bool is_active = 7;
+  // Creation time.
+  google.protobuf.Timestamp created_at = 8;
+  // Last update time.
+  google.protobuf.Timestamp updated_at = 9;
+}
+
+// HabitLog represents a habit completion log entry.
+message HabitLog {
+  // Unique log identifier.
+  string id = 1;
+  // Parent habit identifier.
+  string habit_id = 2;
+  // Date of the log entry.
+  string log_date = 3;
+  // Completion count.
+  int32 count = 4;
+  // Optional note.
+  optional string note = 5;
+  // Creation time.
+  google.protobuf.Timestamp created_at = 6;
+}
+
+// HabitStats contains habit statistics.
+message HabitStats {
+  // Total number of logs.
+  int32 total_logs = 1;
+  // Current streak in days.
+  int32 current_streak = 2;
+  // Longest streak achieved.
+  int32 longest_streak = 3;
+}
+
+// Dashboard contains user dashboard data.
+message Dashboard {
+  // Number of active habits.
+  int32 active_habits_count = 1;
+  // Total logs created today.
+  int32 total_logs_today = 2;
+  // Current streak in days.
+  int32 current_streak = 3;
+  // Longest streak achieved.
+  int32 longest_streak = 4;
+  // Weekly completion percentage (0-100).
+  int32 weekly_completion = 5;
+  // Total habit logs all time.
+  int32 total_logs = 6;
+}
+
+// DailyAnalytics contains analytics for a single day.
+message DailyAnalytics {
+  // Day of week name (Mon, Tue, etc.).
+  string day_name = 1;
+  // Date in YYYY-MM-DD format.
+  string date = 2;
+  // Number of habit logs on this day.
+  int32 logs_count = 3;
+  // Completion percentage for this day (0-100).
+  int32 completion_percentage = 4;
+}
+
+// WeeklyAnalytics contains weekly analytics data.
+message WeeklyAnalytics {
+  // Daily analytics for each day of the week.
+  repeated DailyAnalytics days = 1;
+  // Average completion percentage for the week.
+  int32 average_completion = 2;
+}
+
+// ListHabitsRequest contains filters for listing habits.
+message ListHabitsRequest {
+  // Page number (1-indexed).
+  int32 page = 1;
+  // Number of items per page.
+  int32 per_page = 2;
+  // Filter for active habits only.
+  optional bool active = 3;
+  // Filter for inactive habits only.
+  optional bool inactive = 4;
+  // Search keyword.
+  optional string keyword = 5;
+  // Filter by start date.
+  optional string start_date = 6;
+  // Filter by end date.
+  optional string end_date = 7;
+  // Sort field.
+  optional string sort_by = 8;
+  // Sort direction (asc/desc).
+  optional string sort_direction = 9;
+}
+
+// ListHabitsResponse contains paginated habits.
+message ListHabitsResponse {
+  // Whether the request was successful.
+  bool success = 1;
+  // Human-readable message.
+  string message = 2;
+  // List of habits.
+  repeated Habit data = 3;
+  // Pagination metadata.
+  ethos.common.v1.Meta meta = 4;
+}
+
+// CreateHabitRequest contains data for creating a habit.
+message CreateHabitRequest {
+  // Habit name (required).
+  string name = 1;
+  // Habit description.
+  optional string description = 2;
+  // Habit frequency (default: daily).
+  optional string frequency = 3;
+  // Target count (default: 1).
+  optional int32 target_count = 4;
+  // Reminder time in HH:MM format.
+  optional string reminder_time = 5;
+}
+
+// HabitResponse contains a single habit.
+message HabitResponse {
+  // Whether the request was successful.
+  bool success = 1;
+  // Human-readable message.
+  string message = 2;
+  // The habit data.
+  Habit data = 3;
+}
+
+// GetHabitRequest identifies a habit to retrieve.
+message GetHabitRequest {
+  // Habit identifier.
+  string habit_id = 1;
+}
+
+// UpdateHabitRequest contains data for updating a habit.
+message UpdateHabitRequest {
+  // Habit identifier.
+  string habit_id = 1;
+  // New name.
+  optional string name = 2;
+  // New description.
+  optional string description = 3;
+  // New frequency.
+  optional string frequency = 4;
+  // New target count.
+  optional int32 target_count = 5;
+  // New reminder time.
+  optional string reminder_time = 6;
+}
+
+// DeleteHabitRequest identifies a habit to delete.
+message DeleteHabitRequest {
+  // Habit identifier.
+  string habit_id = 1;
+}
+
+// ActivateHabitRequest identifies a habit to activate.
+message ActivateHabitRequest {
+  // Habit identifier.
+  string habit_id = 1;
+}
+
+// DeactivateHabitRequest identifies a habit to deactivate.
+message DeactivateHabitRequest {
+  // Habit identifier.
+  string habit_id = 1;
+}
+
+// GetHabitStatsRequest identifies a habit for statistics.
+message GetHabitStatsRequest {
+  // Habit identifier.
+  string habit_id = 1;
+}
+
+// HabitStatsResponse contains habit statistics.
+message HabitStatsResponse {
+  // Whether the request was successful.
+  bool success = 1;
+  // Human-readable message.
+  string message = 2;
+  // Habit statistics.
+  HabitStats data = 3;
+}
+
+// LogHabitRequest contains data for logging habit completion.
+message LogHabitRequest {
+  // Habit identifier.
+  string habit_id = 1;
+  // Log date in YYYY-MM-DD format.
+  string log_date = 2;
+  // Completion count.
+  int32 count = 3;
+  // Optional note.
+  optional string note = 4;
+}
+
+// LogHabitResponse contains the created log ID.
+message LogHabitResponse {
+  // Whether the operation was successful.
+  bool success = 1;
+  // Human-readable message.
+  string message = 2;
+  // Created log data.
+  LogHabitData data = 3;
+}
+
+// LogHabitData contains the created log ID.
+message LogHabitData {
+  // The created log ID.
+  string log_id = 1;
+}
+
+// GetHabitLogsRequest contains filters for habit logs.
+message GetHabitLogsRequest {
+  // Habit identifier.
+  string habit_id = 1;
+  // Page number.
+  int32 page = 2;
+  // Items per page.
+  int32 per_page = 3;
+  // Filter by start date.
+  optional string start_date = 4;
+  // Filter by end date.
+  optional string end_date = 5;
+  // Search keyword.
+  optional string keyword = 6;
+  // Sort field.
+  optional string sort_by = 7;
+  // Sort direction (asc/desc).
+  optional string sort_direction = 8;
+}
+
+// GetHabitLogsResponse contains paginated habit logs.
+message GetHabitLogsResponse {
+  // Whether the request was successful.
+  bool success = 1;
+  // Human-readable message.
+  string message = 2;
+  // List of habit logs.
+  repeated HabitLog data = 3;
+  // Pagination metadata.
+  ethos.common.v1.Meta meta = 4;
+}
+
+// UpdateHabitLogRequest contains data for updating a habit log.
+message UpdateHabitLogRequest {
+  // Log identifier.
+  string log_id = 1;
+  // New count.
+  optional int32 count = 2;
+  // New note.
+  optional string note = 3;
+  // New log date.
+  optional string log_date = 4;
+}
+
+// DeleteHabitLogRequest identifies a log to delete.
+message DeleteHabitLogRequest {
+  // Log identifier.
+  string log_id = 1;
+}
+
+// GetDashboardRequest is empty - uses auth context.
+message GetDashboardRequest {}
+
+// DashboardResponse contains dashboard data.
+message DashboardResponse {
+  // Whether the request was successful.
+  bool success = 1;
+  // Human-readable message.
+  string message = 2;
+  // Dashboard data.
+  Dashboard data = 3;
+}
+
+// GetWeeklyAnalyticsRequest is empty - uses auth context.
+message GetWeeklyAnalyticsRequest {}
+
+// WeeklyAnalyticsResponse contains weekly analytics.
+message WeeklyAnalyticsResponse {
+  // Whether the request was successful.
+  bool success = 1;
+  // Human-readable message.
+  string message = 2;
+  // Weekly analytics data.
+  WeeklyAnalytics data = 3;
+}

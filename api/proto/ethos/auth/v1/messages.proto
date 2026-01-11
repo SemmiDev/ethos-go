@@ -1,0 +1,260 @@
+syntax = "proto3";
+
+package ethos.auth.v1;
+
+import "google/protobuf/timestamp.proto";
+import "ethos/common/v1/pagination.proto";
+
+option go_package = "github.com/semmidev/ethos-go/internal/generated/grpc/ethos/auth/v1;authv1";
+
+// RegisterRequest contains user registration data.
+message RegisterRequest {
+  // User's display name (2-100 chars).
+  string name = 1;
+  // User's email address.
+  string email = 2;
+  // User's password (min 8 chars).
+  string password = 3;
+}
+
+// RegisterResponse contains the result of registration.
+message RegisterResponse {
+  // Whether registration was successful.
+  bool success = 1;
+  // Human-readable message.
+  string message = 2;
+  // Registration result data.
+  RegisterData data = 3;
+}
+
+// RegisterData contains the registered user information.
+message RegisterData {
+  // The created user's ID.
+  string user_id = 1;
+  // The user's email address.
+  string email = 2;
+  // The user's display name.
+  string name = 3;
+}
+
+// LoginRequest contains user credentials.
+message LoginRequest {
+  // User's email address.
+  string email = 1;
+  // User's password.
+  string password = 2;
+}
+
+// LoginResponse contains authentication tokens.
+message LoginResponse {
+  // Whether login was successful.
+  bool success = 1;
+  // Authentication data.
+  LoginData data = 2;
+}
+
+// LoginData contains authentication tokens and session info.
+message LoginData {
+  // JWT access token.
+  string access_token = 1;
+  // JWT refresh token.
+  string refresh_token = 2;
+  // Session identifier.
+  string session_id = 3;
+  // User identifier.
+  string user_id = 4;
+  // Token expiration time (Unix timestamp).
+  int64 expires_at = 5;
+}
+
+// GoogleLoginRequest is empty - no parameters needed.
+message GoogleLoginRequest {}
+
+// GoogleLoginResponse contains the OAuth URL.
+message GoogleLoginResponse {
+  // Whether the request was successful.
+  bool success = 1;
+  // OAuth URL data.
+  GoogleLoginData data = 2;
+}
+
+// GoogleLoginData contains the Google OAuth URL.
+message GoogleLoginData {
+  // The Google OAuth authorization URL.
+  string url = 1;
+}
+
+// GoogleCallbackRequest contains the OAuth callback code.
+message GoogleCallbackRequest {
+  // The authorization code from Google OAuth callback.
+  string code = 1;
+}
+
+// LogoutRequest contains the session to terminate.
+message LogoutRequest {
+  // Session ID to terminate.
+  string session_id = 1;
+}
+
+// LogoutAllRequest contains the user ID for bulk logout.
+message LogoutAllRequest {
+  // User ID whose sessions should be terminated.
+  string user_id = 1;
+}
+
+// LogoutResponse contains the logout result.
+message LogoutResponse {
+  // Whether logout was successful.
+  bool success = 1;
+  // Human-readable message.
+  string message = 2;
+}
+
+// ListSessionsRequest contains session list filters.
+message ListSessionsRequest {
+  // Page number (1-indexed).
+  int32 page = 1;
+  // Number of items per page.
+  int32 per_page = 2;
+  // Include blocked sessions in results.
+  bool include_blocked = 3;
+  // Include expired sessions in results.
+  bool include_expired = 4;
+}
+
+// ListSessionsResponse contains paginated sessions.
+message ListSessionsResponse {
+  // Whether the request was successful.
+  bool success = 1;
+  // Human-readable message.
+  string message = 2;
+  // List of sessions.
+  repeated Session data = 3;
+  // Pagination metadata.
+  ethos.common.v1.Meta meta = 4;
+}
+
+// Session represents a user session.
+message Session {
+  // Unique session identifier.
+  string session_id = 1;
+  // Browser/client user agent string.
+  string user_agent = 2;
+  // Client IP address.
+  string client_ip = 3;
+  // Whether the session is blocked.
+  bool is_blocked = 4;
+  // Session expiration time.
+  google.protobuf.Timestamp expires_at = 5;
+  // Session creation time.
+  google.protobuf.Timestamp created_at = 6;
+  // Whether the session is currently active.
+  bool is_active = 7;
+  // Whether this is the current session.
+  bool is_current = 8;
+}
+
+// RevokeOtherSessionsRequest is empty - uses auth context.
+message RevokeOtherSessionsRequest {}
+
+// RevokeOtherSessionsResponse contains the count of revoked sessions.
+message RevokeOtherSessionsResponse {
+  // Whether the operation was successful.
+  bool success = 1;
+  // Human-readable message.
+  string message = 2;
+  // Number of sessions that were revoked.
+  int32 revoked_count = 3;
+}
+
+// GetProfileRequest is empty - uses auth context.
+message GetProfileRequest {}
+
+// ProfileResponse contains user profile data.
+message ProfileResponse {
+  // Whether the request was successful.
+  bool success = 1;
+  // Human-readable message.
+  string message = 2;
+  // User profile data.
+  ProfileData data = 3;
+}
+
+// ProfileData contains user profile information.
+message ProfileData {
+  // User identifier.
+  string user_id = 1;
+  // User's display name.
+  string name = 2;
+  // User's email address.
+  string email = 3;
+  // User's timezone in IANA format (e.g., Asia/Jakarta).
+  string timezone = 4;
+  // Account creation time.
+  google.protobuf.Timestamp created_at = 5;
+}
+
+// UpdateProfileRequest contains profile update data.
+message UpdateProfileRequest {
+  // New display name (optional).
+  optional string name = 1;
+  // New email address (optional).
+  optional string email = 2;
+  // New timezone in IANA format (optional).
+  optional string timezone = 3;
+}
+
+// ChangePasswordRequest contains password change data.
+message ChangePasswordRequest {
+  // Current password for verification.
+  string current_password = 1;
+  // New password (min 8 chars).
+  string new_password = 2;
+}
+
+// VerifyEmailRequest contains email verification data.
+message VerifyEmailRequest {
+  // Email address to verify.
+  string email = 1;
+  // Verification code.
+  string code = 2;
+}
+
+// ResendVerificationRequest contains the email to resend verification to.
+message ResendVerificationRequest {
+  // Email address to resend verification to.
+  string email = 1;
+}
+
+// ForgotPasswordRequest contains the email for password reset.
+message ForgotPasswordRequest {
+  // Email address for password reset.
+  string email = 1;
+}
+
+// ResetPasswordRequest contains password reset data.
+message ResetPasswordRequest {
+  // Email address.
+  string email = 1;
+  // Password reset code.
+  string code = 2;
+  // New password (min 8 chars).
+  string new_password = 3;
+}
+
+// ExportUserDataRequest is empty - uses auth context.
+message ExportUserDataRequest {}
+
+// ExportUserDataResponse contains exported user data.
+message ExportUserDataResponse {
+  // Whether the export was successful.
+  bool success = 1;
+  // Exported data as JSON.
+  bytes data = 2;
+}
+
+// DeleteAccountRequest requires password confirmation.
+message DeleteAccountRequest {
+  // Password confirmation for account deletion.
+  string password = 1;
+}

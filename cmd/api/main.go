@@ -4,22 +4,33 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/hibiken/asynq"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/reflection"
+	"google.golang.org/protobuf/encoding/protojson"
+
 	"github.com/semmidev/ethos-go/config"
 	authtask "github.com/semmidev/ethos-go/internal/auth/adapters/task"
 	authports "github.com/semmidev/ethos-go/internal/auth/ports"
 	authsvc "github.com/semmidev/ethos-go/internal/auth/service"
 	"github.com/semmidev/ethos-go/internal/common/database"
+	"github.com/semmidev/ethos-go/internal/common/grpcutil"
 	"github.com/semmidev/ethos-go/internal/common/logger"
 	"github.com/semmidev/ethos-go/internal/common/metrics"
 	"github.com/semmidev/ethos-go/internal/common/observability"
 	"github.com/semmidev/ethos-go/internal/common/outbox"
+	authv1 "github.com/semmidev/ethos-go/internal/generated/grpc/ethos/auth/v1"
+	habitsv1 "github.com/semmidev/ethos-go/internal/generated/grpc/ethos/habits/v1"
+	notificationsv1 "github.com/semmidev/ethos-go/internal/generated/grpc/ethos/notifications/v1"
 	habittask "github.com/semmidev/ethos-go/internal/habits/adapters/task"
 	habitports "github.com/semmidev/ethos-go/internal/habits/ports"
 	habitsvc "github.com/semmidev/ethos-go/internal/habits/service"
@@ -133,7 +144,7 @@ func run(ctx context.Context, _, _ io.Writer) error {
 
 	// Initialize Auth module
 	authApp := authsvc.NewApplication(ctx, cfg, db, authTaskDispatcher, eventPublisher, appLogger, metricsClient)
-	authServer := authports.NewAuthOpenAPIServer(
+	authGRPCServer := authports.NewAuthGRPCServer(
 		authApp.Commands.Register,
 		authApp.Commands.Login,
 		authApp.Commands.Logout,
@@ -155,27 +166,81 @@ func run(ctx context.Context, _, _ io.Writer) error {
 
 	// Initialize Habits module
 	habitsApp := habitsvc.NewApplication(ctx, db, habitDispatcher, eventPublisher, appLogger, metricsClient)
-	habitsServer := habitports.NewOpenAPIServer(habitsApp)
+	habitsGRPCServer := habitports.NewHabitsGRPCServer(habitsApp)
 
 	// Initialize Notifications module
 	notificationsApp := notificationsvc.NewApplication(db, appLogger, metricsClient, cfg)
-	notificationsServer := notificationports.NewNotificationOpenAPIServer(notificationsApp)
+	notificationsGRPCServer := notificationports.NewNotificationsGRPCServer(notificationsApp)
 
-	// Setup router
+	// Create gRPC server
+	grpcServer := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(
+			authports.UnaryAuthInterceptor(authApp.AuthService),
+		),
+	)
+
+	// Register gRPC services
+	authv1.RegisterAuthServiceServer(grpcServer, authGRPCServer)
+	habitsv1.RegisterHabitsServiceServer(grpcServer, habitsGRPCServer)
+	notificationsv1.RegisterNotificationsServiceServer(grpcServer, notificationsGRPCServer)
+	reflection.Register(grpcServer) // Enable gRPC reflection for debugging
+
+	// Start gRPC server
+	grpcPort := ":50051"
+	grpcListener, err := net.Listen("tcp", grpcPort)
+	if err != nil {
+		return fmt.Errorf("failed to listen on gRPC port: %w", err)
+	}
+
+	go func() {
+		appLogger.Info(ctx, "starting gRPC server", logger.Field{Key: "port", Value: grpcPort})
+		if err := grpcServer.Serve(grpcListener); err != nil {
+			appLogger.Error(ctx, err, "gRPC server error")
+		}
+	}()
+
+	// Create gRPC-Gateway mux
+	gwMux := runtime.NewServeMux(
+		runtime.WithIncomingHeaderMatcher(customHeaderMatcher),
+		runtime.WithErrorHandler(grpcutil.CustomHTTPError),
+		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
+			MarshalOptions: protojson.MarshalOptions{
+				UseProtoNames:   true,
+				EmitUnpopulated: true,
+			},
+			UnmarshalOptions: protojson.UnmarshalOptions{
+				DiscardUnknown: true,
+			},
+		}),
+	)
+
+	// Connect gRPC-Gateway to gRPC server
+	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+	grpcEndpoint := "localhost" + grpcPort
+
+	if err := authv1.RegisterAuthServiceHandlerFromEndpoint(ctx, gwMux, grpcEndpoint, opts); err != nil {
+		return fmt.Errorf("failed to register auth gateway: %w", err)
+	}
+	if err := habitsv1.RegisterHabitsServiceHandlerFromEndpoint(ctx, gwMux, grpcEndpoint, opts); err != nil {
+		return fmt.Errorf("failed to register habits gateway: %w", err)
+	}
+	if err := notificationsv1.RegisterNotificationsServiceHandlerFromEndpoint(ctx, gwMux, grpcEndpoint, opts); err != nil {
+		return fmt.Errorf("failed to register notifications gateway: %w", err)
+	}
+
+	// Create HTTP router with gRPC-Gateway
 	router := NewRouter(RouterConfig{
-		Config:              cfg,
-		AuthServer:          authServer,
-		HabitsServer:        habitsServer,
-		NotificationsServer: notificationsServer,
-		AuthMiddleware:      authApp.AuthMiddleware,
-		OTELProvider:        otelProvider,
-		Logger:              appLogger,
+		Config:         cfg,
+		GatewayMux:     gwMux,
+		OTELProvider:   otelProvider,
+		Logger:         appLogger,
+		AuthMiddleware: authApp.AuthMiddleware,
 	})
 
 	// Create HTTP server
 	httpServer := NewServer(cfg, router, appLogger)
 
-	// Start server in a goroutine
+	// Start HTTP server in a goroutine
 	serverErrors := make(chan error, 1)
 	go func() {
 		if err := httpServer.Start(ctx); err != nil && err != http.ErrServerClosed {
@@ -195,10 +260,24 @@ func run(ctx context.Context, _, _ io.Writer) error {
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer shutdownCancel()
 
+	// Stop gRPC server
+	grpcServer.GracefulStop()
+	appLogger.Info(ctx, "gRPC server stopped")
+
 	if err := httpServer.Shutdown(shutdownCtx); err != nil {
 		return fmt.Errorf("server forced to shutdown: %w", err)
 	}
 
 	appLogger.Info(ctx, "server stopped gracefully")
 	return nil
+}
+
+// customHeaderMatcher passes specific headers to gRPC metadata
+func customHeaderMatcher(key string) (string, bool) {
+	switch key {
+	case "Authorization", "X-Request-Id", "X-Session-Id":
+		return key, true
+	default:
+		return runtime.DefaultHeaderMatcher(key)
+	}
 }

@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package ethos.common.v1;
+
+option go_package = "github.com/semmidev/ethos-go/internal/generated/grpc/ethos/common/v1;commonv1";
+
+// Empty message for requests that require no parameters.
+message Empty {}
+
+// SuccessResponse for operations that return only success status.
+message SuccessResponse {
+  // Whether the operation was successful.
+  bool success = 1;
+  // Human-readable message describing the result.
+  string message = 2;
+}
