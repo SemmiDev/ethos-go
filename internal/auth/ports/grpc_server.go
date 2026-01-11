@@ -6,6 +6,7 @@ import (
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/semmidev/ethos-go/internal/auth/app/command"
@@ -457,14 +458,24 @@ func (s *AuthGRPCServer) ExportUserData(ctx context.Context, req *authv1.ExportU
 		return nil, toGRPCError(err)
 	}
 
-	data, err := json.Marshal(result)
+	dataBytes, err := json.Marshal(result)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to serialize user data")
 	}
 
+	var dataMap map[string]interface{}
+	if err := json.Unmarshal(dataBytes, &dataMap); err != nil {
+		return nil, status.Error(codes.Internal, "failed to process user data")
+	}
+
+	dataStruct, err := structpb.NewStruct(dataMap)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed to create response struct")
+	}
+
 	return &authv1.ExportUserDataResponse{
 		Success: true,
-		Data:    data,
+		Data:    dataStruct,
 	}, nil
 }
 

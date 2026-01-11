@@ -3,6 +3,7 @@ syntax = "proto3";
 package ethos.auth.v1;
 
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
 import "ethos/common/v1/pagination.proto";
 
 option go_package = "github.com/semmidev/ethos-go/internal/generated/grpc/ethos/auth/v1;authv1";
@@ -250,7 +251,7 @@ message ExportUserDataResponse {
   // Whether the export was successful.
   bool success = 1;
   // Exported data as JSON.
-  bytes data = 2;
+  google.protobuf.Struct data = 2;
 }
 
 // DeleteAccountRequest requires password confirmation.

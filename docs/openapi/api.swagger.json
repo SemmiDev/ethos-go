@@ -1624,8 +1624,7 @@
           "description": "Whether the export was successful."
         },
         "data": {
-          "type": "string",
-          "format": "byte",
+          "type": "object",
           "description": "Exported data as JSON."
         }
       },

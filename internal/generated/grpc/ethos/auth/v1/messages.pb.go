@@ -10,6 +10,7 @@ import (
 	v1 "github.com/semmidev/ethos-go/internal/generated/grpc/ethos/common/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	structpb "google.golang.org/protobuf/types/known/structpb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
@@ -1650,7 +1651,7 @@ type ExportUserDataResponse struct {
 	// Whether the export was successful.
 	Success bool `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
 	// Exported data as JSON.
-	Data          []byte `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`
+	Data          *structpb.Struct `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1692,7 +1693,7 @@ func (x *ExportUserDataResponse) GetSuccess() bool {
 	return false
 }
 
-func (x *ExportUserDataResponse) GetData() []byte {
+func (x *ExportUserDataResponse) GetData() *structpb.Struct {
 	if x != nil {
 		return x.Data
 	}
@@ -1749,7 +1750,7 @@ var File_ethos_auth_v1_messages_proto protoreflect.FileDescriptor
 
 const file_ethos_auth_v1_messages_proto_rawDesc = "" +
 	"\n" +
-	"\x1cethos/auth/v1/messages.proto\x12\rethos.auth.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a ethos/common/v1/pagination.proto\"W\n" +
+	"\x1cethos/auth/v1/messages.proto\x12\rethos.auth.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a ethos/common/v1/pagination.proto\"W\n" +
 	"\x0fRegisterRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12\x1a\n" +
@@ -1855,10 +1856,10 @@ const file_ethos_auth_v1_messages_proto_rawDesc = "" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12\x12\n" +
 	"\x04code\x18\x02 \x01(\tR\x04code\x12!\n" +
 	"\fnew_password\x18\x03 \x01(\tR\vnewPassword\"\x17\n" +
-	"\x15ExportUserDataRequest\"F\n" +
+	"\x15ExportUserDataRequest\"_\n" +
 	"\x16ExportUserDataResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x12\n" +
-	"\x04data\x18\x02 \x01(\fR\x04data\"2\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12+\n" +
+	"\x04data\x18\x02 \x01(\v2\x17.google.protobuf.StructR\x04data\"2\n" +
 	"\x14DeleteAccountRequest\x12\x1a\n" +
 	"\bpassword\x18\x01 \x01(\tR\bpasswordB\xc3\x01\n" +
 	"\x11com.ethos.auth.v1B\rMessagesProtoP\x01ZIgithub.com/semmidev/ethos-go/internal/generated/grpc/ethos/auth/v1;authv1\xa2\x02\x03EAX\xaa\x02\rEthos.Auth.V1\xca\x02\rEthos\\Auth\\V1\xe2\x02\x19Ethos\\Auth\\V1\\GPBMetadata\xea\x02\x0fEthos::Auth::V1b\x06proto3"
@@ -1909,6 +1910,7 @@ var file_ethos_auth_v1_messages_proto_goTypes = []any{
 	(*DeleteAccountRequest)(nil),        // 29: ethos.auth.v1.DeleteAccountRequest
 	(*v1.Meta)(nil),                     // 30: ethos.common.v1.Meta
 	(*timestamppb.Timestamp)(nil),       // 31: google.protobuf.Timestamp
+	(*structpb.Struct)(nil),             // 32: google.protobuf.Struct
 }
 var file_ethos_auth_v1_messages_proto_depIdxs = []int32{
 	2,  // 0: ethos.auth.v1.RegisterResponse.data:type_name -> ethos.auth.v1.RegisterData
@@ -1920,11 +1922,12 @@ var file_ethos_auth_v1_messages_proto_depIdxs = []int32{
 	31, // 6: ethos.auth.v1.Session.created_at:type_name -> google.protobuf.Timestamp
 	20, // 7: ethos.auth.v1.ProfileResponse.data:type_name -> ethos.auth.v1.ProfileData
 	31, // 8: ethos.auth.v1.ProfileData.created_at:type_name -> google.protobuf.Timestamp
-	9,  // [9:9] is the sub-list for method output_type
-	9,  // [9:9] is the sub-list for method input_type
-	9,  // [9:9] is the sub-list for extension type_name
-	9,  // [9:9] is the sub-list for extension extendee
-	0,  // [0:9] is the sub-list for field type_name
+	32, // 9: ethos.auth.v1.ExportUserDataResponse.data:type_name -> google.protobuf.Struct
+	10, // [10:10] is the sub-list for method output_type
+	10, // [10:10] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_ethos_auth_v1_messages_proto_init() }
