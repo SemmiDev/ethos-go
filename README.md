@@ -274,6 +274,192 @@ func (s *AuthGRPCServer) Login(ctx, req) (*LoginResponse, error) {
 
 See **[CLAUDE.md](CLAUDE.md)** for detailed development guidelines.
 
+### Module Communication Patterns
+
+Modules communicate via **3 primary mechanisms**:
+
+```mermaid
+graph LR
+    subgraph "Auth Module"
+        A1[Command Handler]
+        A2[Publisher]
+    end
+
+    subgraph "Shared Interfaces"
+        SI[events.Publisher]
+        EV[events.Event]
+    end
+
+    subgraph "Message Broker"
+        NATS[NATS/Redis]
+    end
+
+    subgraph "Notifications Module"
+        N1[Event Consumer]
+        N2[Email Service]
+    end
+
+    A1 --> A2
+    A2 -->|implements| SI
+    A2 --> NATS
+    NATS --> N1
+    N1 --> N2
+```
+
+#### 1. Event-Driven Communication (Loose Coupling)
+
+Modules publish domain events; other modules subscribe and react:
+
+```go
+// internal/common/events/publisher.go - Shared interface
+type Publisher interface {
+    Publish(ctx context.Context, event Event) error
+    PublishAll(ctx context.Context, events []Event) error
+    Close() error
+}
+
+// internal/common/events/event.go - Base event interface
+type Event interface {
+    EventID() string
+    EventType() string      // e.g., "auth.user.registered"
+    OccurredAt() time.Time
+    AggregateID() string    // e.g., user ID
+    AggregateType() string  // e.g., "user"
+}
+```
+
+**Auth Module publishes events:**
+
+```go
+// internal/auth/domain/events/user_events.go
+type UserRegistered struct {
+    events.BaseEvent
+    UserID       string `json:"user_id"`
+    Email        string `json:"email"`
+    Name         string `json:"name"`
+    AuthProvider string `json:"auth_provider"`
+}
+
+func NewUserRegistered(userID, email, name, authProvider string) UserRegistered {
+    return UserRegistered{
+        BaseEvent:    events.NewBaseEvent("auth.user.registered", "user", userID),
+        UserID:       userID,
+        Email:        email,
+        Name:         name,
+        AuthProvider: authProvider,
+    }
+}
+```
+
+**Command handler uses the publisher:**
+
+```go
+// internal/auth/app/command/register.go
+type registerHandler struct {
+    userRepo  user.Repository
+    publisher events.Publisher  // Injected dependency
+}
+
+func (h registerHandler) Handle(ctx context.Context, cmd RegisterCommand) (*RegisterResult, error) {
+    // ... create user logic ...
+
+    // Publish event (other modules can react)
+    event := authevents.NewUserRegistered(
+        newUser.UserID().String(),
+        newUser.Email(),
+        newUser.Name(),
+        "email",
+    )
+    _ = h.publisher.Publish(ctx, event)
+
+    return &RegisterResult{UserID: newUser.UserID()}, nil
+}
+```
+
+**Notifications Module listens and reacts:**
+
+```go
+// internal/notifications/consumer.go
+func (c *Consumer) handleUserRegistered(ctx context.Context, event events.UserRegistered) error {
+    // Send welcome email
+    return c.emailService.SendWelcomeEmail(ctx, event.Email, event.Name)
+}
+```
+
+#### 2. Shared Interfaces (Common Package)
+
+Modules depend on shared abstractions, not concrete implementations:
+
+```go
+// internal/common/events/publisher.go
+type Publisher interface { ... }
+
+// internal/common/database/dbtx.go
+type DBTX interface {
+    ExecContext(ctx, query, args...) (sql.Result, error)
+    QueryRowxContext(ctx, query, args...) *sqlx.Row
+    // ...
+}
+
+// internal/common/validator/validator.go
+type Validator struct { ... }
+```
+
+**Modules import only the interface, not the implementation:**
+
+```go
+// Auth module uses Publisher interface
+import "github.com/semmidev/ethos-go/internal/common/events"
+
+type loginHandler struct {
+    publisher events.Publisher  // Interface, not NATSPublisher
+}
+```
+
+#### 3. Cross-Module Data Access (Anti-Corruption Layer)
+
+When modules need data from other modules, use **read-only interfaces**:
+
+```go
+// Habits module needs user timezone (owned by Auth)
+// Option A: Query via shared read interface
+type UserReader interface {
+    FindByID(ctx context.Context, userID uuid.UUID) (*User, error)
+}
+
+// Option B: Include in JWT claims (preferred for frequently accessed data)
+type TokenClaims struct {
+    UserID    uuid.UUID
+    Timezone  string  // Cached from Auth module
+}
+```
+
+#### Communication Pattern Summary
+
+| Pattern               | Use Case                                 | Example                               |
+| --------------------- | ---------------------------------------- | ------------------------------------- |
+| **Events**            | Async notifications, decoupled reactions | `UserRegistered` → Send welcome email |
+| **Shared Interfaces** | Common abstractions                      | `Publisher`, `DBTX`, `Validator`      |
+| **Read Interfaces**   | Cross-module queries                     | `UserReader` for timezone lookup      |
+| **JWT Claims**        | Frequently accessed user data            | UserID, Timezone in token             |
+
+#### Why NOT Direct Module Imports?
+
+```go
+// ❌ Bad: Habits module imports Auth internals
+import "github.com/semmidev/ethos-go/internal/auth/domain/user"
+
+// ✅ Good: Habits module uses shared interface or events
+import "github.com/semmidev/ethos-go/internal/common/events"
+```
+
+**Benefits:**
+
+- Modules can be developed/tested independently
+- Changes in one module don't break others
+- Easy to replace implementations (NATS → Kafka)
+- Clear module boundaries for future microservices split
+
 ## Tech Stack
 
 | Component | Tech                     |
