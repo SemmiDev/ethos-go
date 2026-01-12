@@ -82,7 +82,53 @@ make build
 
 ## Architecture
 
-Ethos adheres to **Clean Architecture**:
+Ethos adheres to **Clean/Hexagonal Architecture** with **CQRS**:
+
+```mermaid
+graph TB
+    subgraph "Ports (Driving Adapters)"
+        GRPC["gRPC Server"]
+        HTTP["HTTP/REST Gateway"]
+    end
+
+    subgraph "Application Layer"
+        CMD["Commands<br/>(Write Operations)"]
+        QRY["Queries<br/>(Read Operations)"]
+        DEC["Decorators<br/>(Logging, Metrics)"]
+    end
+
+    subgraph "Domain Layer"
+        ENT["Entities<br/>(User, Habit, Session)"]
+        SVC["Domain Services"]
+        PORT["Port Interfaces<br/>(Repository, Reader, Writer)"]
+    end
+
+    subgraph "Adapters (Driven)"
+        REPO["PostgreSQL<br/>Repositories"]
+        JWT["JWT Token<br/>Issuer"]
+        HASH["BCrypt<br/>Hasher"]
+        OAUTH["Google OAuth"]
+        CACHE["Redis Cache"]
+    end
+
+    GRPC --> CMD
+    GRPC --> QRY
+    HTTP --> CMD
+    HTTP --> QRY
+
+    CMD --> DEC
+    QRY --> DEC
+    DEC --> ENT
+    DEC --> SVC
+    CMD --> PORT
+    QRY --> PORT
+
+    PORT -.->|implements| REPO
+    PORT -.->|implements| JWT
+    PORT -.->|implements| HASH
+    PORT -.->|implements| OAUTH
+    PORT -.->|implements| CACHE
+```
 
 ```bash
 ethos-go/
