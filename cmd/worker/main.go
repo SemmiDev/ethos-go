@@ -22,6 +22,7 @@ import (
 	"github.com/semmidev/ethos-go/internal/common/outbox"
 	habittask "github.com/semmidev/ethos-go/internal/habits/adapters/task"
 	habitsvc "github.com/semmidev/ethos-go/internal/habits/service"
+	notifadapter "github.com/semmidev/ethos-go/internal/notifications/adapters"
 	notiftask "github.com/semmidev/ethos-go/internal/notifications/adapters/task"
 	notificationsvc "github.com/semmidev/ethos-go/internal/notifications/service"
 )
@@ -70,6 +71,13 @@ func run(ctx context.Context, _, _ io.Writer) error {
 	// Initialize Dependencies
 	metricsClient := metrics.NewPrometheusMetricsClient()
 	sessionRepo := authadapter.NewSessionPostgresRepository(db)
+	userRepo := authadapter.NewUserPostgresRepository(db)
+
+	// Create UserProvider adapter - this allows other modules to access user data via interface
+	userProvider := authadapter.NewUserProviderAdapter(userRepo)
+
+	// Create notification repository for cross-module communication
+	notifRepo := notifadapter.NewNotificationPostgresRepository(db)
 
 	// Initialize NATS
 	var eventPublisher events.Publisher
@@ -111,8 +119,9 @@ func run(ctx context.Context, _, _ io.Writer) error {
 			defer eventConsumer.Close()
 			appLogger.Info(ctx, "NATS consumer initialized")
 
-			// Register Event Handlers
-			eventConsumer.RegisterHandler(handlers.NewUserRegisteredHandler(appLogger))
+			// Register Event Handlers with cross-module dependencies
+			// UserRegisteredHandler: uses UserProvider (Auth) + NotificationRepository (Notifications)
+			eventConsumer.RegisterHandler(handlers.NewUserRegisteredHandler(appLogger, userProvider, notifRepo))
 			eventConsumer.RegisterHandler(handlers.NewHabitCreatedHandler(appLogger))
 			eventConsumer.RegisterHandler(handlers.NewHabitCompletedHandler(appLogger))
 
