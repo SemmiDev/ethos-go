@@ -57,22 +57,26 @@ export function AnalyticsPage() {
             </div>
 
             {/* Simple Bar Chart */}
-            <div className="flex items-end justify-between h-48 pt-4">
-              {weeklyDaysLabels.map((day, index) => (
-                <div key={day} className="flex flex-col items-center flex-1 group">
-                  <div className="relative w-8">
-                    <div
-                      className="w-full bg-primary/20 group-hover:bg-primary transition-colors duration-200 rounded-t"
-                      style={{ height: `${Math.max(weeklyData[index] || 0, 4)}%` }}
-                    />
-                    {/* Tooltip */}
-                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-base-content text-base-100 text-xs px-2 py-1 rounded whitespace-nowrap">
-                      {weeklyData[index] || 0}%
+            <div className="flex items-end justify-between gap-2" style={{ height: '180px', paddingTop: '16px' }}>
+              {weeklyDaysLabels.map((day, index) => {
+                const percentage = weeklyData[index] || 0;
+                const maxBarHeight = 140; // Maximum bar height in pixels
+                const barHeight = Math.max((percentage / 100) * maxBarHeight, 4); // Min 4px for visibility
+
+                return (
+                  <div key={day} className="flex flex-col items-center flex-1 group h-full justify-end">
+                    <div className="relative flex flex-col items-center">
+                      {/* Tooltip */}
+                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-base-content text-base-100 text-xs px-2 py-1 rounded whitespace-nowrap z-10">
+                        {percentage}%
+                      </div>
+                      {/* Bar */}
+                      <div className="w-8 bg-primary/20 group-hover:bg-primary transition-all duration-300 rounded-t" style={{ height: `${barHeight}px` }} />
                     </div>
+                    <span className="text-xs text-base-content/50 mt-2">{day}</span>
                   </div>
-                  <span className="text-xs text-base-content/50 mt-2">{day}</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Average line */}
