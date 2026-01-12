@@ -130,15 +130,147 @@ graph TB
     PORT -.->|implements| CACHE
 ```
 
+### Project Structure
+
 ```bash
 ethos-go/
+├── cmd/                    # Application entry points
+│   ├── server/             # Main API server
+│   └── worker/             # Background job worker
 ├── internal/
-│   ├── {module}/       # Feature Modules (Auth, Habits)
-│   │   ├── domain/     # Business Logic (Pure Go)
-│   │   ├── app/        # Use Cases (CQRS)
-│   │   ├── adapters/   # DB Implementation
-│   │   └── ports/      # gRPC Servers & Handlers
+│   ├── auth/               # Authentication module
+│   ├── habits/             # Habit tracking module
+│   ├── notifications/      # Notification module
+│   ├── common/             # Shared utilities
+│   └── generated/          # Generated gRPC code
+├── api/                    # Protocol Buffer definitions
+├── migrations/             # Database migrations
+└── frontend/               # Embedded React application
 ```
+
+### Layer Responsibilities
+
+| Layer           | Directory   | Responsibility                                                             |
+| --------------- | ----------- | -------------------------------------------------------------------------- |
+| **Domain**      | `domain/`   | Business entities, rules, and port interfaces. Zero external dependencies. |
+| **Application** | `app/`      | Use cases (Commands/Queries), orchestrates domain logic.                   |
+| **Adapters**    | `adapters/` | Implements domain ports (PostgreSQL, JWT, BCrypt).                         |
+| **Ports**       | `ports/`    | Entry points (gRPC servers, HTTP handlers).                                |
+| **Service**     | `service/`  | Dependency injection and wiring.                                           |
+
+### Design Decisions
+
+#### 1. Domain Entity Encapsulation
+
+Entities use **private fields** with **getters/setters** to enforce invariants:
+
+```go
+// ✅ Good: Encapsulated entity
+type User struct {
+    userID  uuid.UUID  // Private
+    email   string
+}
+
+func (u *User) Email() string { return u.email }
+func (u *User) SetEmail(email string) { u.email = email }
+```
+
+**Why?** Prevents invalid state mutations and enforces business rules at the domain level.
+
+#### 2. Interface Segregation (ISP)
+
+Repository interfaces are split by read/write concerns:
+
+```go
+type UserReader interface {
+    FindByEmail(ctx context.Context, email string) (*User, error)
+    FindByID(ctx context.Context, userID uuid.UUID) (*User, error)
+}
+
+type UserWriter interface {
+    Create(ctx context.Context, user *User) error
+    Update(ctx context.Context, user *User) error
+}
+
+type Repository interface {
+    UserReader
+    UserWriter
+}
+```
+
+**Why?** Query handlers only need `UserReader`, avoiding unnecessary dependencies.
+
+#### 3. CQRS Pattern
+
+Commands (writes) and Queries (reads) are separated into distinct handlers:
+
+```go
+// Commands: Mutate state
+type Commands struct {
+    Register  RegisterHandler
+    Login     LoginHandler
+    // ...
+}
+
+// Queries: Read-only operations
+type Queries struct {
+    GetProfile   GetProfileHandler
+    ListSessions ListSessionsHandler
+    // ...
+}
+```
+
+**Why?** Enables independent scaling, clearer intent, and simpler testing.
+
+#### 4. Decorator Pattern for Cross-Cutting Concerns
+
+Logging, metrics, and tracing are wrapped around handlers:
+
+```go
+func NewLoginHandler(...) LoginHandler {
+    return decorator.ApplyCommandResultDecorators(
+        loginHandler{...},
+        logger,
+        metricsClient,
+    )
+}
+```
+
+**Why?** Keeps business logic clean; cross-cutting concerns are composable.
+
+#### 5. Dependency Inversion
+
+Domain defines interfaces; adapters implement them:
+
+```go
+// Domain defines the contract
+type TokenIssuer interface {
+    IssueAccessToken(ctx, userID, sessionID, expiresAt) (string, error)
+}
+
+// Adapter implements it
+type JWTTokenIssuer struct { ... }
+func (j *JWTTokenIssuer) IssueAccessToken(...) (string, error) { ... }
+```
+
+**Why?** Domain remains testable and framework-agnostic.
+
+#### 6. Thin Controllers (Ports)
+
+gRPC/HTTP handlers only translate requests and delegate to use cases:
+
+```go
+func (s *AuthGRPCServer) Login(ctx, req) (*LoginResponse, error) {
+    cmd := command.LoginCommand{Email: req.Email, Password: req.Password}
+    result, err := s.loginHandler.Handle(ctx, cmd)
+    if err != nil {
+        return nil, toGRPCError(err)
+    }
+    return &LoginResponse{AccessToken: result.AccessToken}, nil
+}
+```
+
+**Why?** Keeps transport concerns separate from business logic.
 
 See **[CLAUDE.md](CLAUDE.md)** for detailed development guidelines.
 
