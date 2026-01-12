@@ -76,6 +76,8 @@ func run(ctx context.Context, _, _ io.Writer) error {
 	appLogger.Info(ctx, "starting app",
 		logger.Field{Key: "env", Value: cfg.AppEnv},
 		logger.Field{Key: "version", Value: version},
+		logger.Field{Key: "commit", Value: commit},
+		logger.Field{Key: "build_time", Value: buildTime},
 	)
 
 	// Initialize OpenTelemetry
