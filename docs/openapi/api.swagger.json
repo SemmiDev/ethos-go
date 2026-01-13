@@ -1640,17 +1640,6 @@
       },
       "description": "ForgotPasswordRequest contains the email for password reset."
     },
-    "v1Frequency": {
-      "type": "string",
-      "enum": [
-        "FREQUENCY_UNSPECIFIED",
-        "FREQUENCY_DAILY",
-        "FREQUENCY_WEEKLY",
-        "FREQUENCY_MONTHLY"
-      ],
-      "default": "FREQUENCY_UNSPECIFIED",
-      "description": "Frequency represents habit recurrence patterns.\n\n - FREQUENCY_UNSPECIFIED: Unspecified frequency.\n - FREQUENCY_DAILY: Daily habit.\n - FREQUENCY_WEEKLY: Weekly habit.\n - FREQUENCY_MONTHLY: Monthly habit."
-    },
     "v1GetHabitLogsResponse": {
       "type": "object",
       "properties": {
@@ -1727,8 +1716,8 @@
           "description": "Habit description."
         },
         "frequency": {
-          "$ref": "#/definitions/v1Frequency",
-          "description": "Habit frequency."
+          "type": "string",
+          "description": "Habit frequency (daily, weekly, monthly)."
         },
         "targetCount": {
           "type": "integer",

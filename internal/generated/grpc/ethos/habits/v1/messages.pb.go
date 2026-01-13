@@ -89,8 +89,8 @@ type Habit struct {
 	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	// Habit description.
 	Description *string `protobuf:"bytes,3,opt,name=description,proto3,oneof" json:"description,omitempty"`
-	// Habit frequency.
-	Frequency Frequency `protobuf:"varint,4,opt,name=frequency,proto3,enum=ethos.habits.v1.Frequency" json:"frequency,omitempty"`
+	// Habit frequency (daily, weekly, monthly).
+	Frequency string `protobuf:"bytes,4,opt,name=frequency,proto3" json:"frequency,omitempty"`
 	// Target count per frequency period.
 	TargetCount int32 `protobuf:"varint,5,opt,name=target_count,json=targetCount,proto3" json:"target_count,omitempty"`
 	// Daily reminder time in HH:MM format.
@@ -156,11 +156,11 @@ func (x *Habit) GetDescription() string {
 	return ""
 }
 
-func (x *Habit) GetFrequency() Frequency {
+func (x *Habit) GetFrequency() string {
 	if x != nil {
 		return x.Frequency
 	}
-	return Frequency_FREQUENCY_UNSPECIFIED
+	return ""
 }
 
 func (x *Habit) GetTargetCount() int32 {
@@ -1984,12 +1984,12 @@ var File_ethos_habits_v1_messages_proto protoreflect.FileDescriptor
 
 const file_ethos_habits_v1_messages_proto_rawDesc = "" +
 	"\n" +
-	"\x1eethos/habits/v1/messages.proto\x12\x0fethos.habits.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a ethos/common/v1/pagination.proto\"\x8e\x03\n" +
+	"\x1eethos/habits/v1/messages.proto\x12\x0fethos.habits.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a ethos/common/v1/pagination.proto\"\xf2\x02\n" +
 	"\x05Habit\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12%\n" +
-	"\vdescription\x18\x03 \x01(\tH\x00R\vdescription\x88\x01\x01\x128\n" +
-	"\tfrequency\x18\x04 \x01(\x0e2\x1a.ethos.habits.v1.FrequencyR\tfrequency\x12!\n" +
+	"\vdescription\x18\x03 \x01(\tH\x00R\vdescription\x88\x01\x01\x12\x1c\n" +
+	"\tfrequency\x18\x04 \x01(\tR\tfrequency\x12!\n" +
 	"\ftarget_count\x18\x05 \x01(\x05R\vtargetCount\x12(\n" +
 	"\rreminder_time\x18\x06 \x01(\tH\x01R\freminderTime\x88\x01\x01\x12\x1b\n" +
 	"\tis_active\x18\a \x01(\bR\bisActive\x129\n" +
@@ -2207,25 +2207,24 @@ var file_ethos_habits_v1_messages_proto_goTypes = []any{
 	(*v1.Meta)(nil),                   // 30: ethos.common.v1.Meta
 }
 var file_ethos_habits_v1_messages_proto_depIdxs = []int32{
-	0,  // 0: ethos.habits.v1.Habit.frequency:type_name -> ethos.habits.v1.Frequency
-	29, // 1: ethos.habits.v1.Habit.created_at:type_name -> google.protobuf.Timestamp
-	29, // 2: ethos.habits.v1.Habit.updated_at:type_name -> google.protobuf.Timestamp
-	29, // 3: ethos.habits.v1.HabitLog.created_at:type_name -> google.protobuf.Timestamp
-	5,  // 4: ethos.habits.v1.WeeklyAnalytics.days:type_name -> ethos.habits.v1.DailyAnalytics
-	1,  // 5: ethos.habits.v1.ListHabitsResponse.data:type_name -> ethos.habits.v1.Habit
-	30, // 6: ethos.habits.v1.ListHabitsResponse.meta:type_name -> ethos.common.v1.Meta
-	1,  // 7: ethos.habits.v1.HabitResponse.data:type_name -> ethos.habits.v1.Habit
-	3,  // 8: ethos.habits.v1.HabitStatsResponse.data:type_name -> ethos.habits.v1.HabitStats
-	20, // 9: ethos.habits.v1.LogHabitResponse.data:type_name -> ethos.habits.v1.LogHabitData
-	2,  // 10: ethos.habits.v1.GetHabitLogsResponse.data:type_name -> ethos.habits.v1.HabitLog
-	30, // 11: ethos.habits.v1.GetHabitLogsResponse.meta:type_name -> ethos.common.v1.Meta
-	4,  // 12: ethos.habits.v1.DashboardResponse.data:type_name -> ethos.habits.v1.Dashboard
-	6,  // 13: ethos.habits.v1.WeeklyAnalyticsResponse.data:type_name -> ethos.habits.v1.WeeklyAnalytics
-	14, // [14:14] is the sub-list for method output_type
-	14, // [14:14] is the sub-list for method input_type
-	14, // [14:14] is the sub-list for extension type_name
-	14, // [14:14] is the sub-list for extension extendee
-	0,  // [0:14] is the sub-list for field type_name
+	29, // 0: ethos.habits.v1.Habit.created_at:type_name -> google.protobuf.Timestamp
+	29, // 1: ethos.habits.v1.Habit.updated_at:type_name -> google.protobuf.Timestamp
+	29, // 2: ethos.habits.v1.HabitLog.created_at:type_name -> google.protobuf.Timestamp
+	5,  // 3: ethos.habits.v1.WeeklyAnalytics.days:type_name -> ethos.habits.v1.DailyAnalytics
+	1,  // 4: ethos.habits.v1.ListHabitsResponse.data:type_name -> ethos.habits.v1.Habit
+	30, // 5: ethos.habits.v1.ListHabitsResponse.meta:type_name -> ethos.common.v1.Meta
+	1,  // 6: ethos.habits.v1.HabitResponse.data:type_name -> ethos.habits.v1.Habit
+	3,  // 7: ethos.habits.v1.HabitStatsResponse.data:type_name -> ethos.habits.v1.HabitStats
+	20, // 8: ethos.habits.v1.LogHabitResponse.data:type_name -> ethos.habits.v1.LogHabitData
+	2,  // 9: ethos.habits.v1.GetHabitLogsResponse.data:type_name -> ethos.habits.v1.HabitLog
+	30, // 10: ethos.habits.v1.GetHabitLogsResponse.meta:type_name -> ethos.common.v1.Meta
+	4,  // 11: ethos.habits.v1.DashboardResponse.data:type_name -> ethos.habits.v1.Dashboard
+	6,  // 12: ethos.habits.v1.WeeklyAnalyticsResponse.data:type_name -> ethos.habits.v1.WeeklyAnalytics
+	13, // [13:13] is the sub-list for method output_type
+	13, // [13:13] is the sub-list for method input_type
+	13, // [13:13] is the sub-list for extension type_name
+	13, // [13:13] is the sub-list for extension extendee
+	0,  // [0:13] is the sub-list for field type_name
 }
 
 func init() { file_ethos_habits_v1_messages_proto_init() }

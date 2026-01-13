@@ -27,8 +27,8 @@ message Habit {
   string name = 2;
   // Habit description.
   optional string description = 3;
-  // Habit frequency.
-  Frequency frequency = 4;
+  // Habit frequency (daily, weekly, monthly).
+  string frequency = 4;
   // Target count per frequency period.
   int32 target_count = 5;
   // Daily reminder time in HH:MM format.

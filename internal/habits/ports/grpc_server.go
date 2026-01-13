@@ -527,18 +527,10 @@ func (s *HabitsGRPCServer) GetWeeklyAnalytics(ctx context.Context, req *habitsv1
 
 // toProtoHabit converts a query.Habit to a protobuf Habit.
 func toProtoHabit(h query.Habit) *habitsv1.Habit {
-	freq := habitsv1.Frequency_FREQUENCY_DAILY
-	switch h.Frequency {
-	case "weekly":
-		freq = habitsv1.Frequency_FREQUENCY_WEEKLY
-	case "monthly":
-		freq = habitsv1.Frequency_FREQUENCY_MONTHLY
-	}
-
 	habit := &habitsv1.Habit{
 		Id:          h.HabitID,
 		Name:        h.Name,
-		Frequency:   freq,
+		Frequency:   h.Frequency,
 		TargetCount: int32(h.TargetCount),
 		IsActive:    h.IsActive,
 		CreatedAt:   timestamppb.New(h.CreatedAt),

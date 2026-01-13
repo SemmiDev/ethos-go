@@ -9,6 +9,7 @@ import (
 	"github.com/semmidev/ethos-go/internal/common/events"
 	"github.com/semmidev/ethos-go/internal/common/logger"
 	"github.com/semmidev/ethos-go/internal/common/validator"
+	"github.com/semmidev/ethos-go/internal/habits/adapters"
 	habitevents "github.com/semmidev/ethos-go/internal/habits/domain/events"
 	"github.com/semmidev/ethos-go/internal/habits/domain/habit"
 	"github.com/semmidev/ethos-go/internal/habits/domain/habitlog"
@@ -28,8 +29,7 @@ type LogHabit struct {
 type LogHabitHandler decorator.CommandHandler[LogHabit]
 
 type logHabitHandler struct {
-	habitRepo habit.Repository
-	logRepo   habitlog.Repository
+	uow       adapters.HabitsUnitOfWork
 	validator *validator.Validator
 	streakSvc *habit.StreakService
 	publisher events.Publisher
@@ -37,24 +37,19 @@ type logHabitHandler struct {
 
 // NewLogHabitHandler creates a new handler with decorators
 func NewLogHabitHandler(
-	habitRepo habit.Repository,
-	logRepo habitlog.Repository,
+	uow adapters.HabitsUnitOfWork,
 	validator *validator.Validator,
-	publisher events.Publisher, // Injected
+	publisher events.Publisher,
 	log logger.Logger,
 	metricsClient decorator.MetricsClient,
 ) LogHabitHandler {
-	if habitRepo == nil {
-		panic("nil habit repository")
-	}
-	if logRepo == nil {
-		panic("nil habit log repository")
+	if uow == nil {
+		panic("nil unit of work")
 	}
 
 	return decorator.ApplyCommandDecorators(
 		logHabitHandler{
-			habitRepo: habitRepo,
-			logRepo:   logRepo,
+			uow:       uow,
 			validator: validator,
 			streakSvc: habit.NewStreakService(),
 			publisher: publisher,
@@ -77,9 +72,8 @@ func (h logHabitHandler) Handle(ctx context.Context, cmd LogHabit) error {
 		return apperror.ValidationFailed(err.Error())
 	}
 
-	// Verify habit exists and belongs to user
-	_, err := h.habitRepo.GetHabit(ctx, cmd.HabitID, cmd.UserID)
-	if err != nil {
+	// Verify habit exists and belongs to user (read can be outside transaction)
+	if _, err := h.uow.Habits().GetHabit(ctx, cmd.HabitID, cmd.UserID); err != nil {
 		return err
 	}
 
@@ -96,50 +90,53 @@ func (h logHabitHandler) Handle(ctx context.Context, cmd LogHabit) error {
 		return err
 	}
 
-	if err := h.logRepo.AddHabitLog(ctx, newLog); err != nil {
-		return err
-	}
-
-	// Recalculate streaks and stats
-	// 1. Get habit aggregate (already fetched)
-	habitAgg, err := h.habitRepo.GetHabit(ctx, cmd.HabitID, cmd.UserID)
-	if err != nil {
-		return err // Should not happen as we checked above
-	}
-
-	// 2. Fetch all logs for this habit (needed for accurate streak calc)
-	logs, err := h.logRepo.ListHabitLogs(ctx, cmd.HabitID, cmd.UserID)
-	if err != nil {
-		return err
-	}
-
-	// 3. Fetch active vacations
-	vacations, err := h.habitRepo.ListVacations(ctx, cmd.HabitID)
-	if err != nil {
-		return err
-	}
-
-	// 4. Calculate stats
-	stats := h.streakSvc.CalculateStreak(habitAgg, logs, vacations, time.Now())
-
-	// 5. Persist stats
-	if err := h.habitRepo.UpsertStats(ctx, stats); err != nil {
-		return err
-	}
-
-	if err := h.habitRepo.UpsertStats(ctx, stats); err != nil {
-		return err
-	}
-
-	// Calculate total count for today
-	totalToday := 0
-	for _, l := range logs {
-		if l.LogDate().Equal(newLog.LogDate()) || (l.LogDate().Year() == newLog.LogDate().Year() && l.LogDate().YearDay() == newLog.LogDate().YearDay()) {
-			totalToday += l.Count()
+	// Use Unit of Work pattern for transactional consistency
+	var totalToday int
+	err = h.uow.WithTransaction(ctx, func(txUow adapters.HabitsUnitOfWork) error {
+		// 1. Add the log entry
+		if err := txUow.HabitLogs().AddHabitLog(ctx, newLog); err != nil {
+			return err
 		}
+
+		// 2. Get habit aggregate for streak calculation
+		habitAgg, err := txUow.Habits().GetHabit(ctx, cmd.HabitID, cmd.UserID)
+		if err != nil {
+			return err
+		}
+
+		// 3. Fetch all logs for this habit
+		logs, err := txUow.HabitLogs().ListHabitLogs(ctx, cmd.HabitID, cmd.UserID)
+		if err != nil {
+			return err
+		}
+
+		// 4. Fetch active vacations
+		vacations, err := txUow.Habits().ListVacations(ctx, cmd.HabitID)
+		if err != nil {
+			return err
+		}
+
+		// 5. Calculate and persist stats
+		stats := h.streakSvc.CalculateStreak(habitAgg, logs, vacations, time.Now())
+		if err := txUow.Habits().UpsertStats(ctx, stats); err != nil {
+			return err
+		}
+
+		// Calculate total count for today (for event)
+		for _, l := range logs {
+			if l.LogDate().Year() == newLog.LogDate().Year() && l.LogDate().YearDay() == newLog.LogDate().YearDay() {
+				totalToday += l.Count()
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return err
 	}
 
-	// Publish HabitCompleted event
+	// Publish event (outside transaction - fire-and-forget)
 	event := habitevents.NewHabitCompleted(
 		cmd.HabitID,
 		cmd.UserID,

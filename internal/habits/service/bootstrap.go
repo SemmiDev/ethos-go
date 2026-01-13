@@ -30,6 +30,9 @@ func NewApplication(
 	statsRepo := adapters.NewStatsRepository(db)
 	validate := validator.New("en")
 
+	// Create Unit of Work for commands that need transactional consistency
+	habitsUow := adapters.NewHabitsUnitOfWork(db)
+
 	// Create command handlers with decorators
 	return app.Application{
 		Commands: app.Commands{
@@ -68,8 +71,7 @@ func NewApplication(
 				metricsClient,
 			),
 			LogHabit: command.NewLogHabitHandler(
-				habitRepo,
-				habitLogRepo,
+				habitsUow, // Use Unit of Work for transactional consistency
 				validate,
 				eventPublisher,
 				log,

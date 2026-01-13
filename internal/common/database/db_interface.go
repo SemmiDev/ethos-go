@@ -51,42 +51,6 @@ type DBTX interface {
 	DriverName() string
 }
 
-// TxOptions represents transaction options for custom transaction configurations.
-type TxOptions struct {
-	// Isolation is the transaction isolation level.
-	// If zero, the driver or database's default level is used.
-	Isolation IsolationLevel
-
-	// ReadOnly indicates whether the transaction is read-only.
-	ReadOnly bool
-}
-
-// IsolationLevel is the transaction isolation level used in TxOptions.
-type IsolationLevel int
-
-// Various isolation levels that drivers may support.
-const (
-	LevelDefault IsolationLevel = iota
-	LevelReadUncommitted
-	LevelReadCommitted
-	LevelWriteCommitted
-	LevelRepeatableRead
-	LevelSnapshot
-	LevelSerializable
-	LevelLinearizable
-)
-
-// toSQLTxOptions converts TxOptions to *sql.TxOptions.
-func (o *TxOptions) toSQLTxOptions() *sql.TxOptions {
-	if o == nil {
-		return nil
-	}
-	return &sql.TxOptions{
-		Isolation: sql.IsolationLevel(o.Isolation),
-		ReadOnly:  o.ReadOnly,
-	}
-}
-
 // Compile-time checks to ensure *sqlx.DB and *sqlx.Tx implement DBTX.
 var (
 	_ DBTX = (*sqlx.DB)(nil)
