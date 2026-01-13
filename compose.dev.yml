@@ -25,10 +25,12 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      tempo:
+      jaeger:
         condition: service_healthy
       loki:
         condition: service_healthy
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=jaeger:4317
     healthcheck:
       test: ['CMD', 'wget', '-q', '--spider', 'http://localhost:8080/health']
       interval: 10s
@@ -118,7 +120,7 @@ services:
       start_period: 10s
 
   # ============================================================================
-  # LGTM Stack: Loki (Logs), Grafana (Visualization), Tempo (Traces), Prometheus (Metrics)
+  # LGTM Stack: Loki (Logs), Grafana (Visualization), Jaeger (Traces), Prometheus (Metrics)
   # ============================================================================
 
   # Loki - Log aggregation
@@ -163,27 +165,28 @@ services:
       retries: 5
       start_period: 15s
 
-  # Tempo - Distributed tracing backend
-  tempo:
-    container_name: ethosgo-tempo
-    image: grafana/tempo:2.4.0
+  # Jaeger - Distributed tracing backend
+  jaeger:
+    container_name: ethosgo-jaeger
+    image: jaegertracing/all-in-one:1.53
     ports:
-      - '3200:3200' # Tempo HTTP
-      - '4317:4317' # OTLP gRPC
-      - '4318:4318' # OTLP HTTP
-    command: ['-config.file=/etc/tempo/tempo.yaml']
-    volumes:
-      - ./observability/tempo-config.yaml:/etc/tempo/tempo.yaml:ro
-      - tempo-data:/tmp/tempo
+      - "16686:16686" # Web UI
+      - "14268:14268" # Collector HTTP
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+      - "9411:9411"   # Zipkin
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+      - METRICS_STORAGE_TYPE=prometheus
     networks:
       - ethosgo-network
     restart: unless-stopped
     healthcheck:
-      test: ['CMD', 'wget', '-q', '--spider', 'http://localhost:3200/ready']
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:14269/"] # Admin port
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 30s
+      start_period: 10s
 
   # Prometheus - Metrics collection and storage
   prometheus:
@@ -222,7 +225,7 @@ services:
     env_file:
       - .env
     environment:
-      - GF_FEATURE_TOGGLES_ENABLE=traceqlEditor tempoSearch tempoBackendSearch tempoServiceGraph traceToMetrics correlations
+      - GF_FEATURE_TOGGLES_ENABLE=traceqlEditor traceToMetrics correlations
     volumes:
       - ./observability/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml:ro
       - ./observability/grafana-dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml:ro
@@ -234,7 +237,7 @@ services:
     depends_on:
       loki:
         condition: service_healthy
-      tempo:
+      jaeger:
         condition: service_healthy
       prometheus:
         condition: service_healthy
@@ -257,8 +260,6 @@ volumes:
   ethosgo-nats-data-volume:
     driver: local
   loki-data:
-    driver: local
-  tempo-data:
     driver: local
   prometheus-data:
     driver: local

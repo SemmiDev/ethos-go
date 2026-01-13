@@ -16,7 +16,7 @@ datasources:
       # Enable exemplars for metrics-to-traces linking
       exemplarTraceIdDestinations:
         - name: trace_id
-          datasourceUid: tempo
+          datasourceUid: jaeger
 
   # ==========================================================================
   # Loki - Logs
@@ -31,28 +31,27 @@ datasources:
       maxLines: 1000
       # Derived fields for trace correlation
       derivedFields:
-        - datasourceUid: tempo
+        - datasourceUid: jaeger
           matcherRegex: '"trace_id":"([a-f0-9]+)"'
           matcherType: regex
           name: TraceID
           url: '$${__value.raw}'
-        - datasourceUid: tempo
+        - datasourceUid: jaeger
           matcherRegex: 'trace_id=([a-f0-9]+)'
           matcherType: regex
           name: TraceID
           url: '$${__value.raw}'
 
   # ==========================================================================
-  # Tempo - Traces
+  # Jaeger - Traces
   # ==========================================================================
-  - name: Tempo
-    type: tempo
+  - name: Jaeger
+    type: jaeger
     access: proxy
-    url: http://tempo:3200
-    uid: tempo
+    url: http://jaeger:16686
+    uid: jaeger
     editable: false
     jsonData:
-      httpMethod: GET
       # Traces to Logs correlation
       tracesToLogs:
         datasourceUid: loki
@@ -69,33 +68,7 @@ datasources:
         spanStartTimeShift: '-1h'
         spanEndTimeShift: '1h'
         lokiSearch: true
-      # Traces to Metrics correlation
-      tracesToMetrics:
-        datasourceUid: prometheus
-        spanStartTimeShift: '-1h'
-        spanEndTimeShift: '1h'
-        tags:
-          - key: service.name
-            value: service
-        queries:
-          - name: 'Request rate'
-            query: 'sum(rate(http_requests_total{service="$${__tags.service}"}[5m]))'
-          - name: 'Error rate'
-            query: 'sum(rate(http_requests_total{service="$${__tags.service}",http_status_code=~"5.."}[5m]))'
-          - name: 'P95 Latency'
-            query: 'histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{service="$${__tags.service}"}[5m])) by (le))'
-      # Service map (requires tempo metrics generator)
-      serviceMap:
-        datasourceUid: prometheus
       # Node graph visualization
       nodeGraph:
         enabled: true
-      # Search in Loki
-      lokiSearch:
-        datasourceUid: loki
-      # Search configuration
-      search:
-        hide: false
-      # Trace to profiles (if using Pyroscope)
-      # traceToProfiles:
-      #   datasourceUid: pyroscope
+
