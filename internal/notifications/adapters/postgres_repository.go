@@ -8,17 +8,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/semmidev/ethos-go/internal/common/apperror"
+	"github.com/semmidev/ethos-go/internal/common/database"
 	"github.com/semmidev/ethos-go/internal/common/model"
 	"github.com/semmidev/ethos-go/internal/notifications/domain"
 )
 
 type NotificationPostgresRepository struct {
-	db *sqlx.DB
+	db database.DBTX
 }
 
-func NewNotificationPostgresRepository(db *sqlx.DB) *NotificationPostgresRepository {
+func NewNotificationPostgresRepository(db database.DBTX) *NotificationPostgresRepository {
 	return &NotificationPostgresRepository{db: db}
 }
 

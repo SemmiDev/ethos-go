@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/semmidev/ethos-go/config"
 	"github.com/semmidev/ethos-go/internal/auth/adapters"
 	"github.com/semmidev/ethos-go/internal/auth/adapters/google"
@@ -14,6 +13,7 @@ import (
 	"github.com/semmidev/ethos-go/internal/auth/domain/gateway"
 	"github.com/semmidev/ethos-go/internal/auth/domain/session"
 	"github.com/semmidev/ethos-go/internal/auth/ports"
+	"github.com/semmidev/ethos-go/internal/common/database"
 	"github.com/semmidev/ethos-go/internal/common/decorator"
 	"github.com/semmidev/ethos-go/internal/common/events"
 	"github.com/semmidev/ethos-go/internal/common/logger"
@@ -24,7 +24,7 @@ import (
 func NewApplication(
 	_ context.Context,
 	cfg *config.Config,
-	db *sqlx.DB,
+	db database.DBTX,
 	dispatcher gateway.TaskDispatcher,
 	eventPublisher events.Publisher,
 	log logger.Logger,

@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 
-	"github.com/jmoiron/sqlx"
+	"github.com/semmidev/ethos-go/internal/common/database"
 	"github.com/semmidev/ethos-go/internal/common/decorator"
 	"github.com/semmidev/ethos-go/internal/common/events"
 	"github.com/semmidev/ethos-go/internal/common/logger"
@@ -18,7 +18,7 @@ import (
 // NewApplication creates and wires all dependencies for the habits module
 func NewApplication(
 	ctx context.Context,
-	db *sqlx.DB,
+	db database.DBTX,
 	dispatcher domaintask.TaskDispatcher,
 	eventPublisher events.Publisher, // Added eventPublisher
 	log logger.Logger,

@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/semmidev/ethos-go/internal/common/database"
 	"github.com/semmidev/ethos-go/internal/common/model"
 	"github.com/semmidev/ethos-go/internal/habits/app/query"
@@ -116,7 +115,7 @@ func (r *HabitPostgresRepository) UpdateHabit(
 	habitID, userID string,
 	updateFn func(ctx context.Context, h *habit.Habit) (*habit.Habit, error),
 ) error {
-	return database.RunInTx(ctx, r.db, func(tx *sqlx.Tx) error {
+	return database.RunInTx(ctx, r.db, func(tx database.DBTX) error {
 		var model habitModel
 		query := `SELECT * FROM habits WHERE habit_id = $1 FOR UPDATE`
 		err := tx.GetContext(ctx, &model, query, habitID)

@@ -44,6 +44,9 @@ type DBTX interface {
 	// Rebind transforms a query from QUESTION to the DB driver's bind type.
 	Rebind(query string) string
 
+	// NamedExecContext executes a named query.
+	NamedExecContext(ctx context.Context, query string, arg interface{}) (sql.Result, error)
+
 	// DriverName returns the driverName used by this DB.
 	DriverName() string
 }

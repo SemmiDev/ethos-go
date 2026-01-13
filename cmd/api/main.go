@@ -197,9 +197,10 @@ func initModules(
 	appLogger logger.Logger,
 ) (authapp.Application, habitsapp.Application, notificationsapp.Application) {
 	metricsClient := metrics.NewPrometheusMetricsClient()
+	tracedDB := database.NewTracedDBTX(db)
 
 	// Initialize Outbox publisher
-	outboxRepo := outbox.NewRepository(db)
+	outboxRepo := outbox.NewRepository(tracedDB)
 	eventPublisher := outbox.NewPublisher(outboxRepo)
 
 	// Initialize task dispatchers
@@ -207,9 +208,9 @@ func initModules(
 	authTaskDispatcher := authtask.NewAsynqTaskDispatcher(cfg, asynqClient)
 
 	// Initialize modules
-	authApp := authsvc.NewApplication(ctx, cfg, db, authTaskDispatcher, eventPublisher, appLogger, metricsClient)
-	habitsApp := habitsvc.NewApplication(ctx, db, habitDispatcher, eventPublisher, appLogger, metricsClient)
-	notificationsApp := notificationsvc.NewApplication(db, appLogger, metricsClient, cfg)
+	authApp := authsvc.NewApplication(ctx, cfg, tracedDB, authTaskDispatcher, eventPublisher, appLogger, metricsClient)
+	habitsApp := habitsvc.NewApplication(ctx, tracedDB, habitDispatcher, eventPublisher, appLogger, metricsClient)
+	notificationsApp := notificationsvc.NewApplication(tracedDB, appLogger, metricsClient, cfg)
 
 	return authApp, habitsApp, notificationsApp
 }

@@ -2,8 +2,6 @@ package database
 
 import (
 	"context"
-
-	"github.com/jmoiron/sqlx"
 )
 
 // TransactionProvider provides transaction management for command handlers.
@@ -29,16 +27,16 @@ import (
 // WARNING: This pattern should be used sparingly. In most cases, prefer the UpdateFn pattern
 // where transactions are handled entirely within a single repository method.
 type TransactionProvider struct {
-	db *sqlx.DB
+	db DBTX
 }
 
 // NewTransactionProvider creates a new TransactionProvider.
-func NewTransactionProvider(db *sqlx.DB) *TransactionProvider {
+func NewTransactionProvider(db DBTX) *TransactionProvider {
 	return &TransactionProvider{db: db}
 }
 
 // DB returns the underlying database connection.
-func (p *TransactionProvider) DB() *sqlx.DB {
+func (p *TransactionProvider) DB() DBTX {
 	return p.db
 }
 
@@ -47,7 +45,7 @@ func (p *TransactionProvider) DB() *sqlx.DB {
 //
 // Example:
 //
-//	err := provider.Transact(ctx, func(tx *sqlx.Tx) error {
+//	err := provider.Transact(ctx, func(tx database.DBTX) error {
 //	    userRepo := adapters.NewUserRepository(tx)
 //	    habitRepo := adapters.NewHabitRepository(tx)
 //
@@ -57,17 +55,17 @@ func (p *TransactionProvider) DB() *sqlx.DB {
 //	    }
 //	    return habitRepo.Create(ctx, habit)
 //	})
-func (p *TransactionProvider) Transact(ctx context.Context, fn func(tx *sqlx.Tx) error) error {
+func (p *TransactionProvider) Transact(ctx context.Context, fn func(tx DBTX) error) error {
 	return RunInTx(ctx, p.db, fn)
 }
 
 // TransactWithResult executes a function within a transaction and returns a result.
-func (p *TransactionProvider) TransactWithResult(ctx context.Context, fn func(tx *sqlx.Tx) (any, error)) (any, error) {
+func (p *TransactionProvider) TransactWithResult(ctx context.Context, fn func(tx DBTX) (any, error)) (any, error) {
 	return RunInTxWithResult(ctx, p.db, fn)
 }
 
 // TransactWithOptions executes a function within a transaction with custom options.
-func (p *TransactionProvider) TransactWithOptions(ctx context.Context, opts *TxOptions, fn func(tx *sqlx.Tx) error) error {
+func (p *TransactionProvider) TransactWithOptions(ctx context.Context, opts *TxOptions, fn func(tx DBTX) error) error {
 	return RunInTxWithOptions(ctx, p.db, opts, fn)
 }
 
@@ -81,7 +79,7 @@ func (p *TransactionProvider) TransactWithOptions(ctx context.Context, opts *TxO
 //	    AuditRepo *AuditLogRepository
 //	}
 //
-//	provider := NewGenericTransactionProvider(db, func(tx *sqlx.Tx) Adapters {
+//	provider := NewGenericTransactionProvider(db, func(tx database.DBTX) Adapters {
 //	    return Adapters{
 //	        UserRepo:  NewUserRepository(tx),
 //	        AuditRepo: NewAuditLogRepository(tx),
@@ -92,13 +90,13 @@ func (p *TransactionProvider) TransactWithOptions(ctx context.Context, opts *TxO
 //	    return adapters.UserRepo.Create(ctx, user)
 //	})
 type GenericTransactionProvider[T any] struct {
-	db         *sqlx.DB
-	adaptersFn func(tx *sqlx.Tx) T
+	db         DBTX
+	adaptersFn func(tx DBTX) T
 }
 
 // NewGenericTransactionProvider creates a new GenericTransactionProvider.
 // adaptersFn is a function that creates the adapters struct from a transaction.
-func NewGenericTransactionProvider[T any](db *sqlx.DB, adaptersFn func(tx *sqlx.Tx) T) *GenericTransactionProvider[T] {
+func NewGenericTransactionProvider[T any](db DBTX, adaptersFn func(tx DBTX) T) *GenericTransactionProvider[T] {
 	return &GenericTransactionProvider[T]{
 		db:         db,
 		adaptersFn: adaptersFn,
@@ -107,7 +105,7 @@ func NewGenericTransactionProvider[T any](db *sqlx.DB, adaptersFn func(tx *sqlx.
 
 // Transact executes a function within a transaction, providing typed adapters.
 func (p *GenericTransactionProvider[T]) Transact(ctx context.Context, fn func(adapters T) error) error {
-	return RunInTx(ctx, p.db, func(tx *sqlx.Tx) error {
+	return RunInTx(ctx, p.db, func(tx DBTX) error {
 		adapters := p.adaptersFn(tx)
 		return fn(adapters)
 	})
