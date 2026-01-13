@@ -3,6 +3,7 @@ auth_enabled: false
 server:
   http_listen_port: 3100
   grpc_listen_port: 9096
+  log_level: info
 
 common:
   instance_addr: 127.0.0.1
@@ -16,13 +17,28 @@ common:
     kvstore:
       store: inmemory
 
+# Query performance settings
 query_range:
   results_cache:
     cache:
       embedded_cache:
         enabled: true
         max_size_mb: 100
+  # Align queries to improve cache hit rate
+  align_queries_with_step: true
+  # Cache recent results
+  cache_results: true
 
+# Query limits and timeouts
+frontend:
+  max_outstanding_per_tenant: 2048
+  compress_responses: true
+
+# Querier limits
+querier:
+  max_concurrent: 10
+
+# Schema configuration
 schema_config:
   configs:
     - from: 2020-10-24
@@ -33,14 +49,48 @@ schema_config:
         prefix: index_
         period: 24h
 
+# Ruler for alerting (optional)
 ruler:
   alertmanager_url: http://localhost:9093
+  enable_api: true
+  enable_alertmanager_v2: true
 
+# Limits configuration - production tuning
 limits_config:
+  # Reject old samples (older than 7 days)
   reject_old_samples: true
   reject_old_samples_max_age: 168h
+
+  # Ingestion rate limits
   ingestion_rate_mb: 16
   ingestion_burst_size_mb: 32
 
+  # Per-stream limits
+  max_entries_limit_per_query: 10000
+  max_chunks_per_query: 2000000
+  max_query_series: 500
+  max_query_parallelism: 32
+
+  # Retention - keep logs for 7 days
+  retention_period: 168h
+
+  # Split large queries
+  split_queries_by_interval: 24h
+
+  # Cardinality limits
+  max_label_name_length: 1024
+  max_label_value_length: 2048
+  max_label_names_per_series: 30
+
+# Compactor for retention enforcement
+compactor:
+  working_directory: /loki/compactor
+  compaction_interval: 10m
+  retention_enabled: true
+  retention_delete_delay: 2h
+  retention_delete_worker_count: 150
+  delete_request_store: filesystem
+
+# Analytics
 analytics:
   reporting_enabled: false

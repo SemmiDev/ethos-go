@@ -1,0 +1,137 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+  log_level: info
+
+positions:
+  filename: /tmp/positions.yaml
+  sync_period: 10s
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+    tenant_id: ""
+    batchwait: 1s
+    batchsize: 1048576  # 1MB
+    timeout: 10s
+    backoff_config:
+      min_period: 500ms
+      max_period: 5m
+      max_retries: 10
+
+scrape_configs:
+  # ==========================================================================
+  # Docker Container Logs
+  # ==========================================================================
+  - job_name: docker
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+        filters:
+          - name: name
+            values: ["ethosgo-.*"]
+
+    relabel_configs:
+      # Use container name as a label
+      - source_labels: ['__meta_docker_container_name']
+        regex: '/(.*)'
+        target_label: container
+
+      # Extract service name from container name (ethosgo-app -> app)
+      - source_labels: ['__meta_docker_container_name']
+        regex: '/ethosgo-(.*)'
+        target_label: service
+
+      # Add compose service label if available
+      - source_labels: ['__meta_docker_container_label_com_docker_compose_service']
+        target_label: compose_service
+
+      # Add job label
+      - replacement: 'docker'
+        target_label: job
+
+      # Add environment label
+      - replacement: 'development'
+        target_label: environment
+
+    pipeline_stages:
+      # Only process JSON logs (skip non-JSON)
+      - match:
+          selector: '{job="docker"}'
+          stages:
+            # Parse JSON logs
+            - json:
+                expressions:
+                  level: level
+                  msg: msg
+                  time: time
+                  trace_id: trace_id
+                  span_id: span_id
+                  request_id: request_id
+                  error: error
+                  source: source
+                  command: command
+                  query: query
+
+            # Extract labels from parsed JSON
+            - labels:
+                level:
+                trace_id:
+                request_id:
+
+            # Set log timestamp from JSON time field
+            - timestamp:
+                source: time
+                format: RFC3339
+                fallback_formats:
+                  - RFC3339Nano
+                  - "2006-01-02T15:04:05.000Z07:00"
+
+            # Add output for easier filtering
+            - output:
+                source: msg
+
+  # ==========================================================================
+  # Application Log Files (backup if stdout not captured)
+  # ==========================================================================
+  - job_name: app-logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: ethosgo-files
+          service: app
+          environment: development
+          __path__: /app/logs/*.log
+
+    pipeline_stages:
+      # Parse JSON logs from files
+      - json:
+          expressions:
+            level: level
+            msg: msg
+            time: time
+            trace_id: trace_id
+            span_id: span_id
+            request_id: request_id
+            error: error
+
+      # Extract labels
+      - labels:
+          level:
+          trace_id:
+          request_id:
+
+      # Set timestamp
+      - timestamp:
+          source: time
+          format: RFC3339
+          fallback_formats:
+            - RFC3339Nano
+
+      # Output message
+      - output:
+          source: msg
+
+# Target configuration for health checks
+target_config:
+  sync_period: 10s

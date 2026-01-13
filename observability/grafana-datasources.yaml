@@ -1,7 +1,9 @@
 apiVersion: 1
 
 datasources:
-  # Prometheus - for metrics (scraped from app and other services)
+  # ==========================================================================
+  # Prometheus - Metrics (Default)
+  # ==========================================================================
   - name: Prometheus
     type: prometheus
     access: proxy
@@ -9,8 +11,16 @@ datasources:
     isDefault: true
     uid: prometheus
     editable: false
+    jsonData:
+      httpMethod: POST
+      # Enable exemplars for metrics-to-traces linking
+      exemplarTraceIdDestinations:
+        - name: trace_id
+          datasourceUid: tempo
 
-  # Loki - for logs
+  # ==========================================================================
+  # Loki - Logs
+  # ==========================================================================
   - name: Loki
     type: loki
     access: proxy
@@ -18,13 +28,23 @@ datasources:
     uid: loki
     editable: false
     jsonData:
+      maxLines: 1000
+      # Derived fields for trace correlation
       derivedFields:
         - datasourceUid: tempo
-          matcherRegex: '"trace_id":"(\w+)"'
+          matcherRegex: '"trace_id":"([a-f0-9]+)"'
+          matcherType: regex
+          name: TraceID
+          url: '$${__value.raw}'
+        - datasourceUid: tempo
+          matcherRegex: 'trace_id=([a-f0-9]+)'
+          matcherType: regex
           name: TraceID
           url: '$${__value.raw}'
 
-  # Tempo - for traces
+  # ==========================================================================
+  # Tempo - Traces
+  # ==========================================================================
   - name: Tempo
     type: tempo
     access: proxy
@@ -33,6 +53,7 @@ datasources:
     editable: false
     jsonData:
       httpMethod: GET
+      # Traces to Logs correlation
       tracesToLogs:
         datasourceUid: loki
         filterByTraceID: true
@@ -41,19 +62,40 @@ datasources:
         mappedTags:
           - key: service.name
             value: service
+          - key: http.method
+            value: method
+          - key: http.status_code
+            value: status
+        spanStartTimeShift: '-1h'
+        spanEndTimeShift: '1h'
+        lokiSearch: true
+      # Traces to Metrics correlation
       tracesToMetrics:
         datasourceUid: prometheus
+        spanStartTimeShift: '-1h'
+        spanEndTimeShift: '1h'
         tags:
           - key: service.name
             value: service
         queries:
           - name: 'Request rate'
-            query: 'sum(rate(http_requests_total{$$__tags}[5m]))'
-          - name: 'Request duration'
-            query: 'histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{$$__tags}[5m])) by (le))'
+            query: 'sum(rate(http_requests_total{service="$${__tags.service}"}[5m]))'
+          - name: 'Error rate'
+            query: 'sum(rate(http_requests_total{service="$${__tags.service}",http_status_code=~"5.."}[5m]))'
+          - name: 'P95 Latency'
+            query: 'histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{service="$${__tags.service}"}[5m])) by (le))'
+      # Service map (requires tempo metrics generator)
       serviceMap:
         datasourceUid: prometheus
+      # Node graph visualization
       nodeGraph:
         enabled: true
+      # Search in Loki
       lokiSearch:
         datasourceUid: loki
+      # Search configuration
+      search:
+        hide: false
+      # Trace to profiles (if using Pyroscope)
+      # traceToProfiles:
+      #   datasourceUid: pyroscope

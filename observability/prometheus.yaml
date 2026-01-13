@@ -3,26 +3,79 @@ global:
   evaluation_interval: 15s
   external_labels:
     monitor: 'ethos-go'
+    environment: 'development'
+
+# Alerting configuration (optional - requires Alertmanager)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets:
+#           - alertmanager:9093
+
+# Rule files for alerting
+rule_files:
+  - /etc/prometheus/rules/*.yaml
 
 scrape_configs:
-  # Scrape Prometheus itself
+  # ==========================================================================
+  # Prometheus Self-Monitoring
+  # ==========================================================================
   - job_name: 'prometheus'
     static_configs:
       - targets: ['localhost:9090']
+    metrics_path: /metrics
 
-  # Scrape the ethos-go application
+  # ==========================================================================
+  # Application Services
+  # ==========================================================================
   - job_name: 'ethos-go-app'
     static_configs:
       - targets: ['app:8080']
     metrics_path: /metrics
     scheme: http
+    scrape_interval: 10s
+    scrape_timeout: 5s
 
-  # Scrape Tempo metrics
+  - job_name: 'ethos-go-worker'
+    static_configs:
+      - targets: ['worker:8081']
+    metrics_path: /metrics
+    scheme: http
+    scrape_interval: 15s
+    scrape_timeout: 5s
+
+  # ==========================================================================
+  # Observability Stack
+  # ==========================================================================
   - job_name: 'tempo'
     static_configs:
       - targets: ['tempo:3200']
+    metrics_path: /metrics
 
-  # Scrape Loki metrics
   - job_name: 'loki'
     static_configs:
       - targets: ['loki:3100']
+    metrics_path: /metrics
+
+  - job_name: 'promtail'
+    static_configs:
+      - targets: ['promtail:9080']
+    metrics_path: /metrics
+
+  - job_name: 'grafana'
+    static_configs:
+      - targets: ['grafana:3000']
+    metrics_path: /metrics
+
+  # ==========================================================================
+  # Database Services
+  # ==========================================================================
+  # PostgreSQL exporter (if you add one)
+  # - job_name: 'postgresql'
+  #   static_configs:
+  #     - targets: ['postgres-exporter:9187']
+
+  # Redis exporter (if you add one)
+  # - job_name: 'redis'
+  #   static_configs:
+  #     - targets: ['redis-exporter:9121']

@@ -241,3 +241,14 @@ func (m *Metrics) RecordAuthAttempt(ctx context.Context, authType, status string
 
 	m.AuthAttemptsTotal.Add(ctx, 1, metric.WithAttributes(attrs...))
 }
+
+// RecordQuery records application query execution metrics
+func (m *Metrics) RecordQuery(ctx context.Context, query, status string, duration time.Duration) {
+	attrs := []attribute.KeyValue{
+		attribute.String("query", query),
+		attribute.String("status", status),
+	}
+
+	m.QueriesTotal.Add(ctx, 1, metric.WithAttributes(attrs...))
+	m.QueryDuration.Record(ctx, duration.Seconds(), metric.WithAttributes(attrs...))
+}

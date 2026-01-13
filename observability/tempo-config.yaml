@@ -1,6 +1,8 @@
 server:
   http_listen_port: 3200
+  log_level: info
 
+# Distributor - receives traces from clients
 distributor:
   receivers:
     otlp:
@@ -11,20 +13,23 @@ distributor:
           endpoint: 0.0.0.0:4318
     zipkin:
       endpoint: 0.0.0.0:9411
-    jaeger:
-      protocols:
-        thrift_http:
-          endpoint: 0.0.0.0:14268
 
+# Ingester - batches traces and writes to storage
 ingester:
   trace_idle_period: 10s
-  max_block_bytes: 1_000_000
+  max_block_bytes: 5_000_000
   max_block_duration: 5m
+  flush_check_period: 10s
 
+# Compactor - compacts blocks for efficient storage
 compactor:
   compaction:
-    block_retention: 48h
+    # Retain traces for 7 days (production-grade)
+    block_retention: 168h
+    compacted_block_retention: 1h
+    compaction_window: 4h
 
+# Storage configuration
 storage:
   trace:
     backend: local
@@ -32,12 +37,60 @@ storage:
       path: /tmp/tempo/blocks
     wal:
       path: /tmp/tempo/wal
+    # Block configuration for better performance
+    block:
+      version: vParquet4
 
+# Query configuration
 querier:
   frontend_worker:
     frontend_address: ""
+  max_concurrent_queries: 20
+  search:
+    # Limit search to prevent OOM
+    max_duration: 168h
 
+# Global overrides and limits
 overrides:
   defaults:
+    ingestion:
+      # Max spans per trace
+      max_traces_per_user: 0  # 0 = unlimited
+      max_bytes_per_trace: 5_000_000  # 5MB max trace size
+    # Metrics generator for RED metrics
     metrics_generator:
-      processors: []
+      processors:
+        - service-graphs
+        - span-metrics
+      # Generate metrics for traces
+      registry:
+        external_labels:
+          source: tempo
+      storage:
+        path: /tmp/tempo/generator/wal
+        remote_write:
+          - url: http://prometheus:9090/api/v1/write
+            send_exemplars: true
+
+# Metrics generator configuration
+metrics_generator:
+  registry:
+    external_labels:
+      source: tempo
+  storage:
+    path: /tmp/tempo/generator/wal
+    remote_write:
+      - url: http://prometheus:9090/api/v1/write
+        send_exemplars: true
+  traces_storage:
+    path: /tmp/tempo/generator/traces
+  processor:
+    service_graphs:
+      wait: 10s
+      max_items: 10000
+    span_metrics:
+      dimensions:
+        - service.name
+        - http.method
+        - http.status_code
+      enable_target_info: true

@@ -26,7 +26,15 @@ services:
       redis:
         condition: service_healthy
       tempo:
-        condition: service_started
+        condition: service_healthy
+      loki:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '--spider', 'http://localhost:8080/health']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   worker:
     container_name: ethosgo-worker
@@ -110,7 +118,7 @@ services:
       start_period: 10s
 
   # ============================================================================
-  # LGTM Stack: Loki (Logs), Grafana (Visualization), Tempo (Traces), Mimir (Metrics)
+  # LGTM Stack: Loki (Logs), Grafana (Visualization), Tempo (Traces), Prometheus (Metrics)
   # ============================================================================
 
   # Loki - Log aggregation
@@ -126,6 +134,34 @@ services:
     networks:
       - ethosgo-network
     restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '--spider', 'http://localhost:3100/ready']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Promtail - Log shipper (collects logs and sends to Loki)
+  promtail:
+    container_name: ethosgo-promtail
+    image: grafana/promtail:3.0.0
+    command: -config.file=/etc/promtail/config.yaml
+    volumes:
+      - ./observability/promtail-config.yaml:/etc/promtail/config.yaml:ro
+      - ./logs:/app/logs:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - ethosgo-network
+    restart: unless-stopped
+    depends_on:
+      loki:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '--spider', 'http://localhost:9080/ready']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
 
   # Tempo - Distributed tracing backend
   tempo:
@@ -135,7 +171,6 @@ services:
       - '3200:3200' # Tempo HTTP
       - '4317:4317' # OTLP gRPC
       - '4318:4318' # OTLP HTTP
-      - '9411:9411' # Zipkin
     command: ['-config.file=/etc/tempo/tempo.yaml']
     volumes:
       - ./observability/tempo-config.yaml:/etc/tempo/tempo.yaml:ro
@@ -143,8 +178,14 @@ services:
     networks:
       - ethosgo-network
     restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '--spider', 'http://localhost:3200/ready']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
-  # Prometheus - Scrapes metrics from app and other services
+  # Prometheus - Metrics collection and storage
   prometheus:
     container_name: ethosgo-prometheus
     image: prom/prometheus:v2.50.0
@@ -153,13 +194,24 @@ services:
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=15d'
+      - '--storage.tsdb.retention.size=10GB'
       - '--web.enable-remote-write-receiver'
+      - '--web.enable-lifecycle'
+      - '--enable-feature=exemplar-storage'
     volumes:
       - ./observability/prometheus.yaml:/etc/prometheus/prometheus.yml:ro
+      - ./observability/rules:/etc/prometheus/rules:ro
       - prometheus-data:/prometheus
     networks:
       - ethosgo-network
     restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '--spider', 'http://localhost:9090/-/healthy']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
 
   # Grafana - Unified observability dashboard
   grafana:
@@ -169,6 +221,8 @@ services:
       - '3000:3000'
     env_file:
       - .env
+    environment:
+      - GF_FEATURE_TOGGLES_ENABLE=traceqlEditor tempoSearch tempoBackendSearch tempoServiceGraph traceToMetrics correlations
     volumes:
       - ./observability/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml:ro
       - ./observability/grafana-dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml:ro
@@ -178,23 +232,18 @@ services:
       - ethosgo-network
     restart: unless-stopped
     depends_on:
-      - loki
-      - tempo
-      - prometheus
-
-  # Jaeger - Alternative tracing UI (optional, for comparison)
-  jaeger:
-    container_name: ethosgo-jaeger
-    image: jaegertracing/all-in-one:1.54
-    ports:
-      - '16686:16686' # Jaeger UI
-      - '14268:14268' # Jaeger HTTP collector
-    environment:
-      - COLLECTOR_OTLP_ENABLED=true
-      - SPAN_STORAGE_TYPE=memory
-    networks:
-      - ethosgo-network
-    restart: unless-stopped
+      loki:
+        condition: service_healthy
+      tempo:
+        condition: service_healthy
+      prometheus:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '--spider', 'http://localhost:3000/api/health']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
 networks:
   ethosgo-network:
