@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -17,6 +19,50 @@ import (
 	authv1 "github.com/semmidev/ethos-go/internal/generated/grpc/ethos/auth/v1"
 	commonv1 "github.com/semmidev/ethos-go/internal/generated/grpc/ethos/common/v1"
 )
+
+const (
+	grpcGatewayUserAgentHeader = "grpcgateway-user-agent"
+	userAgentHeader            = "user-agent"
+	xForwardedForHeader        = "x-forwarded-for"
+)
+
+// clientMetadata holds client information extracted from gRPC context.
+type clientMetadata struct {
+	UserAgent string
+	ClientIP  string
+}
+
+// extractClientMetadata extracts user agent and client IP from gRPC context.
+func extractClientMetadata(ctx context.Context) *clientMetadata {
+	mtdt := &clientMetadata{
+		UserAgent: "unknown",
+		ClientIP:  "unknown",
+	}
+
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
+		// First check grpc-gateway user agent (for REST API requests)
+		if userAgents := md.Get(grpcGatewayUserAgentHeader); len(userAgents) > 0 {
+			mtdt.UserAgent = userAgents[0]
+		}
+
+		// Then check regular user-agent (for direct gRPC requests)
+		if userAgents := md.Get(userAgentHeader); len(userAgents) > 0 {
+			mtdt.UserAgent = userAgents[0]
+		}
+
+		// Check x-forwarded-for header for client IP (when behind proxy)
+		if clientIPs := md.Get(xForwardedForHeader); len(clientIPs) > 0 {
+			mtdt.ClientIP = clientIPs[0]
+		}
+	}
+
+	// Get peer address as fallback for client IP
+	if p, ok := peer.FromContext(ctx); ok {
+		mtdt.ClientIP = p.Addr.String()
+	}
+
+	return mtdt
+}
 
 // AuthGRPCServer implements the gRPC AuthService interface.
 type AuthGRPCServer struct {
@@ -107,11 +153,12 @@ func (s *AuthGRPCServer) Register(ctx context.Context, req *authv1.RegisterReque
 
 // Login authenticates a user and returns tokens.
 func (s *AuthGRPCServer) Login(ctx context.Context, req *authv1.LoginRequest) (*authv1.LoginResponse, error) {
+	mtdt := extractClientMetadata(ctx)
 	cmd := command.LoginCommand{
 		Email:     req.Email,
 		Password:  req.Password,
-		UserAgent: "gRPC-Client",
-		ClientIP:  "unknown",
+		UserAgent: mtdt.UserAgent,
+		ClientIP:  mtdt.ClientIP,
 	}
 
 	result, err := s.loginHandler.Handle(ctx, cmd)
@@ -150,10 +197,11 @@ func (s *AuthGRPCServer) GoogleLogin(ctx context.Context, req *authv1.GoogleLogi
 
 // GoogleCallback handles the Google OAuth callback.
 func (s *AuthGRPCServer) GoogleCallback(ctx context.Context, req *authv1.GoogleCallbackRequest) (*authv1.LoginResponse, error) {
+	mtdt := extractClientMetadata(ctx)
 	cmd := command.LoginGoogleCommand{
 		Code:      req.Code,
-		UserAgent: "gRPC-Client",
-		ClientIP:  "unknown",
+		UserAgent: mtdt.UserAgent,
+		ClientIP:  mtdt.ClientIP,
 	}
 
 	result, err := s.loginGoogleHandler.Handle(ctx, cmd)
