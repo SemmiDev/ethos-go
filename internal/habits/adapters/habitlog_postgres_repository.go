@@ -107,54 +107,52 @@ func (r *HabitLogPostgresRepository) UpdateHabitLog(
 	logID, userID string,
 	updateFn func(ctx context.Context, log *habitlog.HabitLog) (*habitlog.HabitLog, error),
 ) error {
-	return database.RunInTx(ctx, r.db, func(tx database.DBTX) error {
-		var model habitLogModel
-		q := `SELECT * FROM habit_logs WHERE log_id = $1 FOR UPDATE`
-		err := tx.GetContext(ctx, &model, q, logID)
-		if errors.Is(err, sql.ErrNoRows) {
-			return habitlog.ErrNotFound
-		}
-		if err != nil {
-			return err
-		}
-
-		log, err := r.unmarshalHabitLog(model)
-		if err != nil {
-			return err
-		}
-
-		// Authorization check
-		if err := log.CanBeModifiedBy(userID); err != nil {
-			return err
-		}
-
-		// Apply update function
-		updatedLog, err := updateFn(ctx, log)
-		if err != nil {
-			return err
-		}
-
-		// Convert *string to sql.NullString for database update
-		var note sql.NullString
-		if updatedLog.Note() != nil {
-			note = sql.NullString{String: *updatedLog.Note(), Valid: true}
-		}
-
-		// Persist changes
-		updateQuery := `
-		UPDATE habit_logs
-		SET count = $1, note = $2, log_date = $3, updated_at = $4
-		WHERE log_id = $5
-	`
-		_, err = tx.ExecContext(ctx, updateQuery,
-			updatedLog.Count(),
-			note,
-			updatedLog.LogDate(),
-			updatedLog.UpdatedAt(),
-			logID,
-		)
+	var model habitLogModel
+	q := `SELECT * FROM habit_logs WHERE log_id = $1`
+	err := r.db.GetContext(ctx, &model, q, logID)
+	if errors.Is(err, sql.ErrNoRows) {
+		return habitlog.ErrNotFound
+	}
+	if err != nil {
 		return err
-	})
+	}
+
+	log, err := r.unmarshalHabitLog(model)
+	if err != nil {
+		return err
+	}
+
+	// Authorization check
+	if err := log.CanBeModifiedBy(userID); err != nil {
+		return err
+	}
+
+	// Apply update function
+	updatedLog, err := updateFn(ctx, log)
+	if err != nil {
+		return err
+	}
+
+	// Convert *string to sql.NullString for database update
+	var note sql.NullString
+	if updatedLog.Note() != nil {
+		note = sql.NullString{String: *updatedLog.Note(), Valid: true}
+	}
+
+	// Persist changes
+	updateQuery := `
+	UPDATE habit_logs
+	SET count = $1, note = $2, log_date = $3, updated_at = $4
+	WHERE log_id = $5
+`
+	_, err = r.db.ExecContext(ctx, updateQuery,
+		updatedLog.Count(),
+		note,
+		updatedLog.LogDate(),
+		updatedLog.UpdatedAt(),
+		logID,
+	)
+	return err
 }
 
 func (r *HabitLogPostgresRepository) DeleteHabitLog(ctx context.Context, logID, userID string) error {

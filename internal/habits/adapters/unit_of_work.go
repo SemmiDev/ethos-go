@@ -2,6 +2,8 @@ package adapters
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/semmidev/ethos-go/internal/common/database"
@@ -42,7 +44,6 @@ type HabitsUnitOfWork interface {
 // habitsUnitOfWork is the PostgreSQL implementation of HabitsUnitOfWork.
 type habitsUnitOfWork struct {
 	db            database.DBTX
-	tx            *sqlx.Tx // nil when not in a transaction
 	habitRepo     habit.Repository
 	logRepo       habitlog.Repository
 	inTransaction bool
@@ -72,15 +73,22 @@ func (uow *habitsUnitOfWork) HabitLogs() habitlog.Repository {
 // WithTransaction executes a function within a transaction.
 // This is the recommended way to use transactions as it handles
 // commit and rollback automatically, including panic recovery.
-func (uow *habitsUnitOfWork) WithTransaction(ctx context.Context, fn func(HabitsUnitOfWork) error) error {
+func (uow *habitsUnitOfWork) WithTransaction(ctx context.Context, fn func(HabitsUnitOfWork) error) (err error) {
 	// If already in a transaction, just run the function (nested transaction support)
 	if uow.inTransaction {
 		return fn(uow)
 	}
 
-	// Use the database package's RunInTx for proper transaction handling
-	return database.RunInTx(ctx, uow.db, func(tx database.DBTX) error {
-		// Create a new UnitOfWork with transactional repositories
+	// Get the underlying database connection to begin a transaction
+	db := uow.db
+
+	// Unwrap TracedDBTX if necessary to access BeginTxx
+	if traced, ok := db.(*database.TracedDBTX); ok {
+		db = traced.Unwrap()
+	}
+
+	// If it's already a transaction, just run the function
+	if tx, ok := db.(*sqlx.Tx); ok {
 		txUow := &habitsUnitOfWork{
 			db:            tx,
 			habitRepo:     NewHabitPostgresRepository(tx),
@@ -88,5 +96,46 @@ func (uow *habitsUnitOfWork) WithTransaction(ctx context.Context, fn func(Habits
 			inTransaction: true,
 		}
 		return fn(txUow)
-	})
+	}
+
+	// It must be *sqlx.DB to start a transaction
+	conn, ok := db.(*sqlx.DB)
+	if !ok {
+		return errors.New("WithTransaction: db must be *sqlx.DB or *sqlx.Tx")
+	}
+
+	tx, err := conn.BeginTxx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("begin transaction: %w", err)
+	}
+
+	// Handle panic recovery
+	defer func() {
+		if p := recover(); p != nil {
+			_ = tx.Rollback()
+			panic(p)
+		}
+	}()
+
+	// Create a new UnitOfWork with transactional repositories
+	txUow := &habitsUnitOfWork{
+		db:            tx,
+		habitRepo:     NewHabitPostgresRepository(tx),
+		logRepo:       NewHabitLogPostgresRepository(tx),
+		inTransaction: true,
+	}
+
+	err = fn(txUow)
+	if err != nil {
+		if rbErr := tx.Rollback(); rbErr != nil {
+			return errors.Join(err, fmt.Errorf("rollback: %w", rbErr))
+		}
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		return fmt.Errorf("commit: %w", err)
+	}
+
+	return nil
 }

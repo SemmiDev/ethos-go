@@ -115,59 +115,57 @@ func (r *HabitPostgresRepository) UpdateHabit(
 	habitID, userID string,
 	updateFn func(ctx context.Context, h *habit.Habit) (*habit.Habit, error),
 ) error {
-	return database.RunInTx(ctx, r.db, func(tx database.DBTX) error {
-		var model habitModel
-		query := `SELECT * FROM habits WHERE habit_id = $1 FOR UPDATE`
-		err := tx.GetContext(ctx, &model, query, habitID)
-		if errors.Is(err, sql.ErrNoRows) {
-			return habit.ErrNotFound
-		}
-		if err != nil {
-			return err
-		}
+	var model habitModel
+	query := `SELECT * FROM habits WHERE habit_id = $1`
+	err := r.db.GetContext(ctx, &model, query, habitID)
+	if errors.Is(err, sql.ErrNoRows) {
+		return habit.ErrNotFound
+	}
+	if err != nil {
+		return err
+	}
 
-		h, err := r.unmarshalHabit(model)
-		if err != nil {
-			return err
-		}
+	h, err := r.unmarshalHabit(model)
+	if err != nil {
+		return err
+	}
 
-		if err := h.CanBeViewedBy(userID); err != nil {
-			return err
-		}
+	if err := h.CanBeViewedBy(userID); err != nil {
+		return err
+	}
 
-		updatedHabit, err := updateFn(ctx, h)
-		if err != nil {
-			return err
-		}
+	updatedHabit, err := updateFn(ctx, h)
+	if err != nil {
+		return err
+	}
 
-		// Convert *string to sql.NullString for database update
-		var description sql.NullString
-		if updatedHabit.Description() != nil {
-			description = sql.NullString{String: *updatedHabit.Description(), Valid: true}
-		}
+	// Convert *string to sql.NullString for database update
+	var description sql.NullString
+	if updatedHabit.Description() != nil {
+		description = sql.NullString{String: *updatedHabit.Description(), Valid: true}
+	}
 
-		var reminderTime sql.NullString
-		if updatedHabit.ReminderTime() != nil {
-			reminderTime = sql.NullString{String: *updatedHabit.ReminderTime(), Valid: true}
-		}
+	var reminderTime sql.NullString
+	if updatedHabit.ReminderTime() != nil {
+		reminderTime = sql.NullString{String: *updatedHabit.ReminderTime(), Valid: true}
+	}
 
-		updateQuery := `
+	updateQuery := `
         UPDATE habits
         SET name = $1, description = $2, frequency = $3, target_count = $4, reminder_time = $5, is_active = $6, updated_at = $7
         WHERE habit_id = $8
     `
-		_, err = tx.ExecContext(ctx, updateQuery,
-			updatedHabit.Name(),
-			description,
-			updatedHabit.Frequency().String(),
-			updatedHabit.TargetCount(),
-			reminderTime,
-			updatedHabit.IsActive(),
-			updatedHabit.UpdatedAt(),
-			habitID,
-		)
-		return err
-	})
+	_, err = r.db.ExecContext(ctx, updateQuery,
+		updatedHabit.Name(),
+		description,
+		updatedHabit.Frequency().String(),
+		updatedHabit.TargetCount(),
+		reminderTime,
+		updatedHabit.IsActive(),
+		updatedHabit.UpdatedAt(),
+		habitID,
+	)
+	return err
 }
 
 func (r *HabitPostgresRepository) DeleteHabit(ctx context.Context, habitID, userID string) error {
